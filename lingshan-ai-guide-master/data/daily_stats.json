@@ -1,0 +1,421 @@
+{
+  "2026-06-20": {
+    "date": "2026-06-20",
+    "total_queries": 13,
+    "llm_queries": 13,
+    "avg_response_ms": 2498.153846153846,
+    "emotions": {
+      "think": 11,
+      "explain": 2
+    },
+    "hot_questions": [
+      {
+        "question": "灵山大佛有多高",
+        "count": 8
+      },
+      {
+        "question": "九龙灌浴表演时间",
+        "count": 2
+      },
+      {
+        "question": "五印坛城",
+        "count": 2
+      },
+      {
+        "question": "门票价格",
+        "count": 1
+      }
+    ]
+  },
+  "2026-06-21": {
+    "date": "2026-06-21",
+    "total_queries": 37,
+    "llm_queries": 37,
+    "avg_response_ms": 2467.5405405405404,
+    "emotions": {
+      "think": 31,
+      "explain": 4,
+      "greet": 2
+    },
+    "hot_questions": [
+      {
+        "question": "灵山大佛有多高",
+        "count": 13
+      },
+      {
+        "question": "九龙灌浴表演时间",
+        "count": 12
+      },
+      {
+        "question": "门票价格",
+        "count": 5
+      },
+      {
+        "question": "推荐游览路线",
+        "count": 3
+      },
+      {
+        "question": "五印坛城",
+        "count": 1
+      },
+      {
+        "question": "你好呀",
+        "count": 1
+      },
+      {
+        "question": "灵山坐落于哪里",
+        "count": 1
+      },
+      {
+        "question": "你好",
+        "count": 1
+      }
+    ]
+  },
+  "2026-06-22": {
+    "date": "2026-06-22",
+    "total_queries": 27,
+    "llm_queries": 25,
+    "avg_response_ms": 3974.925925925926,
+    "emotions": {
+      "think": 22,
+      "greet": 2,
+      "explain": 3
+    },
+    "hot_questions": [
+      {
+        "question": "灵山大佛有多高",
+        "count": 11
+      },
+      {
+        "question": "九龙灌浴表演时间",
+        "count": 6
+      },
+      {
+        "question": "门票价格",
+        "count": 3
+      },
+      {
+        "question": "你好",
+        "count": 2
+      },
+      {
+        "question": "推荐游览路线",
+        "count": 2
+      },
+      {
+        "question": "灵山大佛",
+        "count": 1
+      },
+      {
+        "question": "灵山坐落于哪里",
+        "count": 1
+      },
+      {
+        "question": "江苏还有什么推荐景点吗",
+        "count": 1
+      }
+    ]
+  },
+  "2026-07-06": {
+    "date": "2026-07-06",
+    "total_queries": 21,
+    "llm_queries": 21,
+    "avg_response_ms": 2302.5238095238096,
+    "emotions": {
+      "think": 18,
+      "greet": 2,
+      "explain": 1
+    },
+    "hot_questions": [
+      {
+        "question": "灵山大佛有多高",
+        "count": 7
+      },
+      {
+        "question": "九龙灌浴表演时间",
+        "count": 5
+      },
+      {
+        "question": "门票价格",
+        "count": 4
+      },
+      {
+        "question": "梵宫有什么好看的",
+        "count": 2
+      },
+      {
+        "question": "你好",
+        "count": 2
+      },
+      {
+        "question": "祥符禅寺",
+        "count": 1
+      }
+    ]
+  },
+  "2026-07-07": {
+    "date": "2026-07-07",
+    "total_queries": 51,
+    "llm_queries": 51,
+    "avg_response_ms": 3339.0588235294117,
+    "emotions": {
+      "explain": 1,
+      "greet": 4,
+      "think": 46
+    },
+    "hot_questions": [
+      {
+        "question": "九龙灌浴表演时间",
+        "count": 16
+      },
+      {
+        "question": "门票价格",
+        "count": 12
+      },
+      {
+        "question": "灵山大佛有多高",
+        "count": 10
+      },
+      {
+        "question": "推荐游览路线",
+        "count": 6
+      },
+      {
+        "question": "你好",
+        "count": 2
+      },
+      {
+        "question": "五印坛城",
+        "count": 1
+      },
+      {
+        "question": "灵山大佛",
+        "count": 1
+      },
+      {
+        "question": "百子戏弥勒",
+        "count": 1
+      },
+      {
+        "question": "你是谁",
+        "count": 1
+      },
+      {
+        "question": "香月花街",
+        "count": 1
+      }
+    ]
+  },
+  "2026-07-12": {
+    "date": "2026-07-12",
+    "total_queries": 44,
+    "llm_queries": 0,
+    "avg_response_ms": 3.5454545454545454,
+    "emotions": {
+      "think": 26,
+      "explain": 18
+    },
+    "hot_questions": [
+      {
+        "question": "灵山大佛有多高",
+        "count": 17
+      },
+      {
+        "question": "灵山大佛",
+        "count": 8
+      },
+      {
+        "question": "九龙灌浴表演时间",
+        "count": 7
+      },
+      {
+        "question": "灵山大照壁",
+        "count": 4
+      },
+      {
+        "question": "九龙灌浴",
+        "count": 2
+      },
+      {
+        "question": "灵山梵宫",
+        "count": 1
+      },
+      {
+        "question": "门票价格",
+        "count": 1
+      },
+      {
+        "question": "拈花湾在哪",
+        "count": 1
+      },
+      {
+        "question": "梵天花海",
+        "count": 1
+      },
+      {
+        "question": "游览路线推荐",
+        "count": 1
+      },
+      {
+        "question": "祥符禅寺",
+        "count": 1
+      }
+    ]
+  },
+  "2026-07-13": {
+    "date": "2026-07-13",
+    "total_queries": 64,
+    "llm_queries": 0,
+    "avg_response_ms": 2.6249999999999996,
+    "emotions": {
+      "think": 29,
+      "explain": 35
+    },
+    "hot_questions": [
+      {
+        "question": "灵山大佛有多高",
+        "count": 8
+      },
+      {
+        "question": "推荐游览路线",
+        "count": 8
+      },
+      {
+        "question": "九龙灌浴表演时间",
+        "count": 7
+      },
+      {
+        "question": "灵山大照壁",
+        "count": 6
+      },
+      {
+        "question": "拈花湾",
+        "count": 5
+      },
+      {
+        "question": "门票价格",
+        "count": 5
+      },
+      {
+        "question": "灵山大佛",
+        "count": 3
+      },
+      {
+        "question": "莲花池",
+        "count": 3
+      },
+      {
+        "question": "拈花广场",
+        "count": 3
+      },
+      {
+        "question": "菩提大道",
+        "count": 2
+      },
+      {
+        "question": "佛足坛",
+        "count": 2
+      },
+      {
+        "question": "拈花堂",
+        "count": 2
+      },
+      {
+        "question": "有哪22个景点",
+        "count": 1
+      },
+      {
+        "question": "灵山梵宫",
+        "count": 1
+      },
+      {
+        "question": "五智门",
+        "count": 1
+      },
+      {
+        "question": "我要游览所有景点",
+        "count": 1
+      },
+      {
+        "question": "给我浏览所有景点的路线",
+        "count": 1
+      },
+      {
+        "question": "五印坛城",
+        "count": 1
+      },
+      {
+        "question": "百子戏弥勒",
+        "count": 1
+      },
+      {
+        "question": "梵天花海",
+        "count": 1
+      }
+    ]
+  },
+  "2026-07-14": {
+    "date": "2026-07-14",
+    "total_queries": 35,
+    "llm_queries": 0,
+    "avg_response_ms": 2.942857142857143,
+    "emotions": {
+      "explain": 10,
+      "think": 25
+    },
+    "hot_questions": [
+      {
+        "question": "推荐游览路线",
+        "count": 12
+      },
+      {
+        "question": "门票价格",
+        "count": 8
+      },
+      {
+        "question": "灵山大佛有多高",
+        "count": 4
+      },
+      {
+        "question": "灵山大照壁",
+        "count": 2
+      },
+      {
+        "question": "拈花广场",
+        "count": 2
+      },
+      {
+        "question": "拈花堂",
+        "count": 2
+      },
+      {
+        "question": "灵山梵宫",
+        "count": 1
+      },
+      {
+        "question": "菩提大道",
+        "count": 1
+      },
+      {
+        "question": "九龙灌浴表演时间",
+        "count": 1
+      },
+      {
+        "question": "百子戏弥勒",
+        "count": 1
+      },
+      {
+        "question": "祥符禅寺",
+        "count": 1
+      }
+    ],
+    "categories": {
+      "other": 15,
+      "route": 12,
+      "ticket": 8
+    },
+    "feedback_helpful": 0,
+    "feedback_unhelpful": 0
+  }
+}

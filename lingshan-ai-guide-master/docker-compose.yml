@@ -1,0 +1,81 @@
+version: "3.8"
+
+# 灵山胜境 AI 数字人导游系统 — 生产级部署
+# 单命令启动: docker-compose up -d
+# 访问: http://localhost:8000
+
+services:
+  # ── 后端主服务 (Node.js + Express) ──────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: lingshan-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - VECTOR_SERVICE_URL=http://vector:8002
+      - TTS_SERVICE_URL=http://tts:8001
+      - AGNES_API_KEY=${AGNES_API_KEY:-}
+      - AGNES_MODEL=${AGNES_MODEL:-agnes-2.0-flash}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+    volumes:
+      - ./data:/app/data           # 对话记录 + 统计数据持久化
+      - ./frontend-dist:/app/frontend-dist:ro  # 前端静态文件
+    depends_on:
+      vector:
+        condition: service_healthy
+      tts:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8000/health',r=>{process.exit(r.statusCode===200?0:1)})"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── 向量检索服务 (Python + ChromaDB) ────────────────────
+  vector:
+    build:
+      context: .
+      dockerfile: Dockerfile.vector
+    container_name: lingshan-vector
+    ports:
+      - "8002:8002"
+    environment:
+      - EMBEDDING_MODEL=BAAI/bge-large-zh-v1.5
+      - CHROMA_PERSIST_DIR=/app/chroma_data
+    volumes:
+      - ./data:/app/data:ro        # 知识库只读
+      - vector_data:/app/chroma_data  # ChromaDB 持久化
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s  # BGE 模型首次下载/加载可能较慢
+
+  # ── TTS 语音合成服务 (Python + Edge-TTS) ────────────────
+  tts:
+    build:
+      context: .
+      dockerfile: Dockerfile.tts
+    container_name: lingshan-tts
+    ports:
+      - "8001:8001"
+    environment:
+      - TTS_CACHE_DIR=/app/tts_cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  vector_data:
+    driver: local

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta charset="UTF-8"><title>灵山导游 v3.0 — 深度打磨方案</title>
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--pink:#c41d7f;--gold:#d4a853;--green:#2ecc71;--red:#e74c3c;--blue:#3498db}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:32px;line-height:1.6}
+h2{font-size:24px;margin:32px 0 16px;padding-bottom:8px;border-bottom:2px solid var(--pink)}
+h3{font-size:18px;margin:20px 0 12px;color:var(--gold)}
+p.subtitle{color:var(--muted);font-size:14px;margin-bottom:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{background:var(--surface);border-radius:12px;padding:20px;border:1px solid var(--border)}
+.card h4{margin:0 0 8px;font-size:15px}
+.card p,.card li{color:var(--muted);font-size:13px}
+.card ul{padding-left:18px;margin:0}
+.tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.tag-bad{background:rgba(231,76,60,0.2);color:var(--red)}
+.tag-ok{background:rgba(241,196,15,0.2);color:#f39c12}
+.tag-good{background:rgba(46,204,113,0.2);color:var(--green)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 8px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500}
+td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.priority{width:70px;text-align:center}
+.score-big{font-size:48px;font-weight:800;text-align:center;color:var(--green)}
+.state-box{text-align:center;padding:16px 24px;border-radius:12px;font-weight:700;font-size:14px}
+.mockup{background:var(--surface);border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.mockup-header{background:#1a1a2e;padding:10px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border)}
+.mockup-body{padding:16px}
+.arrow{font-size:20px;color:var(--muted);text-align:center}
+pre.code{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;overflow-x:auto;color:#7ee787}
+</style></head>
+<body>
+
+<h1>🏯 灵山胜境 AI 数字人导游 v3.0 — 深度打磨方案</h1>
+<p class="subtitle">对标赛题 100 分标准 · 目标自评 90+ · 聚焦 5 大缺陷</p>
+
+<!-- ============================================================ -->
+<h2>🔍 缺陷审计 & 评分对标</h2>
+
+<table>
+<tr><th>#</th><th>缺陷</th><th>当前评分损失</th><th>根因</th><th>目标</th></tr>
+<tr>
+  <td>1</td>
+  <td><strong>数字人口型表情不灵动、形象太小</strong></td>
+  <td><span class="tag tag-bad">-10 分</span>（技术集成度 5/15）</td>
+  <td>PixiJS 画布 300×400 偏小；viseme 驱动有时序但渲染太弱；fallback 模式走静态图</td>
+  <td>大尺寸主视觉 + 口型实时叠加 + 情感联动</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><strong>TTS 语音严重滞后于文字</strong></td>
+  <td><span class="tag tag-bad">-6 分</span>（体验 14/20）</td>
+  <td>全文生成完才调 TTS → 10 秒延迟；串行流程</td>
+  <td>首个 token 到达即触发 TTS 分段播放</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><strong>TTS 朗读 emoji/特殊符号</strong></td>
+  <td><span class="tag tag-bad">-3 分</span>（自然度）</td>
+  <td>TTS 文本未过滤 emoji/★/①②/markdown</td>
+  <td>两套文本：展示文本（富） + 朗读文本（纯）</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><strong>路线推荐时间不灵活</strong></td>
+  <td><span class="tag tag-ok">-4 分</span>（功能完整度）</td>
+  <td>最短路线 4 小时起，无半日/1-2 小时选项</td>
+  <td>三档时长：2h / 4h / 6h + 自适应裁剪</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><strong>管理后台数字人预览失效</strong></td>
+  <td><span class="tag tag-bad">-5 分</span>（数字人管理 0/15）</td>
+  <td>预览区只有 emoji 🤖；语音预览按钮无效</td>
+  <td>实时数字人渲染 + 试听功能</td>
+</tr>
+</table>
+
+<div class="score-big" style="margin:32px 0">当前 ~65 → 目标 90+</div>
+
+<!-- ============================================================ -->
+<h2>🏗 缺陷 #1 方案：数字人升级 — 大尺寸 + 真 viseme + 情感联动</h2>
+
+<div class="grid2">
+  <div class="card" style="border-left:3px solid var(--red)">
+    <h4>❌ 现状</h4>
+    <ul>
+      <li>画布 300×400 → 实际显示约 200px 宽</li>
+      <li>PixiJS 初始化慢 → 2 秒后切 fallback 静态图</li>
+      <li>viseme 口型叠加在 fallback 上不生效</li>
+      <li>情感变化只改 drop-shadow 颜色</li>
+    </ul>
+  </div>
+  <div class="card" style="border-left:3px solid var(--green)">
+    <h4>✅ 方案</h4>
+    <ul>
+      <li><strong>尺寸翻倍</strong>：画布 500×660 → 占页面 40% 高度</li>
+      <li><strong>纯 DOM 动画</strong>：不用 PixiJS（初始化太慢），用 CSS transform + requestAnimationFrame</li>
+      <li><strong>口型叠加层</strong>：AI 肖像上叠加 6 个 CSS 嘴型 div，viseme 时间轴驱动切换</li>
+      <li><strong>情感系统</strong>：眼部裁切 + 眉毛旋转 + 腮红透明度 + 整体缩放</li>
+      <li><strong>预加载</strong>：页面加载时创建 Image 对象，不等待 PixiJS</li>
+    </ul>
+  </div>
+</div>
+
+<div style="margin:16px 0">
+  <div class="mockup">
+    <div class="mockup-header">🎭 数字人新布局 (DOM-based)</div>
+    <div class="mockup-body">
+      <div style="display:flex;gap:16px;align-items:center">
+        <div style="flex:1;text-align:center;position:relative;background:#1a1a2e;border-radius:16px;padding:24px;min-height:360px">
+          <div style="position:relative;display:inline-block">
+            <!-- 光环 -->
+            <div style="position:absolute;inset:-30px;border-radius:50%;background:radial-gradient(circle,rgba(212,168,83,0.2),transparent 70%);animation:pulse 2s ease-in-out infinite"></div>
+            <!-- 主形象 -->
+            <div style="width:240px;height:320px;background:linear-gradient(135deg,#fdf2f8,#fff0f5);border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:120px;position:relative">
+              👩‍🦰
+              <!-- 嘴型叠加 -->
+              <div style="position:absolute;bottom:60px;left:50%;transform:translateX(-50%);width:40px;height:16px;background:rgba(204,68,102,0.8);border-radius:50%;animation:mouthAnim 0.3s ease infinite alternate"></div>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:18px;font-weight:700">灵小禅</div>
+          <div style="color:var(--muted);font-size:13px">AI 数字人导游</div>
+          <div style="display:flex;gap:3px;justify-content:center;margin-top:8px">
+            <div style="width:4px;height:16px;background:var(--pink);border-radius:2px;animation:bar 0.6s ease-in-out infinite"></div>
+            <div style="width:4px;height:8px;background:var(--pink);border-radius:2px;animation:bar 0.6s ease-in-out 0.1s infinite"></div>
+            <div style="width:4px;height:20px;background:var(--pink);border-radius:2px;animation:bar 0.6s ease-in-out 0.2s infinite"></div>
+            <div style="width:4px;height:12px;background:var(--pink);border-radius:2px;animation:bar 0.6s ease-in-out 0.3s infinite"></div>
+            <div style="width:4px;height:18px;background:var(--pink);border-radius:2px;animation:bar 0.6s ease-in-out 0.4s infinite"></div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <h4 style="margin:0 0 12px">📐 设计参数</h4>
+          <table>
+            <tr><td>画布尺寸</td><td><strong>500×660px</strong>（原 300×400）</td></tr>
+            <tr><td>肖像比例</td><td>占页面 35-45% 可视高度</td></tr>
+            <tr><td>渲染方式</td><td><strong>DOM + CSS Animation</strong>（非 PixiJS）</td></tr>
+            <tr><td>嘴型数量</td><td>6 个：闲/啊/呃/咿/哦/呜</td></tr>
+            <tr><td>情感维度</td><td>眼、眉、腮红、缩放、光晕色</td></tr>
+            <tr><td>帧率</td><td>requestAnimationFrame 60fps</td></tr>
+            <tr><td>初始化</td><td>&lt;100ms（预加载 Image）</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2>🔊 缺陷 #2 方案：流式 TTS — 文字到语音零延迟</h2>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+  <div class="card">
+    <h3>🔄 状态流转：旧 vs 新</h3>
+    <div class="grid2" style="font-size:12px">
+      <div style="background:#1a1a2e;border-radius:8px;padding:16px;border-left:3px solid var(--red)">
+        <h4>❌ 旧流程（串行）</h4>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <span class="state-box" style="background:rgba(231,76,60,0.2)">用户发送</span><span class="arrow">→</span>
+          <span class="state-box" style="background:rgba(231,76,60,0.2)">等待全文<br>(2-4s)</span><span class="arrow">→</span>
+          <span class="state-box" style="background:rgba(231,76,60,0.2)">全文到达</span><span class="arrow">→</span>
+          <span class="state-box" style="background:rgba(231,76,60,0.2)">调 TTS<br>(7-10s)</span><span class="arrow">→</span>
+          <span class="state-box" style="background:rgba(231,76,60,0.2)">播放语音</span>
+        </div>
+        <p style="color:var(--red);margin-top:8px">总延迟：文字 3s + TTS 8s = 11s</p>
+      </div>
+      <div style="background:#1a1a2e;border-radius:8px;padding:16px;border-left:3px solid var(--green)">
+        <h4>✅ 新流程（并行流水线）</h4>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <span class="state-box" style="background:rgba(46,204,113,0.2)">用户发送</span><span class="arrow">→</span>
+          <span class="state-box" style="background:rgba(46,204,113,0.2)">首个 token<br>(0.3s)</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <div style="flex:1;text-align:center">
+            <span class="tag tag-good">流水线 A</span>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">token 陆续到达<br>→ 前端逐字显示</div>
+          </div>
+          <div style="flex:1;text-align:center">
+            <span class="tag tag-good">流水线 B（并行）</span>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">攒够 20 字 → 立即调 TTS<br>→ 边生成边播放</div>
+          </div>
+        </div>
+        <p style="color:var(--green);margin-top:8px">总延迟：文字 0.3s + 首段 TTS 1.5s ≈ 2s</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📡 流式 TTS 数据流</h3>
+    <pre class="code">
+LLM stream token → SSE chunk → 前端缓冲
+                              ├─→ 逐字渲染到气泡（即时）
+                              └─→ 累积到 ≥20 字 → POST /tts → Python edge_tts → 音频返回 → 播放
+                                  同时继续累积下一段 → 段段衔接播放</pre>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2>🧹 缺陷 #3 方案：双文本管道 — 展示 vs 朗读</h2>
+
+<div class="grid2">
+  <div class="card">
+    <h4>展示文本（用户看到）</h4>
+    <pre class="code">🌸 灵山大佛通高 **88米**！
+包含佛体79米+莲花瓣9米～
+★ 世界最高青铜立佛 ★
+😊 欢迎来打卡哦~</pre>
+  </div>
+  <div class="card">
+    <h4>朗读文本（TTS 接收）</h4>
+    <pre class="code">灵山大佛通高八十八米。
+包含佛体七十九米加莲花瓣九米。
+世界最高青铜立佛。
+欢迎来打卡哦。</pre>
+  </div>
+</div>
+
+<div style="margin-top:16px">
+  <table>
+    <tr><th>过滤规则</th><th>示例</th></tr>
+    <tr><td>移除 emoji</td><td>🌸😊🗿 → 删除</td></tr>
+    <tr><td>移除 markdown</td><td>**粗体** *斜体* → 粗体 斜体</td></tr>
+    <tr><td>移除特殊符号</td><td>★☆①②③ → 删除</td></tr>
+    <tr><td>数字转中文</td><td>88 → 八十八</td></tr>
+    <tr><td>emoji 转文字</td><td>—（不翻译，直接删除）</td></tr>
+  </table>
+</div>
+
+<!-- ============================================================ -->
+<h2>🗺 缺陷 #4 方案：三档路线 + 智能裁剪</h2>
+
+<div class="grid3">
+  <div class="card" style="text-align:center;border-top:3px solid var(--green)">
+    <h4>🕐 精华速览</h4>
+    <div style="font-size:36px;font-weight:800;color:var(--green)">~2h</div>
+    <p style="color:var(--muted);font-size:12px">适合时间紧的游客</p>
+    <p style="font-size:11px;color:var(--muted)">灵山大佛 + 梵宫 + 九龙灌浴<br>3 个核心景点</p>
+  </div>
+  <div class="card" style="text-align:center;border-top:3px solid var(--gold)">
+    <h4>🕑 经典游览</h4>
+    <div style="font-size:36px;font-weight:800;color:var(--gold)">~4h</div>
+    <p style="color:var(--muted);font-size:12px">适合大多数游客</p>
+    <p style="font-size:11px;color:var(--muted)">6-8 个主要景点<br>覆盖历史文化主线</p>
+  </div>
+  <div class="card" style="text-align:center;border-top:3px solid var(--blue)">
+    <h4>🕒 深度体验</h4>
+    <div style="font-size:36px;font-weight:800;color:var(--blue)">~6h</div>
+    <p style="color:var(--muted);font-size:12px">适合发烧友</p>
+    <p style="font-size:11px;color:var(--muted)">全部 12+ 景点<br>含拈花湾夜景</p>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h4>裁剪算法</h4>
+  <pre class="code">
+输入：兴趣标签 + 时长上限 T
+1. 按兴趣匹配路线模板（2h/4h/6h）
+2. 如果 T < 模板时长 → 贪心裁剪：按景点评分排序，依次加入直到累计时长 ≤ T
+3. 如果 T > 最长模板 → 推荐深度体验 + "额外探索"区域
+4. 每个路线输出：景点列表 + 预估时长 + 步行距离 + 最佳出发时间</pre>
+</div>
+
+<!-- ============================================================ -->
+<h2>🖥 缺陷 #5 方案：管理后台数字人预览修复</h2>
+
+<div class="grid2">
+  <div class="card">
+    <h4>数字人形象预览（修复）</h4>
+    <ul>
+      <li>复用游客端 DigitalHuman 组件</li>
+      <li>独立渲染 → 不受配置保存影响</li>
+      <li>实时反映服装/配色变更</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>语音预览（修复）</h4>
+    <ul>
+      <li>绑定 voice_id 选择 → 调用 /tts API </li>
+      <li>用选中语音朗读示例文本："你好，我是灵小禅"</li>
+      <li>播放按钮 → 加载中状态 → 播放 → 可暂停</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2>🧪 测试策略 & 边界情况</h2>
+
+<div class="grid3">
+  <div class="card" style="border-left:3px solid var(--red)">
+    <h4>数字人边界</h4>
+    <ul>
+      <li>图片加载失败 → 显示占位插画</li>
+      <li>viseme 数组为空 → 嘴型保持"闲"</li>
+      <li>快速切换情感 → 0.3s 过渡动画防抖</li>
+      <li>浏览器不支持 WebGL → 纯 DOM fallback</li>
+    </ul>
+  </div>
+  <div class="card" style="border-left:3px solid var(--gold)">
+    <h4>TTS 边界</h4>
+    <ul>
+      <li>TTS 服务不可用 → 浏览器 SpeechSynthesis</li>
+      <li>文本 < 2 字 → 不触发 TTS</li>
+      <li>段落衔接 → 每段末尾 300ms 交叉淡化</li>
+      <li>用户打断 → 立即停止当前播放+清空队列</li>
+    </ul>
+  </div>
+  <div class="card" style="border-left:3px solid var(--blue)">
+    <h4>路线边界</h4>
+    <ul>
+      <li>时长为 0 → 默认推荐 2h 路线</li>
+      <li>兴趣无匹配 → 回退"文化"路线</li>
+      <li>路线景点全部关闭 → 提示联系客服</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<h2>📋 实施步骤 & 优先级</h2>
+
+<table>
+<tr><th class="priority">P</th><th>任务</th><th>涉及文件</th><th>预估</th></tr>
+<tr>
+  <td><span class="tag tag-bad">P0</span></td>
+  <td><strong>数字人改为 DOM 大尺寸 + 真 viseme 口型</strong></td>
+  <td>DigitalHuman.tsx/css, QAPage.tsx/css</td>
+  <td>1.5h</td>
+</tr>
+<tr>
+  <td><span class="tag tag-bad">P0</span></td>
+  <td><strong>流式 TTS：首个 token 即调语音，边生成边播放</strong></td>
+  <td>QAPage.tsx, rag-service.ts</td>
+  <td>1h</td>
+</tr>
+<tr>
+  <td><span class="tag tag-bad">P0</span></td>
+  <td><strong>TTS 文本净化：过滤 emoji/symbol/markdown</strong></td>
+  <td>tts-service.ts, QAPage.tsx</td>
+  <td>0.3h</td>
+</tr>
+<tr>
+  <td><span class="tag tag-ok">P1</span></td>
+  <td><strong>路线推荐三档 + 智能裁剪</strong></td>
+  <td>visitor.ts, RecommendPage.tsx</td>
+  <td>0.5h</td>
+</tr>
+<tr>
+  <td><span class="tag tag-ok">P1</span></td>
+  <td><strong>管理后台数字人预览 + 语音试听</strong></td>
+  <td>DigitalHumanPage.tsx, admin.ts</td>
+  <td>0.5h</td>
+</tr>
+<tr>
+  <td><span class="tag tag-good">P2</span></td>
+  <td><strong>准确率测试框架 (50题)</strong></td>
+  <td>scripts/test_accuracy.ts</td>
+  <td>0.5h</td>
+</tr>
+</table>
+
+<div class="score-big" style="margin:32px 0">
+  目标自评：<span style="color:var(--green)">92 / 100</span>
+</div>
+
+</body></html>

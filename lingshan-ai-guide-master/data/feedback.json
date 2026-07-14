@@ -1,0 +1,184 @@
+[
+  {
+    "id": "9090721b-7e09-4c6c-985f-515c81df6e38",
+    "session_id": "c9ddeead-42cd-401c-9b29-d765a701c1d3",
+    "timestamp": "2026-07-07T13:17:14.284Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "c44502fa-2d52-4aa3-b4ec-e25dc29a9a3e",
+    "session_id": "ebd3a05a-f3a7-43d3-93b9-54616972016f",
+    "timestamp": "2026-07-07T13:36:33.198Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "5f990323-3e5b-4e85-b911-9f3ee548427e",
+    "session_id": "d22f229b-0416-44ef-a26c-75256826e28f",
+    "timestamp": "2026-07-07T13:41:32.599Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "f299ab99-56fb-4e73-8a2f-a710e24eab72",
+    "session_id": "d22f229b-0416-44ef-a26c-75256826e28f",
+    "timestamp": "2026-07-07T13:42:25.704Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "0f43f136-38fd-4822-8ff3-f19d3613feb1",
+    "session_id": "d22f229b-0416-44ef-a26c-75256826e28f",
+    "timestamp": "2026-07-07T13:44:51.741Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "0d057087-79da-4d8e-87f4-4ea94f282e50",
+    "session_id": "a6bc91ff-7561-4d44-a9e8-81d2afe211db",
+    "timestamp": "2026-07-07T13:49:14.347Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "0bf2110c-6475-469f-a44a-75d3db67786c",
+    "session_id": "a6bc91ff-7561-4d44-a9e8-81d2afe211db",
+    "timestamp": "2026-07-07T13:49:39.859Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "9e30a839-e9a7-43f6-bc16-dfb0f551f5d4",
+    "session_id": "f263d301-9674-455c-b5e0-7685bcb129eb",
+    "timestamp": "2026-07-07T14:21:48.404Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "230a4481-a756-4d0d-9c40-ee7b5879e2a0",
+    "session_id": "a1ca21cb-c08c-4940-a9e7-75338afd91d7",
+    "timestamp": "2026-07-07T14:33:56.986Z",
+    "rating": 4,
+    "comment": ""
+  },
+  {
+    "id": "26c7f86d-b564-4d40-9b81-dcf7c27817e4",
+    "session_id": "bc70c17c-d48e-4575-925d-ab4691d638cb",
+    "timestamp": "2026-07-07T14:43:01.265Z",
+    "rating": 4,
+    "comment": ""
+  },
+  {
+    "id": "4364cd35-920f-4f9f-8787-f1427690a20f",
+    "session_id": "f1d37236-58f5-447b-a2b6-f7acc7d1db50",
+    "timestamp": "2026-07-07T15:12:00.788Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "dc2eb5c6-21cb-416e-98e3-83525c9125c4",
+    "session_id": "7c33ef70-aec3-44f6-ad81-18a0d34ba89c",
+    "timestamp": "2026-07-07T15:22:31.381Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "5d01b9fc-cd79-4b3b-b1aa-ac8bfb1164ea",
+    "session_id": "8631f96e-5450-41d9-a124-22b60e089fe8",
+    "timestamp": "2026-07-07T15:23:12.887Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "fb633d99-c4c5-4c59-8158-573e2fd40ffc",
+    "session_id": "30f69e19-6181-4184-a9f6-cd60567352a3",
+    "timestamp": "2026-07-07T15:24:15.143Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "1ba890f5-cd08-4d77-ba6b-fe5d3464d51d",
+    "session_id": "4436021c-ba46-4fb1-a1ff-f056ecf1c4cb",
+    "timestamp": "2026-07-13T15:31:06.484Z",
+    "rating": 4,
+    "comment": ""
+  },
+  {
+    "id": "0d0e0e2b-5943-408c-898d-9841682d2ba7",
+    "session_id": "4436021c-ba46-4fb1-a1ff-f056ecf1c4cb",
+    "timestamp": "2026-07-13T15:31:11.276Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "d9d29fdc-99c2-4fe0-a031-64dd68e7ddba",
+    "session_id": "75055b17-60a2-4124-8126-00e2b293f6e7",
+    "timestamp": "2026-07-13T16:33:57.589Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "77997a30-bedd-4600-a300-fc6b6ad605c2",
+    "session_id": "75055b17-60a2-4124-8126-00e2b293f6e7",
+    "timestamp": "2026-07-13T16:33:59.696Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "17f958b7-15a2-4c72-899e-96e1bfe46896",
+    "session_id": "75055b17-60a2-4124-8126-00e2b293f6e7",
+    "timestamp": "2026-07-13T16:34:01.503Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "70369ed7-c05d-473a-8833-7814e21c9c79",
+    "session_id": "75055b17-60a2-4124-8126-00e2b293f6e7",
+    "timestamp": "2026-07-13T16:34:03.918Z",
+    "rating": 4,
+    "comment": ""
+  },
+  {
+    "id": "e44a31f8-f58a-44b8-843f-b5fc29c89489",
+    "session_id": "4fb29dfe-0305-418d-8c01-429a3455297d",
+    "timestamp": "2026-07-13T16:51:23.885Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "a2810359-4d3a-40fa-80e4-b82e2f4265ec",
+    "session_id": "bac14c08-206f-449d-bd53-253970f0982b",
+    "timestamp": "2026-07-14T02:54:42.889Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "db672bb5-9953-4d21-8fe7-6f50479c1042",
+    "session_id": "bac14c08-206f-449d-bd53-253970f0982b",
+    "timestamp": "2026-07-14T02:54:45.776Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "388ab6aa-16c1-4da0-9fbf-f631601c75db",
+    "session_id": "eedf82eb-113d-47a7-9359-6238bd65bf49",
+    "timestamp": "2026-07-14T03:09:16.435Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "ee656533-5430-4bf5-ba5c-b02f1052f3a5",
+    "session_id": "eedf82eb-113d-47a7-9359-6238bd65bf49",
+    "timestamp": "2026-07-14T03:09:18.205Z",
+    "rating": 5,
+    "comment": ""
+  },
+  {
+    "id": "c95f0ce6-4746-47ec-a6d1-a7d687be78a3",
+    "session_id": "69c7d9ec-5f5a-4844-bc3b-0e3cea2bef21",
+    "timestamp": "2026-07-14T05:17:30.230Z",
+    "rating": 5,
+    "comment": ""
+  }
+]

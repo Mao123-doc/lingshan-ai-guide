@@ -1,0 +1,52 @@
+# Web Framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# Database
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+alembic==1.14.1
+Psycopg2-binary
+
+# Vector Database & RAG
+chromadb==0.5.23
+langchain==0.3.13
+langchain-community==0.3.13
+langchain-text-splitters==0.3.4
+
+# Embedding Models
+sentence-transformers==3.3.1
+FlagEmbedding==1.3.3
+
+# LLM API Clients
+httpx==0.28.1
+openai==1.58.1
+
+# ASR & TTS
+faster-whisper==1.0.3
+edge-tts==6.1.14
+
+# Data Processing
+pandas==2.2.3
+openpyxl==3.1.5
+jieba==0.42.1
+numpy==1.26.4
+
+# Document Processing
+mammoth==1.9.0
+PyMuPDF==1.25.1
+
+# Auth & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.1
+
+# Validation
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# Utils
+aiofiles==24.1.0
+tenacity==9.0.0
+loguru==0.7.3
