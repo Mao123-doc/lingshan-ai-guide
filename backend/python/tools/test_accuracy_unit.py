@@ -26,6 +26,12 @@ SPEC.loader.exec_module(MODULE)
 
 
 class EvaluationBaselineTests(unittest.TestCase):
+    def test_evaluation_config_disables_history_and_full_knowledge(self):
+        self.assertFalse(MODULE.EVALUATION_CONFIG["enableHistory"])
+        self.assertFalse(MODULE.EVALUATION_CONFIG["includeFullKnowledge"])
+        self.assertEqual(MODULE.EVALUATION_CONFIG["retrievalTopK"], 8)
+        self.assertEqual(MODULE.EVALUATION_CONFIG["contextTopK"], 5)
+
     def test_embedding_model_is_not_loaded_during_module_import(self):
         self.assertIsNone(MODULE._embedder)
 

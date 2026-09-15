@@ -8,6 +8,18 @@ from pathlib import Path
 _embedder = None
 HAS_EMBED = False
 
+EVALUATION_CONFIG = {
+    "enableQueryRewrite": True,
+    "enableVectorRetrieval": True,
+    "enableStructuredRetrieval": True,
+    "enableKeywordRetrieval": True,
+    "enableRerank": True,
+    "enableHistory": False,
+    "includeFullKnowledge": False,
+    "retrievalTopK": 8,
+    "contextTopK": 5,
+}
+
 
 def initialize_semantic_model() -> bool:
     """Load the optional embedding model only when the runner starts."""
@@ -38,7 +50,11 @@ def call_qa_api(query: str, session_id: str) -> dict:
     """Call the running backend Q&A endpoint."""
     import urllib.request
     url = "http://127.0.0.1:8010/api/v1/visitor/qa"
-    data = json.dumps({"query": query, "session_id": session_id}).encode("utf-8")
+    data = json.dumps({
+        "query": query,
+        "session_id": session_id,
+        "evaluation_config": EVALUATION_CONFIG,
+    }).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
