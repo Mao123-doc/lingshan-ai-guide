@@ -30,9 +30,26 @@ def recall_at_k(retrieved_ids: list[str], gold_ids: set[str], k: int) -> float:
     return 1.0 if retrieved.intersection(gold_ids) else 0.0
 
 
+def recall_at_k_groups(
+    retrieved_groups: list[list[str]], gold_ids: set[str], k: int
+) -> float:
+    if not gold_ids:
+        return 0.0
+    return 1.0 if any(set(group).intersection(gold_ids) for group in retrieved_groups[: max(k, 0)]) else 0.0
+
+
 def reciprocal_rank_at_k(retrieved_ids: list[str], gold_ids: set[str], k: int) -> float:
     for rank, document_id in enumerate(retrieved_ids[: max(k, 0)], start=1):
         if document_id in gold_ids:
+            return 1.0 / rank
+    return 0.0
+
+
+def reciprocal_rank_at_k_groups(
+    retrieved_groups: list[list[str]], gold_ids: set[str], k: int
+) -> float:
+    for rank, group in enumerate(retrieved_groups[: max(k, 0)], start=1):
+        if set(group).intersection(gold_ids):
             return 1.0 / rank
     return 0.0
 
@@ -154,6 +171,17 @@ def canonicalize_documents(
     unmatched IDs remain visible to prevent silent credit.
     """
 
+    groups, unmatched = canonicalize_document_groups(evidence_documents, field_texts)
+    canonical_ids = [document_id for group in groups for document_id in group]
+    return list(dict.fromkeys(canonical_ids)), unmatched
+
+
+def canonicalize_document_groups(
+    evidence_documents: list[dict[str, Any]],
+    field_texts: dict[str, str],
+) -> tuple[list[list[str]], list[str]]:
+    """Return canonical IDs grouped by original evidence rank."""
+
     fragments: dict[str, list[str]] = {}
     for document_id, text in field_texts.items():
         compact = _compact_text(text)
@@ -164,7 +192,7 @@ def canonicalize_documents(
         starts = range(0, max(1, len(compact) - window + 1), 4)
         fragments[document_id] = [compact[start : start + window] for start in starts]
 
-    canonical_ids: list[str] = []
+    groups: list[list[str]] = []
     unmatched: list[str] = []
     for evidence in evidence_documents:
         evidence_id = str(evidence.get("id", ""))
@@ -177,10 +205,8 @@ def canonicalize_documents(
         if not matches:
             unmatched.append(evidence_id)
             continue
-        for document_id in matches:
-            if document_id not in canonical_ids:
-                canonical_ids.append(document_id)
-    return canonical_ids, unmatched
+        groups.append(list(dict.fromkeys(matches)))
+    return groups, unmatched
 
 
 def load_structured_field_texts(path: Path) -> dict[str, str]:
@@ -228,17 +254,25 @@ def load_structured_field_texts(path: Path) -> dict[str, str]:
 
 def score_record(record: dict[str, Any], gold: dict[str, Any]) -> dict[str, Any]:
     retrieved_ids = list(record.get("retrieved_ids") or [])
+    retrieved_groups = list(record.get("retrieved_rank_groups") or [])
     gold_ids = set(gold["gold_document_ids"])
     outcome = record_outcome(record)
+    if retrieved_groups:
+        recall = lambda k: recall_at_k_groups(retrieved_groups, gold_ids, k)
+        mrr = reciprocal_rank_at_k_groups(retrieved_groups, gold_ids, 5)
+    else:
+        recall = lambda k: recall_at_k(retrieved_ids, gold_ids, k)
+        mrr = reciprocal_rank_at_k(retrieved_ids, gold_ids, 5)
     return {
         "question_id": gold["question_id"],
         "query": gold["query"],
         "gold_document_ids": sorted(gold_ids),
         "retrieved_ids": retrieved_ids,
-        "recall_at_1": recall_at_k(retrieved_ids, gold_ids, 1),
-        "recall_at_3": recall_at_k(retrieved_ids, gold_ids, 3),
-        "recall_at_5": recall_at_k(retrieved_ids, gold_ids, 5),
-        "mrr_at_5": reciprocal_rank_at_k(retrieved_ids, gold_ids, 5),
+        "retrieved_rank_groups": retrieved_groups,
+        "recall_at_1": recall(1),
+        "recall_at_3": recall(3),
+        "recall_at_5": recall(5),
+        "mrr_at_5": mrr,
         "outcome": outcome,
         "eligible_for_retrieval_metrics": outcome in {"ok", "no_result"},
         "latency_ms": record.get("latency_ms"),

@@ -16,7 +16,7 @@ from typing import Any
 
 from benchmark import (
     aggregate_scored_records,
-    canonicalize_documents,
+    canonicalize_document_groups,
     extract_retrieved_ids,
     extract_stage_map,
     load_json,
@@ -157,7 +157,8 @@ def build_raw_record(
     retrieval_error = any(stage_execution_state(stage) == "failed" for stage in stages.values())
     evidence_documents = trace.get("retrievedDocuments") or []
     raw_retrieved_ids = extract_retrieved_ids(body)
-    canonical_ids, unmatched_evidence_ids = canonicalize_documents(evidence_documents, field_texts)
+    canonical_rank_groups, unmatched_evidence_ids = canonicalize_document_groups(evidence_documents, field_texts)
+    canonical_ids = [document_id for group in canonical_rank_groups for document_id in group]
     metric_retrieved_ids = canonical_ids or raw_retrieved_ids
     return {
         "question_id": gold["question_id"],
@@ -171,6 +172,7 @@ def build_raw_record(
         "fallback_used": fallback_used,
         "rewritten_query": trace.get("rewrittenQuery"),
         "retrieved_ids": metric_retrieved_ids,
+        "retrieved_rank_groups": canonical_rank_groups,
         "retrieved_ids_raw": raw_retrieved_ids,
         "retrieved_documents": evidence_documents,
         "unmatched_evidence_ids": unmatched_evidence_ids,

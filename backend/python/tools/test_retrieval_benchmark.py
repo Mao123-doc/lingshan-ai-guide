@@ -36,6 +36,24 @@ class RetrievalBenchmarkTests(unittest.TestCase):
         self.assertEqual(canonical, ["LS-001_params"])
         self.assertEqual(unmatched, [])
 
+    def test_rank_group_keeps_multiple_canonical_ids_at_one_retrieval_rank(self):
+        evidence = [{"id": "chunk_1", "text": "长39.8m，高7m，采用优质青石雕刻而成。"}]
+        fields = {
+            "LS-001_params": "长39.8m，高7m，采用优质青石雕刻而成，被誉为华夏第一壁。",
+            "LS-001_location": "景区入口处，面朝太湖，背靠景区核心区域。",
+        }
+        groups, unmatched = MODULE.canonicalize_document_groups(evidence, fields)
+        self.assertEqual(groups, [["LS-001_params"]])
+        self.assertEqual(unmatched, [])
+
+    def test_group_metrics_use_evidence_rank_not_flattened_id_rank(self):
+        self.assertEqual(
+            MODULE.recall_at_k_groups([["a", "b"], ["c"]], {"b"}, 1), 1.0
+        )
+        self.assertEqual(
+            MODULE.reciprocal_rank_at_k_groups([["a", "b"], ["c"]], {"b"}, 2), 1.0
+        )
+
     def test_structured_source_parser_recovers_canonical_documents(self):
         source = Path(__file__).resolve().parents[2] / ".." / "data" / "raw" / "knowledge_dataset.txt"
         fields = MODULE.load_structured_field_texts(source.resolve())
