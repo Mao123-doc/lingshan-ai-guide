@@ -1,0 +1,18 @@
+{
+  "benchmark": "route_validator_v1",
+  "git_sha": "59cdc04",
+  "assets": {
+    "spots": {"path":"data/route/spots.json","sha256":"CBB2DADF1FC84886023A3595E44C085129B3A88BDAE31321A3BB2BA05736F8C2","count":23},
+    "edges": {"path":"data/route/edges.json","sha256":"9F64BF4BC0121EF7B7790A6469B5A96E51BD41A07526C04E4506B2D0E3F3D16D","count":22},
+    "performances": {"path":"data/route/performances.json","sha256":"9C12908B67A1E9747F255593879DCC4B7782810FE3E5FE84E5F070353B697BAA","count":2},
+    "facilities": {"path":"data/route/facilities.json","sha256":"74390A21499792B27B90CF964F441E51DF21A2DC8978FF9BD9B1C5851DEC3891","count":3}
+  },
+  "validator": {
+    "contract_sha256":"9A42392807E429587B588D0CD6040E40AD2743B2E97271EB59BA25F6D80D7BA7",
+    "implementation_sha256":"9CC84DFE69E25A854C2AADAC167CEE2073732AA18E0E9E5723B56A60E7EBAC67",
+    "assertions": 30,
+    "schema_valid": true,
+    "invalid_route_rejection": true
+  },
+  "data_quality_note": "Walking durations and unverified facility details are explicitly marked estimated and require field verification."
+}
