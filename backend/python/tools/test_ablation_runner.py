@@ -114,6 +114,51 @@ class AblationRunnerTests(unittest.TestCase):
         self.assertEqual(record["error"], "timeout")
         self.assertFalse(record["evaluation"]["passed"])
 
+    def test_report_contains_comparison_tables_and_fixed_settings(self):
+        if MODULE is None:
+            self.fail("run_ablation.py has not been created")
+
+        results = {
+            "full_retrieval": {
+                "config": {"enableRerank": True, "enableQueryRewrite": True},
+                "metrics": {
+                    "accuracy": 80.0,
+                    "fact_recall": 0.8,
+                    "avg_latency_ms": 100.0,
+                },
+                "records": [],
+            },
+            "vector_only": {
+                "config": {"enableRerank": False, "enableQueryRewrite": True},
+                "metrics": {
+                    "accuracy": 50.0,
+                    "fact_recall": 0.5,
+                    "avg_latency_ms": 80.0,
+                },
+                "records": [],
+            },
+        }
+
+        report = MODULE.build_ablation_report(results)
+
+        self.assertIn("## 1. 实验目的", report)
+        self.assertIn("## 2. 实验设置", report)
+        self.assertIn("## 3. 实验结果", report)
+        self.assertIn("## 4. 错误分析", report)
+        self.assertIn("## 5. 结论", report)
+        self.assertIn("| Vector Only | 50.0 | 0.5 | 80.0 |", report)
+        self.assertIn("deepseek-chat", report)
+        self.assertIn("BAAI/bge-large-zh-v1.5", report)
+
+    def test_report_marks_missing_profile_without_inventing_metrics(self):
+        if MODULE is None:
+            self.fail("run_ablation.py has not been created")
+
+        report = MODULE.build_ablation_report({})
+
+        self.assertIn("数据尚未生成", report)
+        self.assertNotIn("0.0", report)
+
 
 if __name__ == "__main__":
     unittest.main()

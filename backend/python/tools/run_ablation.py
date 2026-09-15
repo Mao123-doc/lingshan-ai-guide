@@ -30,7 +30,18 @@ PROFILE_FILES = {
     "keyword_only": "keyword_only.json",
     "full_retrieval": "full_retrieval.json",
     "vector_rerank": "vector_rerank.json",
+    "full_without_rerank": "full_without_rerank.json",
     "full_without_rewrite": "full_without_rewrite.json",
+}
+
+PROFILE_LABELS = {
+    "vector_only": "Vector Only",
+    "structured_only": "Structured Only",
+    "keyword_only": "Keyword Only",
+    "full_retrieval": "Full Retrieval",
+    "vector_rerank": "Vector + Rerank",
+    "full_without_rerank": "Full - Rerank",
+    "full_without_rewrite": "Full - Rewrite",
 }
 
 
@@ -128,6 +139,135 @@ def aggregate_records(records: list[dict]) -> dict:
     }
 
 
+def classify_record_error(record: dict) -> str | None:
+    if not record.get("api_success"):
+        return "API"
+    trace = record.get("trace") or {}
+    retrieval = trace.get("retrieval") or {}
+    if any(stage.get("status") == "failed" for stage in retrieval.values()):
+        return "Retrieval"
+    if (trace.get("retrievalMode") == "none") or not trace.get("retrievedIds"):
+        return "Retrieval"
+    if (trace.get("rerank") or {}).get("status") == "failed":
+        return "Rerank"
+    if (trace.get("generation") or {}).get("status") == "failed":
+        return "Generation"
+    if not (record.get("evaluation") or {}).get("passed", False):
+        return "Evaluator"
+    return None
+
+
+def _metric(metrics: dict, key: str) -> str:
+    value = metrics.get(key)
+    return "N/A" if value is None else str(value)
+
+
+def build_ablation_report(results: dict[str, dict]) -> str:
+    lines = [
+        "# RAG Retrieval Ablation Report",
+        "",
+        "## 1. 实验目的",
+        "",
+        "比较 Vector、Structured、Keyword Retrieval 及 Full Retrieval 的事实覆盖和延迟，并观察 Rerank 与 Query Rewrite 对同一 RAG Pipeline 的影响。实验只切换 evaluation_config，未复制或修改正式 RAG 实现。",
+        "",
+        "## 2. 实验设置",
+        "",
+        "- Dataset：`backend/python/tools/test_questions.json`，同一 50 题测试集",
+        "- Evaluator：`backend/python/tools/test_accuracy.py`，Fact Contract 版本保持不变",
+        "- LLM：`deepseek-chat`",
+        "- Embedding：`BAAI/bge-large-zh-v1.5`",
+        "- Prompt、temperature、retrievalTopK=8、contextTopK=5 保持不变",
+        "- Evaluation 控制变量：`enableHistory=false`，`includeFullKnowledge=false`",
+        "- 每题使用独立 session；每个 profile 保留原始 answer、evaluation 和 execution trace",
+        "",
+        "## 3. 实验结果",
+        "",
+        "### Retrieval Ablation",
+        "",
+        "| Method | Accuracy | Fact Recall | Avg Latency (ms) |",
+        "|---|---:|---:|---:|",
+    ]
+    retrieval_profiles = (
+        "vector_only",
+        "structured_only",
+        "keyword_only",
+        "full_retrieval",
+    )
+    if not results:
+        lines.append("| 数据尚未生成 | N/A | N/A | N/A |")
+    else:
+        for profile in retrieval_profiles:
+            result = results.get(profile)
+            if not result:
+                lines.append(f"| {PROFILE_LABELS[profile]} | N/A | N/A | N/A |")
+                continue
+            metrics = result.get("metrics", {})
+            lines.append(
+                f"| {PROFILE_LABELS[profile]} | {_metric(metrics, 'accuracy')} | "
+                f"{_metric(metrics, 'fact_recall')} | {_metric(metrics, 'avg_latency_ms')} |"
+            )
+
+    lines.extend(
+        [
+            "",
+            "### Component Ablation",
+            "",
+            "| Configuration | Accuracy |",
+            "|---|---:|",
+        ]
+    )
+    for profile in ("full_retrieval", "full_without_rerank", "full_without_rewrite"):
+        result = results.get(profile)
+        if not result:
+            lines.append(f"| {PROFILE_LABELS[profile]} | N/A |")
+        else:
+            lines.append(
+                f"| {PROFILE_LABELS[profile]} | "
+                f"{_metric(result.get('metrics', {}), 'accuracy')} |"
+            )
+
+    lines.extend(["", "## 4. 错误分析", ""])
+    errors = {"API": 0, "Retrieval": 0, "Rerank": 0, "Generation": 0, "Evaluator": 0}
+    for result in results.values():
+        for record in result.get("records", []):
+            category = classify_record_error(record)
+            if category:
+                errors[category] += 1
+    if not results:
+        lines.append("数据尚未生成，暂不做错误归因。")
+    else:
+        lines.append("错误分类基于保存的 trace；没有 trace 证据时不推断具体原因。")
+        for category, count in errors.items():
+            lines.append(f"- {category}: {count}")
+
+    lines.extend(["", "## 5. 结论", ""])
+    full = results.get("full_retrieval", {}).get("metrics")
+    vector = results.get("vector_only", {}).get("metrics")
+    no_rerank = results.get("full_without_rerank", {}).get("metrics")
+    no_rewrite = results.get("full_without_rewrite", {}).get("metrics")
+    if not full:
+        lines.append("实验结果尚未生成，不能对模块贡献下结论。")
+    else:
+        lines.append(f"- Full Retrieval accuracy：{_metric(full, 'accuracy')}。")
+        if vector:
+            lines.append(
+                f"- Full 相对 Vector Only 的 accuracy 差异："
+                f"{round(full['accuracy'] - vector['accuracy'], 1)} 个百分点。"
+            )
+        if no_rerank:
+            lines.append(
+                f"- Rerank accuracy 差异："
+                f"{round(full['accuracy'] - no_rerank['accuracy'], 1)} 个百分点。"
+            )
+        if no_rewrite:
+            lines.append(
+                f"- Rewrite accuracy 差异："
+                f"{round(full['accuracy'] - no_rewrite['accuracy'], 1)} 个百分点。"
+            )
+        lines.append("- 具体模块贡献仅依据同一测试集、同一控制变量和保存的 trace 解读。")
+    return "\n".join(lines) + "\n"
+
+
 def run_profile(
     profile: str,
     config: dict,
@@ -199,7 +339,7 @@ def run_experiments(
 
     component_profiles = {
         name: results[name]
-        for name in ("vector_rerank", "full_without_rewrite")
+        for name in ("vector_rerank", "full_without_rerank", "full_without_rewrite")
         if name in results
     }
     if component_profiles:
@@ -225,6 +365,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--base-url", default="http://127.0.0.1:8010")
     parser.add_argument("--run-id", default=None)
+    parser.add_argument(
+        "--report-path",
+        type=Path,
+        default=PROJECT_ROOT / "docs" / "ablation_report.md",
+    )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
@@ -243,6 +388,8 @@ def main() -> None:
     if args.dry_run:
         print(json.dumps(results, ensure_ascii=False, indent=2))
     else:
+        args.report_path.parent.mkdir(parents=True, exist_ok=True)
+        args.report_path.write_text(build_ablation_report(results), encoding="utf-8")
         print(json.dumps({name: value["metrics"] for name, value in results.items()}, ensure_ascii=False, indent=2))
 
 

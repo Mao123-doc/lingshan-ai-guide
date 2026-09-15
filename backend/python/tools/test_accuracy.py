@@ -51,6 +51,12 @@ def get_ablation_profiles() -> dict[str, dict]:
             enableRerank=True,
         ),
         "vector_rerank": profile(enableVectorRetrieval=True, enableRerank=True),
+        "full_without_rerank": profile(
+            enableVectorRetrieval=True,
+            enableStructuredRetrieval=True,
+            enableKeywordRetrieval=True,
+            enableRerank=False,
+        ),
         "full_without_rewrite": profile(
             enableQueryRewrite=False,
             enableVectorRetrieval=True,

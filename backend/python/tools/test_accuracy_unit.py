@@ -114,6 +114,7 @@ class EvaluationBaselineTests(unittest.TestCase):
                 "keyword_only",
                 "full_retrieval",
                 "vector_rerank",
+                "full_without_rerank",
                 "full_without_rewrite",
             },
         )
@@ -145,6 +146,7 @@ class EvaluationBaselineTests(unittest.TestCase):
             profiles["keyword_only"]["enableKeywordRetrieval"], True
         )
         self.assertTrue(profiles["full_retrieval"]["enableRerank"])
+        self.assertFalse(profiles["full_without_rerank"]["enableRerank"])
         self.assertFalse(profiles["full_without_rewrite"]["enableQueryRewrite"])
 
     def test_ablation_profiles_keep_evaluation_controls_fixed(self):
