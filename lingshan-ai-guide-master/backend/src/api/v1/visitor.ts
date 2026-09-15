@@ -309,7 +309,13 @@ const INTEREST_ROUTES: Record<string, any[]> = {
 };
 
 visitorRouter.post('/recommend', (req: Request, res: Response) => {
-  const { interests = ['文化'], duration = 4 } = req.body;
+  const {
+    interests = ['文化'],
+    duration = 4,
+    travelType = '朋友',
+    ageGroup = '青年',
+    budget = '舒适型',
+  } = req.body;
 
   // Pick interest route
   let fullRoute = INTEREST_ROUTES['文化'];
@@ -353,6 +359,35 @@ visitorRouter.post('/recommend', (req: Request, res: Response) => {
     tier = '精华速览';
   }
 
+  // Build personalized tips based on user profile
+  const profileTips: string[] = [];
+
+  if (travelType === '亲子') {
+    profileTips.push('亲子游建议减少长距离步行，多安排互动体验项目（如百子戏弥勒、九龙灌浴表演）');
+  } else if (travelType === '带长辈') {
+    profileTips.push('带长辈出行建议放慢节奏，沿途多安排休息区，优先选择有接驳车覆盖的景点');
+  } else if (travelType === '情侣') {
+    profileTips.push('情侣出行推荐打卡梵天花海、五灯湖等浪漫拍照点');
+  }
+
+  if (ageGroup === '老年') {
+    profileTips.push('老年游客建议减少爬坡和长时间站立，优先参观室内展馆');
+  }
+
+  if (budget === '经济型') {
+    profileTips.push('经济型预算优先推荐免费或低价景点（如菩提大道、五明桥、佛足坛等）');
+  } else if (budget === '豪华型') {
+    profileTips.push('豪华型预算可体验《吉祥颂》演出、禅茶品鉴、特色餐饮等增值项目');
+  }
+
+  const baseTips = fullDuration > 300
+    ? '建议上午9点前入园；全程约5-6小时含餐饮休息；穿着舒适运动鞋。'
+    : fullDuration > 180
+      ? '建议上午9-10点入园；游览节奏适中；可在大佛脚下多停留。'
+      : '时间紧凑可选精华景点；下次再来深入探索！';
+
+  const tips = [...profileTips, baseTips].join(' ');
+
   res.json({
     route,
     total_duration: totalDuration,
@@ -362,11 +397,8 @@ visitorRouter.post('/recommend', (req: Request, res: Response) => {
       '经典游览 ~4h': Math.round(fullRoute.slice(0, Math.ceil(fullRoute.length * 0.7)).reduce((s, i) => s + i.visit_duration, 0)),
       '深度体验 ~6h': fullDuration,
     },
-    tips: fullDuration > 300
-      ? '建议上午9点前入园；全程约5-6小时含餐饮休息；穿着舒适运动鞋。'
-      : fullDuration > 180
-        ? '建议上午9-10点入园；游览节奏适中；可在大佛脚下多停留。'
-        : '时间紧凑可选精华景点；下次再来深入探索！',
+    profile: { travelType, ageGroup, budget, interests, duration },
+    tips,
   });
 });
 
@@ -578,22 +610,31 @@ const BAIDU_MAP_AK = 'ZT4ycNFGJ6Q5JzZs6IRCXTRjhQGtHpIx';
 
 visitorRouter.get('/nearby-facilities', async (req: Request, res: Response) => {
   try {
-    // Force Ling Shan scenic area center coordinates (ignore frontend params)
-    const CENTER_LAT = 31.4269;
-    const CENTER_LNG = 120.1009;
+    // Fixed search center: Ling Shan scenic area center.
+    // This ensures facilities returned are inside the scenic area.
+    const searchLat = 31.4269;
+    const searchLng = 120.1009;
     const type = req.query.type as string;
+
+    // User's real coordinates (for distance calculation), fallback to Ling Shan center.
+    let userLat = parseFloat(req.query.lat as string);
+    let userLng = parseFloat(req.query.lng as string);
+    if (isNaN(userLat) || isNaN(userLng)) {
+      userLat = searchLat;
+      userLng = searchLng;
+    }
 
     if (!type || !FACILITY_KEYWORDS[type]) {
       return res.status(400).json({ error: '请提供有效的设施类型' });
     }
 
-    console.log(`[nearby-facilities] 使用灵山景区中心坐标: lat=${CENTER_LAT}, lng=${CENTER_LNG}, type=${type}`);
+    console.log(`[nearby-facilities] 搜索圆心=(${searchLat},${searchLng}), 用户坐标=(${userLat},${userLng}), type=${type}`);
 
     const keywords = FACILITY_KEYWORDS[type];
     let allResults: any[] = [];
 
     for (const keyword of keywords) {
-      const url = `https://api.map.baidu.com/place/v2/search?query=${encodeURIComponent(keyword)}&location=${CENTER_LAT},${CENTER_LNG}&radius=3000&output=json&ak=${BAIDU_MAP_AK}`;
+      const url = `https://api.map.baidu.com/place/v2/search?query=${encodeURIComponent(keyword)}&location=${searchLat},${searchLng}&radius=3000&output=json&ak=${BAIDU_MAP_AK}`;
       console.log(`[nearby-facilities] 调用百度地图API: ${url}`);
       const response = await fetch(url);
       const data = await response.json();
@@ -603,7 +644,7 @@ visitorRouter.get('/nearby-facilities', async (req: Request, res: Response) => {
         const items = data.results.map((r: any) => {
           const itemLat = r.location?.lat;
           const itemLng = r.location?.lng;
-          const dist = (itemLat && itemLng) ? Math.round(haversineDistance(CENTER_LAT, CENTER_LNG, itemLat, itemLng)) : 0;
+          const dist = (itemLat && itemLng) ? Math.round(haversineDistance(userLat, userLng, itemLat, itemLng)) : 0;
           return {
             name: r.name,
             address: r.address || '',
@@ -617,6 +658,12 @@ visitorRouter.get('/nearby-facilities', async (req: Request, res: Response) => {
       }
     }
 
+    // Filter out irrelevant peripheral-town shops (农资店、副食店、建材店 etc.)
+    const IRRELEVANT_KEYWORDS = ['农资', '副食', '建材', '五金', '汽修', '农具', '饲料', '农药'];
+    allResults = allResults.filter(item =>
+      !IRRELEVANT_KEYWORDS.some(kw => (item.name || '').includes(kw))
+    );
+
     // Sort by calculated distance, deduplicate by name
     allResults.sort((a, b) => a.distance - b.distance);
     const seen = new Set<string>();
@@ -627,7 +674,9 @@ visitorRouter.get('/nearby-facilities', async (req: Request, res: Response) => {
     });
 
     console.log(`[nearby-facilities] 解析后的设施列表数量: ${unique.length}`);
-    res.json({ facilities: unique.slice(0, 10) });
+    const responseData = { facilities: unique.slice(0, 10) };
+    console.log('[DEBUG] 返回给前端的设施数据:', JSON.stringify(responseData, null, 2));
+    res.json(responseData);
   } catch (error: any) {
     console.error('Baidu Map API error:', error);
     res.status(500).json({ error: '设施搜索失败' });

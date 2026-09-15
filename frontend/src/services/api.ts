@@ -40,8 +40,8 @@ export const visitorAPI = {
     api.post('/visitor/qa', { query, session_id: sessionId }),
   getSpots: () => api.get('/visitor/spots'),
   getSpotDetail: (id: string) => api.get(`/visitor/spots/${id}`),
-  recommend: (interests: string[], duration: number) =>
-    api.post('/visitor/recommend', { interests, duration }),
+  recommend: (payload: any) =>
+    api.post('/visitor/recommend', payload),
   submitFeedback: (sessionId: string, rating: number, comment: string) =>
     api.post('/visitor/feedback', { session_id: sessionId, rating, comment }),
   getHotQuestions: () => api.get('/visitor/hot-questions'),

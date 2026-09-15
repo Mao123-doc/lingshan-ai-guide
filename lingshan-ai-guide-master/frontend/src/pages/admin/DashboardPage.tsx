@@ -26,8 +26,7 @@ export default function DashboardPage() {
   const [convFilters, setConvFilters] = useState<any>({});
   const [convLoading, setConvLoading] = useState(false);
 
-  // Unsatisfied / location state
-  const [unsatisfied, setUnsatisfied] = useState<any[]>([]);
+  // Location / category state
   const [locations, setLocations] = useState<any[]>([]);
   const [categoryDist, setCategoryDist] = useState<any>({});
 
@@ -83,13 +82,6 @@ export default function DashboardPage() {
     setConvLoading(false);
   };
 
-  const fetchUnsatisfied = async () => {
-    try {
-      const res = await adminAPI.getTopUnsatisfied();
-      setUnsatisfied(res.data || []);
-    } catch {}
-  };
-
   const fetchLocations = async () => {
     try {
       const res = await adminAPI.getVisitorLocations();
@@ -107,7 +99,6 @@ export default function DashboardPage() {
   useEffect(() => {
     if (activeTab === 'detail') fetchConversations(1);
     if (activeTab === 'satisfaction') {
-      fetchUnsatisfied();
       fetchLocations();
       fetchCategoryDist();
     }
@@ -202,12 +193,6 @@ export default function DashboardPage() {
       if (v === 'unhelpful') return <Tag color="red">👎</Tag>;
       return <Tag>-</Tag>;
     }},
-  ];
-
-  const unsatisfiedColumns = [
-    { title: '排名', key: 'rank', width: 60, render: (_: any, __: any, i: number) => i + 1 },
-    { title: '问题内容', dataIndex: 'query', key: 'query', ellipsis: true },
-    { title: '点踩次数', dataIndex: 'count', key: 'count', width: 100, render: (v: number) => <Tag color="red">{v}</Tag> },
   ];
 
   return (
@@ -325,12 +310,7 @@ export default function DashboardPage() {
         {activeTab === 'satisfaction' && (
           <>
             <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-              <Col xs={24} md={12}>
-                <Card title="不满意问答 Top 10">
-                  <Table columns={unsatisfiedColumns} dataSource={unsatisfied} rowKey="query" size="small" pagination={false} />
-                </Card>
-              </Col>
-              <Col xs={24} md={12}>
+              <Col span={24}>
                 <Card title="问题分类分布">
                   <ReactECharts option={categoryOption} style={{ height: 300 }} />
                 </Card>

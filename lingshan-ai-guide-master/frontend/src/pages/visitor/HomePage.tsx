@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Typography, Card, Row, Col, Tag, Button } from 'antd';
 import {
   MessageOutlined, CompassOutlined, SoundOutlined,
@@ -37,8 +37,13 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState('spots');
   const [facilities, setFacilities] = useState<any[]>([]);
   const [facilitiesLoading, setFacilitiesLoading] = useState(false);
+  const lastFixRef = useRef<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => { setHeroVisible(true); }, []);
+
+  const scrollToId = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const ALL_SPOTS_WITH_COORDS = [
     { name: '灵山大佛', lat: 31.42, lng: 120.10, desc: '88米世界最高青铜立佛，登顶抱佛脚俯瞰太湖', icon: '🗿' },
@@ -86,6 +91,7 @@ export default function HomePage() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
+        lastFixRef.current = { lat: latitude, lng: longitude };
         const sorted = ALL_SPOTS_WITH_COORDS
           .map(s => ({ ...s, distance: haversineM(latitude, longitude, s.lat, s.lng) }))
           .sort((a, b) => a.distance - b.distance);
@@ -105,8 +111,13 @@ export default function HomePage() {
     if (type === 'spots') return;
     setFacilitiesLoading(true);
     try {
-      const res = await fetch(`/api/v1/visitor/nearby-facilities?type=${type}`);
+      let url = `/api/v1/visitor/nearby-facilities?type=${type}`;
+      if (lastFixRef.current) {
+        url += `&lat=${lastFixRef.current.lat}&lng=${lastFixRef.current.lng}`;
+      }
+      const res = await fetch(url);
       const data = await res.json();
+      console.log('设施数据:', data);
       setFacilities(data.facilities || []);
     } catch {
       setFacilities([]);
@@ -130,7 +141,20 @@ export default function HomePage() {
 
   return (
     <div className="home-page">
-      <section className="home-hero">
+      <nav className="side-nav">
+        {[
+          { id: 'top', label: '顶部' },
+          { id: 'capabilities', label: '核心能力' },
+          { id: 'spots', label: '核心景点' },
+          { id: 'questions', label: '大家都在问' },
+          { id: 'nearby', label: '附近景点' },
+        ].map(item => (
+          <button key={item.id} className="side-nav__item" onClick={() => scrollToId(item.id)}>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <section id="top" className="home-hero">
         <div className="hero-particles">
           {Array.from({ length: 20 }).map((_, i) => (
             <div key={i} className="hero-particle"
@@ -182,7 +206,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="home-section">
+      <section id="capabilities" className="home-section">
         <div className="section-header">
           <RobotOutlined className="section-icon" />
           <Title level={3}>核心能力</Title>
@@ -191,7 +215,7 @@ export default function HomePage() {
         <Row gutter={[16, 16]}>
           {[
             { icon: <MessageOutlined />, title: '智能问答', desc: '基于景区知识库的精准回答，覆盖历史、文化、实用信息等各类问题', color: '#c41d7f' },
-            { icon: <SoundOutlined />, title: '多模态交互', desc: '支持语音输入和文本输入，数字人以语音、表情、口型同步方式回应', color: '#1890ff' },
+{ icon: <SoundOutlined />, title: '多模态交互', desc: '支持语音与文本输入，数字人以语音方式进行回答', color: '#1890ff' },
             { icon: <CompassOutlined />, title: '个性化推荐', desc: '根据兴趣偏好智能推荐最佳游览路线和讲解重点', color: '#52c41a' },
             { icon: <SmileOutlined />, title: '情感互动', desc: 'AI导游具有丰富的情感表达，提供亲切温暖的陪伴体验', color: '#fa8c16' },
           ].map((f, i) => (
@@ -206,7 +230,7 @@ export default function HomePage() {
         </Row>
       </section>
 
-      <section className="home-section alt-bg">
+      <section id="spots" className="home-section alt-bg">
         <div className="section-header">
           <EnvironmentOutlined className="section-icon" />
           <Title level={3}>核心景点</Title>
@@ -229,7 +253,7 @@ export default function HomePage() {
         </Row>
       </section>
 
-      <section className="home-section">
+      <section id="questions" className="home-section">
         <div className="section-header">
           <ThunderboltOutlined className="section-icon" />
           <Title level={3}>大家都在问</Title>
@@ -247,7 +271,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="home-section alt-bg">
+      <section id="nearby" className="home-section alt-bg">
         <div className="section-header">
           <AimOutlined className="section-icon" />
           <Title level={3}>📍 附近景点</Title>
@@ -393,6 +417,36 @@ export default function HomePage() {
       <style>{`
         .home-page { min-height: 100vh; background: #faf8f5; }
 
+        .side-nav {
+          position: fixed;
+          left: 20px;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 1000;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 12px 8px;
+          background: rgba(0,0,0,0.6);
+          border-radius: 24px;
+          backdrop-filter: blur(6px);
+        }
+        .side-nav__item {
+          border: none;
+          background: transparent;
+          color: #fff;
+          font-size: 13px;
+          padding: 10px 16px;
+          border-radius: 16px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.25s;
+        }
+        .side-nav__item:hover {
+          background: rgba(196,29,127,0.8);
+          color: #fff;
+        }
+
         .home-hero {
           position: relative;
           min-height: 100vh;
@@ -512,6 +566,7 @@ export default function HomePage() {
         .footer-links span:hover { text-decoration: underline; }
 
         @media (max-width: 768px) {
+          .side-nav { display: none; }
           .hero-title { font-size: 28px !important; }
           .hero-subtitle { font-size: 16px !important; }
           .hero-icon { font-size: 48px; }

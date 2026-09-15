@@ -89,6 +89,24 @@
   0%,100% { opacity: 0.7; }
   50%     { opacity: 1; }
 }
+
+/* Stop playback button (shown only while speaking) */
+.qa-stop-btn {
+  margin-top: 6px;
+  padding: 4px 16px;
+  border: 1px solid #c41d7f;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.9);
+  color: #c41d7f;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.qa-stop-btn:hover {
+  background: #c41d7f;
+  color: #fff;
+}
 /* ============================================================
    Quick Chips
    ============================================================ */

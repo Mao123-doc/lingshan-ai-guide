@@ -578,6 +578,16 @@ export default function QAPage() {
         <div className={`dh-status-badge dh-status--${dhStatus}`}>
           {statusText[dhStatus]}
         </div>
+
+        {/* 停止播放按钮：仅在播放语音时显示 */}
+        {isSpeaking && (
+          <button
+            className="qa-stop-btn"
+            onClick={stopPlayback}
+          >
+            ⏹ 停止播放
+          </button>
+        )}
       </div>
 
       <div className="qa-quick-chips">
