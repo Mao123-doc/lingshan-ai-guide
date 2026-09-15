@@ -20,5 +20,13 @@
   {"from":"NH-003","to":"NH-005","walk_minutes":5,"distance_m":300,"accessible":true,"source":"estimated from existing coordinates","confidence":"estimated"},
   {"from":"NH-005","to":"NH-004","walk_minutes":4,"distance_m":260,"accessible":true,"source":"estimated from existing coordinates","confidence":"estimated"},
   {"from":"NH-004","to":"NH-002","walk_minutes":8,"distance_m":560,"accessible":true,"source":"estimated from existing coordinates","confidence":"estimated"},
-  {"from":"NH-002","to":"NH-006","walk_minutes":12,"distance_m":850,"accessible":false,"source":"estimated from existing coordinates","confidence":"estimated"}
+  {"from":"NH-002","to":"NH-006","walk_minutes":12,"distance_m":850,"accessible":false,"source":"estimated from existing coordinates","confidence":"estimated"},
+  {"from":"south_gate","to":"LS-006","walk_minutes":12,"distance_m":800,"accessible":true,"source":"estimated route shortcut from existing coordinates","confidence":"estimated"},
+  {"from":"south_gate","to":"LS-010","walk_minutes":15,"distance_m":1000,"accessible":true,"source":"estimated route shortcut from existing coordinates","confidence":"estimated"},
+  {"from":"LS-006","to":"LS-010","walk_minutes":8,"distance_m":520,"accessible":true,"source":"estimated route shortcut from existing coordinates","confidence":"estimated"},
+  {"from":"LS-010","to":"LS-013","walk_minutes":8,"distance_m":650,"accessible":true,"source":"estimated route shortcut from existing coordinates","confidence":"estimated"},
+  {"from":"LS-013","to":"LS-011","walk_minutes":10,"distance_m":700,"accessible":true,"source":"estimated route shortcut from existing coordinates","confidence":"estimated"},
+  {"from":"LS-011","to":"LS-014","walk_minutes":8,"distance_m":520,"accessible":true,"source":"estimated route shortcut from existing coordinates","confidence":"estimated"},
+  {"from":"south_gate","to":"LS-013","walk_minutes":18,"distance_m":1200,"accessible":true,"source":"estimated route shortcut from existing coordinates","confidence":"estimated"},
+  {"from":"south_gate","to":"LS-011","walk_minutes":20,"distance_m":1400,"accessible":true,"source":"estimated route shortcut from existing coordinates","confidence":"estimated"}
 ]

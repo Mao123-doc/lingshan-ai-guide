@@ -14,12 +14,16 @@ export interface RouteStep {
 }
 
 export interface RoutePlan {
+  feasible?: boolean;
   startTime: string;
   steps: RouteStep[];
   totalMinutes: number;
   walkingMinutes: number;
   visitingMinutes: number;
   waitingMinutes: number;
+  satisfiedConstraints?: string[];
+  rejectedRequests?: Array<{ item: string; reasonCode: string }>;
+  violations?: RouteViolation[];
 }
 
 export interface RouteViolation {
@@ -135,7 +139,10 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
   for (const id of mustVisit) if (!seen.has(id)) violations.push({ code: 'missing_must_visit', message: `未包含必须到访景点：${id}` });
   for (const id of scene.visitedSpotIds) if (seen.has(id)) violations.push({ code: 'already_visited', message: `重复安排已游览景点：${id}` });
   for (const id of scene.preferredPerformanceIds) {
-    if (!plan.steps.some(step => step.performanceId === id)) violations.push({ code: 'missing_preferred_performance', message: `未满足偏好演出：${id}` });
+    const explicitlyRejected = plan.rejectedRequests?.some(request => request.item === id && request.reasonCode === 'performance_unavailable');
+    if (!plan.steps.some(step => step.performanceId === id) && !explicitlyRejected) {
+      violations.push({ code: 'missing_preferred_performance', message: `未满足偏好演出：${id}` });
+    }
   }
 
   const planEnd = plan.steps.length > 0 ? toMinutes(plan.steps[plan.steps.length - 1].end) : start;

@@ -46,7 +46,7 @@ const inaccessiblePlan: RoutePlan = {
 assert.equal(validateRoute(basePlan(), baseScene, graph).valid, true); // 1
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'missing' }] }, baseScene, 'unknown_spot'), true); // 2
 assert.equal(has({ ...basePlan(), steps: [...basePlan().steps, { ...basePlan().steps[1] }] }, baseScene, 'duplicate_spot'), true); // 3
-assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'LS-013' }] }, baseScene, 'disconnected'), true); // 4
+assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'NH-006', end: '09:35', visitMinutes: 30 }] }, baseScene, 'disconnected'), true); // 4
 assert.equal(has(basePlan(), { ...baseScene, mustVisitSpotIds: ['LS-011'] }, 'missing_must_visit'), true); // 5
 assert.equal(has(basePlan(), { ...baseScene, visitedSpotIds: ['LS-001'] }, 'already_visited'), true); // 6
 assert.equal(has({ ...basePlan(), totalMinutes: 61 }, { ...baseScene, remainingMinutes: 20 }, 'time_budget_exceeded'), true); // 7
@@ -58,6 +58,7 @@ assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], performanceI
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], performanceId: 'performance_lingshan_jixiangsong' }] }, baseScene, 'performance_location_mismatch'), true); // 13
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'LS-013', arrive: '09:05', start: '09:05', end: '10:05', visitMinutes: 60, performanceId: 'performance_lingshan_jixiangsong', performanceStartTime: '12:00' }] }, { ...baseScene, currentLocation: 'south_gate' }, 'performance_time_mismatch'), true); // 14
 assert.equal(has(basePlan(), { ...baseScene, preferredPerformanceIds: ['performance_lingshan_jixiangsong'] }, 'missing_preferred_performance'), true); // 15
+assert.equal(validateRoute({ ...basePlan(), rejectedRequests: [{ item: 'performance_lingshan_jixiangsong', reasonCode: 'performance_unavailable' }] }, { ...baseScene, preferredPerformanceIds: ['performance_lingshan_jixiangsong'] }, graph).violations.some(violation => violation.code === 'missing_preferred_performance'), false); // 15b
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], visitMinutes: 20 }] }, baseScene, 'visit_duration_mismatch'), true); // 16
 assert.equal(has({ ...basePlan(), totalMinutes: 99 }, baseScene, 'total_time_mismatch'), true); // 17
 assert.equal(has({ ...basePlan(), walkingMinutes: 99 }, baseScene, 'walking_time_mismatch'), true); // 18
