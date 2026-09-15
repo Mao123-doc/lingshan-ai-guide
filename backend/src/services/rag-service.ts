@@ -9,6 +9,7 @@ import { callLLM, streamLLM, buildTourGuideMessages, isLLMAvailable } from './ll
 import { searchVectors, isVectorAvailable, waitForVectorService } from './vector-search-service';
 import { analyzeEmotion } from './emotion-service';
 import { searchStructured, getFieldIndex } from './structured-knowledge';
+import { DEFAULT_RAG_CONFIG, RAGExperimentConfig, resolveRAGConfig } from './rag-config';
 
 // ============================================================
 // Types
@@ -17,6 +18,7 @@ import { searchStructured, getFieldIndex } from './structured-knowledge';
 interface Chunk {
   id: string;
   text: string;
+  score?: number;
   embedding?: number[];
   metadata: {
     source: string;
@@ -31,6 +33,20 @@ interface RAGResult {
   relatedSpots: string[];
   usedLLM: boolean;
   retrievedChunks: number;
+  trace: RAGTrace;
+}
+
+export interface RAGTrace {
+  originalQuery: string;
+  rewrittenQuery: string;
+  retrievalMode: 'vector' | 'structured' | 'keyword' | 'none';
+  retrievedIds: string[];
+  retrievedScores: number[];
+  rerankEnabled: boolean;
+  rerankedIds: string[];
+  contextIds: string[];
+  historyMessageCount: number;
+  fullKnowledgeIncluded: boolean;
 }
 
 // ============================================================
@@ -263,22 +279,27 @@ function keywordScore(chunk: Chunk, query: string): number {
   return score;
 }
 
-export async function searchChunks(query: string, topK: number = 5): Promise<Chunk[]> {
+async function searchChunksWithTrace(
+  query: string,
+  topK: number,
+  config: RAGExperimentConfig,
+): Promise<{ chunks: Chunk[]; mode: RAGTrace['retrievalMode'] }> {
   // 1. Try vector semantic search first
-  if (isVectorAvailable()) {
+  if (config.enableVectorRetrieval && isVectorAvailable()) {
     try {
       const vectorResults = await searchVectors(query, topK);
       if (vectorResults.length > 0) {
         console.log(`[RAG] Vector search returned ${vectorResults.length} results (top score: ${vectorResults[0].score})`);
-        return vectorResults.map(r => ({
+        return { chunks: vectorResults.map(r => ({
           id: r.id,
           text: r.text,
+          score: r.score,
           metadata: {
             source: r.metadata.source || '',
             category: r.metadata.category || '景点数据',
             keywords: (r.metadata.keywords || '').split(',').filter(Boolean),
           },
-        }));
+        })), mode: 'vector' };
       }
     } catch (e: any) {
       console.warn(`[RAG] Vector search failed: ${e.message?.slice(0, 80)}`);
@@ -286,21 +307,25 @@ export async function searchChunks(query: string, topK: number = 5): Promise<Chu
   }
 
   // 2. Try structured field-level search (primary fallback)
-  const structuredResults = searchStructured(query, topK);
+  const structuredResults = config.enableStructuredRetrieval
+    ? searchStructured(query, topK)
+    : [];
   if (structuredResults.length > 0) {
     console.log(`[RAG] Structured search: ${structuredResults.length} results`);
-    return structuredResults.map(r => ({
+    return { chunks: structuredResults.map(r => ({
       id: `${r.spotId}_${r.fieldName}`,
       text: `【${r.spotName}】${r.fieldLabel}：${r.text}`,
+      score: r.score,
       metadata: {
         source: 'structured_dataset',
         category: r.fieldLabel,
         keywords: [r.spotName],
       },
-    }));
+    })), mode: 'structured' };
   }
 
   // 3. Fallback to keyword + chunk matching
+  if (!config.enableKeywordRetrieval) return { chunks: [], mode: 'none' };
   if (knowledgeChunks.length === 0) {
     knowledgeChunks = buildChunks();
   }
@@ -309,7 +334,22 @@ export async function searchChunks(query: string, topK: number = 5): Promise<Chu
     score: keywordScore(chunk, query),
   }));
   scored.sort((a, b) => b.score - a.score);
-  return scored.filter(s => s.score > 0).slice(0, topK).map(s => s.chunk);
+  return {
+    chunks: scored.filter(s => s.score > 0).slice(0, topK).map(s => ({
+      ...s.chunk,
+      score: s.score,
+    })),
+    mode: 'keyword',
+  };
+}
+
+export async function searchChunks(
+  query: string,
+  topK: number = 5,
+  config: RAGExperimentConfig = DEFAULT_RAG_CONFIG,
+): Promise<Chunk[]> {
+  const result = await searchChunksWithTrace(query, topK, config);
+  return result.chunks;
 }
 
 // ============================================================
@@ -494,25 +534,46 @@ ${snippets}
 /**
  * RAG query — vector search + LLM generation.
  */
-export async function queryRAG(query: string, sessionId: string): Promise<RAGResult> {
+export async function queryRAG(
+  query: string,
+  sessionId: string,
+  configOverrides?: Partial<RAGExperimentConfig>,
+): Promise<RAGResult> {
+  const config = resolveRAGConfig(configOverrides);
   // 0. Rewrite query for better search precision
-  const searchQuery = await rewriteQuery(query);
+  const searchQuery = config.enableQueryRewrite ? await rewriteQuery(query) : query;
 
   // 1. Search for relevant chunks
-  let chunks = await searchChunks(searchQuery, 8); // fetch more for reranking
-  const context = buildRetrievedContext(chunks);
+  const searchResult = await searchChunksWithTrace(searchQuery, config.retrievalTopK, config);
+  let chunks = searchResult.chunks;
 
   // 2. Rerank for relevance
-  chunks = await rerankChunks(query, chunks); // use original query for relevance judgment
-  const rerankedContext = buildRetrievedContext(chunks.slice(0, 5));
+  if (config.enableRerank) {
+    chunks = await rerankChunks(query, chunks); // use original query for relevance judgment
+  }
+  const contextChunks = chunks.slice(0, config.contextTopK);
+  const rerankedContext = buildRetrievedContext(contextChunks);
+  const traceBase = {
+    originalQuery: query,
+    rewrittenQuery: searchQuery,
+    retrievalMode: searchResult.mode,
+    retrievedIds: searchResult.chunks.map(chunk => chunk.id),
+    retrievedScores: searchResult.chunks.map(chunk => chunk.score || 0),
+    rerankEnabled: config.enableRerank,
+    rerankedIds: chunks.map(chunk => chunk.id),
+    contextIds: contextChunks.map(chunk => chunk.id),
+    historyMessageCount: 0,
+    fullKnowledgeIncluded: config.includeFullKnowledge,
+  } satisfies RAGTrace;
 
   // 3. If LLM available, use it for generation
   if (isLLMAvailable()) {
-    const history = getSessionHistory(sessionId);
+    const history = config.enableHistory ? getSessionHistory(sessionId) : [];
+    traceBase.historyMessageCount = history.length;
     const messages = buildTourGuideMessages(query, rerankedContext, history.map(h => ({
       role: h.role as 'user' | 'assistant',
       content: h.content,
-    })));
+    })), { includeFullKnowledge: config.includeFullKnowledge });
 
     const answer = await callLLM(messages, { temperature: 0.3, max_tokens: 280 });
 
@@ -526,6 +587,7 @@ export async function queryRAG(query: string, sessionId: string): Promise<RAGRes
         relatedSpots: extractRelatedSpots(answer),
         usedLLM: true,
         retrievedChunks: chunks.length,
+        trace: traceBase,
       };
     }
   }
@@ -548,26 +610,32 @@ export async function queryRAG(query: string, sessionId: string): Promise<RAGRes
     relatedSpots: extractRelatedSpots(fallbackAnswer),
     usedLLM: false,
     retrievedChunks: chunks.length,
+    trace: traceBase,
   };
 }
 
 /**
  * Streaming RAG query for SSE.
  */
-export async function* streamRAGQuery(query: string, sessionId: string): AsyncGenerator<string> {
+export async function* streamRAGQuery(
+  query: string,
+  sessionId: string,
+  configOverrides?: Partial<RAGExperimentConfig>,
+): AsyncGenerator<string> {
+  const config = resolveRAGConfig(configOverrides);
   // 0. Rewrite query
-  const searchQuery = await rewriteQuery(query);
+  const searchQuery = config.enableQueryRewrite ? await rewriteQuery(query) : query;
 
   // 1. Search — fetch more for reranking
-  let chunks = await searchChunks(searchQuery, 8);
-  const context = buildRetrievedContext(chunks);
+  const searchResult = await searchChunksWithTrace(searchQuery, config.retrievalTopK, config);
+  let chunks = searchResult.chunks;
 
   // 2. Rerank
-  chunks = await rerankChunks(query, chunks);
-  const rerankedContext = buildRetrievedContext(chunks.slice(0, 5));
+  if (config.enableRerank) chunks = await rerankChunks(query, chunks);
+  const rerankedContext = buildRetrievedContext(chunks.slice(0, config.contextTopK));
 
   if (!isLLMAvailable()) {
-    const result = await queryRAG(query, sessionId);
+    const result = await queryRAG(query, sessionId, config);
     addToHistory(sessionId, 'user', query);
     addToHistory(sessionId, 'assistant', result.answer);
     yield result.answer;
@@ -575,11 +643,11 @@ export async function* streamRAGQuery(query: string, sessionId: string): AsyncGe
   }
 
   // 3. Stream LLM response with adequate token budget
-  const history = getSessionHistory(sessionId);
+  const history = config.enableHistory ? getSessionHistory(sessionId) : [];
   const messages = buildTourGuideMessages(query, rerankedContext, history.map(h => ({
     role: h.role as 'user' | 'assistant',
     content: h.content,
-  })));
+  })), { includeFullKnowledge: config.includeFullKnowledge });
 
   let fullAnswer = '';
   let hasContent = false;
@@ -592,7 +660,7 @@ export async function* streamRAGQuery(query: string, sessionId: string): AsyncGe
   // 3. If LLM streaming produced nothing, fall back to non-streaming
   if (!hasContent) {
     console.warn('[RAG] LLM stream returned empty, falling back to non-streaming');
-    const result = await queryRAG(query, sessionId);
+    const result = await queryRAG(query, sessionId, config);
     if (result.answer && result.answer !== fullAnswer) {
       fullAnswer = result.answer;
       yield result.answer;

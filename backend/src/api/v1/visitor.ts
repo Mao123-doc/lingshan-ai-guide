@@ -6,6 +6,7 @@ import {
   queryRAG, streamRAGQuery, getSessionHistory,
   initKnowledgeBase, getKnowledgeStats,
 } from '../../services/rag-service';
+import type { RAGExperimentConfig } from '../../services/rag-config';
 import { textToSpeech } from '../../services/tts-service';
 import { isLLMAvailable, getActiveModelName, callLLM, callMultimodalLLM, isMultimodalAvailable } from '../../services/llm-service';
 import { analyzeEmotion } from '../../services/emotion-service';
@@ -120,7 +121,7 @@ visitorRouter.get('/spots/:spotId', (req: Request, res: Response) => {
 
 visitorRouter.post('/qa', async (req: Request, res: Response) => {
   try {
-    const { query, session_id } = req.body;
+    const { query, session_id, evaluation_config } = req.body;
     if (!query) {
       return res.status(400).json({ error: '请输入问题' });
     }
@@ -142,7 +143,7 @@ visitorRouter.post('/qa', async (req: Request, res: Response) => {
 
       let fullAnswer = '';
       try {
-        for await (const chunk of streamRAGQuery(query, sessionId)) {
+        for await (const chunk of streamRAGQuery(query, sessionId, evaluation_config as Partial<RAGExperimentConfig> | undefined)) {
           fullAnswer += chunk;
           res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
         }
@@ -185,7 +186,7 @@ visitorRouter.post('/qa', async (req: Request, res: Response) => {
       res.end();
     } else {
       // Non-streaming response
-      const result = await queryRAG(query, sessionId);
+      const result = await queryRAG(query, sessionId, evaluation_config as Partial<RAGExperimentConfig> | undefined);
 
       // Save conversation
       const elapsed = Date.now() - startTime;
@@ -216,8 +217,9 @@ visitorRouter.post('/qa', async (req: Request, res: Response) => {
         image_urls: getImageUrls(query, result.answer),
         used_llm: result.usedLLM,
         model: getActiveModelName(),
-        retrieved_chunks: result.retrievedChunks,
-      });
+         retrieved_chunks: result.retrievedChunks,
+         evaluation_trace: result.trace,
+       });
     }
   } catch (error: any) {
     console.error('QA error:', error);
