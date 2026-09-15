@@ -61,7 +61,21 @@ export function isVectorAvailable(): boolean {
 }
 
 export async function searchVectors(query: string, topK: number = 5): Promise<VectorResult[]> {
-  if (!available) return [];
+  const outcome = await searchVectorsWithStatus(query, topK);
+  return outcome.results;
+}
+
+export type VectorSearchOutcome = {
+  results: VectorResult[];
+  status: 'executed' | 'failed';
+  reason?: string;
+};
+
+export async function searchVectorsWithStatus(
+  query: string,
+  topK: number = 5,
+): Promise<VectorSearchOutcome> {
+  if (!available) return { results: [], status: 'failed', reason: 'service_unavailable' };
   try {
     const res = await fetch(`${VECTOR_SERVICE_URL}/search`, {
       method: 'POST',
@@ -69,12 +83,12 @@ export async function searchVectors(query: string, topK: number = 5): Promise<Ve
       body: JSON.stringify({ query, top_k: topK }),
       signal: AbortSignal.timeout(10000),
     });
-    if (!res.ok) return [];
+    if (!res.ok) return { results: [], status: 'failed', reason: `http_${res.status}` };
     const data = await res.json() as SearchResponse;
-    return data.results || [];
+    return { results: data.results || [], status: 'executed' };
   } catch (e: any) {
     console.error(`[Vector] Search failed: ${e.message?.slice(0, 100)}`);
-    return [];
+    return { results: [], status: 'failed', reason: 'request_failed' };
   }
 }
 

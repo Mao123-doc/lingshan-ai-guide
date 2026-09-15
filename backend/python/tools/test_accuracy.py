@@ -2,7 +2,7 @@
 Accuracy Test Runner — evaluates 50 standard questions against RAG pipeline.
 Checks answer quality via keyword overlap and semantic similarity.
 """
-import json, sys, os, time, uuid
+import json, re, sys, os, time, uuid
 from pathlib import Path
 
 _embedder = None
@@ -85,9 +85,25 @@ def semantic_score(answer: str, question: str):
         return None
 
 
+def _contains_value(answer: str, value: object) -> bool:
+    value_lower = str(value).lower()
+    answer_lower = answer.lower()
+    if not any(char.isdigit() for char in value_lower):
+        return value_lower in answer_lower
+
+    if re.fullmatch(r"\d+(?:\.\d+)?", value_lower):
+        left_boundary = r"(?<![0-9.:])"
+        right_boundary = r"(?![0-9.:])"
+    else:
+        left_boundary = r"(?<![0-9])" if value_lower[0].isdigit() else ""
+        right_boundary = r"(?![0-9])" if value_lower[-1].isdigit() else ""
+    pattern = f"{left_boundary}{re.escape(value_lower)}{right_boundary}"
+    return re.search(pattern, answer_lower) is not None
+
+
 def _contains_any(answer: str, acceptable: list) -> bool:
     answer_lower = (answer or "").lower()
-    return any(str(value).lower() in answer_lower for value in acceptable)
+    return any(_contains_value(answer_lower, value) for value in acceptable)
 
 
 def _abstention_match(answer: str) -> bool:
@@ -106,11 +122,18 @@ def evaluate_answer(answer: str, question: dict) -> dict:
 
     facts = question.get("facts")
     if facts:
-        matched_facts = sum(
-            1 for fact in facts if _contains_any(answer, fact.get("acceptable", []))
-        )
-        fact_recall = matched_facts / len(facts)
+        matched_fact_ids = [
+            fact["id"]
+            for fact in facts
+            if _contains_any(answer, fact.get("acceptable", []))
+        ]
+        fact_hits = len(matched_fact_ids)
+        min_fact_hits = question.get("min_fact_hits", len(facts))
+        fact_recall = fact_hits / len(facts)
     else:
+        matched_fact_ids = []
+        fact_hits = 0
+        min_fact_hits = 0
         fact_recall = kw_score
 
     forbidden = question.get("forbidden", [])
@@ -121,7 +144,7 @@ def evaluate_answer(answer: str, question: dict) -> dict:
     if expected_behavior == "abstain":
         passed = abstention_match and not has_forbidden_fact
     else:
-        passed = bool(answer) and fact_recall == 1.0 and not has_forbidden_fact
+        passed = bool(answer) and fact_hits >= min_fact_hits and not has_forbidden_fact
 
     combined = None
     if sem_score is not None:
@@ -135,6 +158,9 @@ def evaluate_answer(answer: str, question: dict) -> dict:
         "semantic_score": round(sem_score, 3) if sem_score is not None else None,
         "combined_score": combined,
         "fact_recall": round(fact_recall, 3),
+        "fact_hits": fact_hits,
+        "min_fact_hits": min_fact_hits,
+        "matched_fact_ids": matched_fact_ids,
         "has_forbidden_fact": has_forbidden_fact,
         "expected_behavior": expected_behavior,
         "abstention_match": abstention_match,

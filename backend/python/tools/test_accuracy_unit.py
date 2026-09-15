@@ -26,6 +26,77 @@ SPEC.loader.exec_module(MODULE)
 
 
 class EvaluationBaselineTests(unittest.TestCase):
+    @staticmethod
+    def _question(question_id):
+        questions = json.loads(
+            Path(__file__).with_name("test_questions.json").read_text(encoding="utf-8")
+        )
+        return next(question for question in questions if question["id"] == question_id)
+
+    def test_height_accepts_all_correct_measurement_scales_without_wrong_fact(self):
+        question = self._question(1)
+        result = MODULE.evaluate_answer(
+            "灵山大佛通高88米，佛体高79米，含台基总高101.5米。",
+            question,
+        )
+
+        self.assertEqual(result["fact_recall"], 1.0)
+        self.assertFalse(result["has_forbidden_fact"])
+        self.assertTrue(result["passed"])
+
+    def test_wall_size_requires_both_length_and_height(self):
+        question = self._question(13)
+        result = MODULE.evaluate_answer("灵山大照壁长39.8米。", question)
+
+        self.assertEqual(result["fact_hits"], 1)
+        self.assertEqual(result["min_fact_hits"], 2)
+        self.assertFalse(result["passed"])
+
+    def test_temple_relics_require_multiple_independent_facts(self):
+        question = self._question(12)
+        result = MODULE.evaluate_answer("祥符禅寺内有六角井。", question)
+
+        self.assertEqual(result["fact_hits"], 1)
+        self.assertEqual(result["min_fact_hits"], 3)
+        self.assertFalse(result["passed"])
+
+    def test_history_route_requires_multiple_scenic_spots(self):
+        question = self._question(37)
+        result = MODULE.evaluate_answer("推荐路线：灵山大佛。", question)
+
+        self.assertEqual(result["fact_hits"], 1)
+        self.assertEqual(result["min_fact_hits"], 4)
+        self.assertFalse(result["passed"])
+
+    def test_history_route_with_required_spots_passes_fact_coverage(self):
+        question = self._question(37)
+        result = MODULE.evaluate_answer(
+            "历史文化路线：祥符禅寺→灵山大佛→灵山梵宫→无尽意斋。",
+            question,
+        )
+
+        self.assertEqual(result["fact_hits"], 4)
+        self.assertEqual(result["min_fact_hits"], 4)
+        self.assertTrue(result["passed"])
+
+    def test_numeric_fact_does_not_match_as_part_of_a_longer_number(self):
+        self.assertFalse(MODULE._contains_any("高188米", ["88米"]))
+
+    def test_numeric_fact_matches_when_standalone_in_text(self):
+        self.assertTrue(MODULE._contains_any("高88米", ["88米"]))
+
+    def test_meter_fact_does_not_match_as_part_of_a_longer_meter_value(self):
+        self.assertFalse(MODULE._contains_any("高17米", ["7米"]))
+
+    def test_bare_number_does_not_match_time(self):
+        self.assertFalse(MODULE._contains_any("演出时间14:00", ["4"]))
+
+    def test_number_with_unit_matches_natural_sentence(self):
+        self.assertTrue(MODULE._contains_any("一天4场", ["4场"]))
+
+    def test_year_matches_longer_date(self):
+        self.assertTrue(MODULE._contains_any("1997年11月15日", ["1997年"]))
+
     def test_evaluation_config_disables_history_and_full_knowledge(self):
         self.assertFalse(MODULE.EVALUATION_CONFIG["enableHistory"])
         self.assertFalse(MODULE.EVALUATION_CONFIG["includeFullKnowledge"])
