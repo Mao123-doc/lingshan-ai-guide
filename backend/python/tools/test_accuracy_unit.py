@@ -90,6 +90,25 @@ class EvaluationBaselineTests(unittest.TestCase):
         self.assertTrue(result["passed"])
         self.assertTrue(result["abstention_match"])
 
+    def test_summary_uses_all_questions_and_reports_categories(self):
+        questions = [
+            {"id": 1, "category": "景点数据"},
+            {"id": 2, "category": "历史背景"},
+        ]
+        results = [
+            {"question_id": 1, "api_success": True, "passed": True},
+            {"question_id": 2, "api_success": False, "passed": False},
+        ]
+
+        summary = MODULE.summarize_results(results, questions)
+
+        self.assertEqual(summary["total"], 2)
+        self.assertEqual(summary["passed"], 1)
+        self.assertEqual(summary["accuracy"], 50.0)
+        self.assertEqual(summary["api_success_rate"], 0.5)
+        self.assertEqual(summary["by_category"]["景点数据"]["total"], 1)
+        self.assertEqual(summary["by_category"]["历史背景"]["api_failures"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

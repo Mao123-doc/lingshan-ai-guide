@@ -118,7 +118,7 @@ def evaluate_answer(answer: str, question: dict) -> dict:
     }
 
 
-def evaluate_api_result(resp: dict, question: dict) -> dict:
+def evaluate_api_result(resp: dict, question: dict, session_id: str = "") -> dict:
     answer = resp.get("answer", "")
     if resp.get("error"):
         return {
@@ -126,6 +126,7 @@ def evaluate_api_result(resp: dict, question: dict) -> dict:
             "question": question["question"],
             "api_success": False,
             "error": resp["error"],
+            "session_id": session_id,
             "answer_preview": "",
             "passed": False,
         }
@@ -133,7 +134,46 @@ def evaluate_api_result(resp: dict, question: dict) -> dict:
     result = evaluate_answer(answer, question)
     result["api_success"] = True
     result["error"] = None
+    result["session_id"] = resp.get("session_id", session_id)
+    result["used_llm"] = resp.get("used_llm")
+    result["retrieved_chunks"] = resp.get("retrieved_chunks")
+    result["evaluation_trace"] = resp.get("evaluation_trace")
+    result["response_time_ms"] = resp.get("response_time_ms")
     return result
+
+
+def summarize_results(results: list, questions: list) -> dict:
+    by_id = {result["question_id"]: result for result in results}
+    categories = {}
+    for question in questions:
+        category = question.get("category", "未分类")
+        result = by_id.get(question["id"], {
+            "api_success": False,
+            "passed": False,
+        })
+        item = categories.setdefault(category, {
+            "total": 0,
+            "passed": 0,
+            "api_successes": 0,
+            "api_failures": 0,
+        })
+        item["total"] += 1
+        item["passed"] += int(bool(result.get("passed")))
+        if result.get("api_success"):
+            item["api_successes"] += 1
+        else:
+            item["api_failures"] += 1
+
+    total = len(questions)
+    passed = sum(1 for result in results if result.get("passed"))
+    api_successes = sum(1 for result in results if result.get("api_success"))
+    return {
+        "total": total,
+        "passed": passed,
+        "accuracy": round(passed / total * 100, 1) if total else 0,
+        "api_success_rate": round(api_successes / total, 3) if total else 0,
+        "by_category": categories,
+    }
 
 
 def main():
@@ -159,7 +199,7 @@ def main():
         print(f"  [{i+1:2d}/{len(questions)}] {q['question'][:40]}...", end=" ", flush=True)
         session_id = build_session_id(run_id, q)
         resp = call_qa_api(q["question"], session_id)
-        eval_result = evaluate_api_result(resp, q)
+        eval_result = evaluate_api_result(resp, q, session_id)
         results.append(eval_result)
         if eval_result["api_success"]:
             api_success_count += 1
@@ -181,11 +221,12 @@ def main():
         # Rate limit
         time.sleep(0.3)
 
-    total = len(questions)
-    accuracy = round(passed_count / total * 100, 1) if total > 0 else 0
+    summary = summarize_results(results, questions)
+    total = summary["total"]
+    accuracy = summary["accuracy"]
     avg_kw = round(total_keyword / api_success_count, 3) if api_success_count > 0 else 0
     avg_sem = round(total_semantic / semantic_count, 3) if semantic_count > 0 else None
-    api_success_rate = round(api_success_count / total, 3) if total > 0 else 0
+    api_success_rate = summary["api_success_rate"]
 
     print()
     print("=" * 60)
@@ -217,6 +258,7 @@ def main():
         "avg_keyword_score": avg_kw,
         "avg_semantic_score": avg_sem,
         "semantic_available": HAS_EMBED,
+        "by_category": summary["by_category"],
         "results": results,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n  详细结果已保存到 data/test_results.json")

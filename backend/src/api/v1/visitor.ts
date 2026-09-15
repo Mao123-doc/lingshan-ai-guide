@@ -216,8 +216,9 @@ visitorRouter.post('/qa', async (req: Request, res: Response) => {
         related_spots: result.relatedSpots,
         image_urls: getImageUrls(query, result.answer),
         used_llm: result.usedLLM,
-        model: getActiveModelName(),
+         model: getActiveModelName(),
          retrieved_chunks: result.retrievedChunks,
+         response_time_ms: elapsed,
          evaluation_trace: result.trace,
        });
     }
