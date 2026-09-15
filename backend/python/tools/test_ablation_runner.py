@@ -159,6 +159,37 @@ class AblationRunnerTests(unittest.TestCase):
         self.assertIn("数据尚未生成", report)
         self.assertNotIn("0.0", report)
 
+    def test_report_classifies_parallel_retrieval_trace_without_crashing(self):
+        if MODULE is None:
+            self.fail("run_ablation.py has not been created")
+
+        results = {
+            "full_retrieval": {
+                "metrics": {"accuracy": 100.0, "fact_recall": 1.0, "avg_latency_ms": 10.0},
+                "records": [
+                    {
+                        "api_success": True,
+                        "trace": {
+                            "retrieval": {
+                                "vector": {"status": "executed"},
+                                "structured": {"status": "executed"},
+                                "keyword": {"status": "executed"},
+                                "candidates": [{"canonicalId": "LS-001"}],
+                                "fusion": {"method": "rrf"},
+                            },
+                            "retrievalMode": "fusion",
+                            "retrievedIds": ["LS-001"],
+                        },
+                        "evaluation": {"passed": True},
+                    }
+                ],
+            }
+        }
+
+        report = MODULE.build_ablation_report(results)
+
+        self.assertIn("- Evaluator: 0", report)
+
 
 if __name__ == "__main__":
     unittest.main()

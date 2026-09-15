@@ -144,7 +144,10 @@ def classify_record_error(record: dict) -> str | None:
         return "API"
     trace = record.get("trace") or {}
     retrieval = trace.get("retrieval") or {}
-    if any(stage.get("status") == "failed" for stage in retrieval.values()):
+    retrieval_stages = [
+        stage for stage in retrieval.values() if isinstance(stage, dict)
+    ]
+    if any(stage.get("status") == "failed" for stage in retrieval_stages):
         return "Retrieval"
     if (trace.get("retrievalMode") == "none") or not trace.get("retrievedIds"):
         return "Retrieval"
