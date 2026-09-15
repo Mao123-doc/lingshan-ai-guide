@@ -103,6 +103,58 @@ class EvaluationBaselineTests(unittest.TestCase):
         self.assertEqual(MODULE.EVALUATION_CONFIG["retrievalTopK"], 8)
         self.assertEqual(MODULE.EVALUATION_CONFIG["contextTopK"], 5)
 
+    def test_ablation_profiles_define_the_six_experiment_variants(self):
+        profiles = MODULE.get_ablation_profiles()
+
+        self.assertEqual(
+            set(profiles),
+            {
+                "vector_only",
+                "structured_only",
+                "keyword_only",
+                "full_retrieval",
+                "vector_rerank",
+                "full_without_rewrite",
+            },
+        )
+        self.assertEqual(
+            profiles["vector_only"]["enableVectorRetrieval"], True
+        )
+        self.assertEqual(
+            profiles["vector_only"]["enableStructuredRetrieval"], False
+        )
+        self.assertEqual(
+            profiles["vector_only"]["enableKeywordRetrieval"], False
+        )
+        self.assertEqual(
+            profiles["structured_only"]["enableVectorRetrieval"], False
+        )
+        self.assertEqual(
+            profiles["structured_only"]["enableStructuredRetrieval"], True
+        )
+        self.assertEqual(
+            profiles["structured_only"]["enableKeywordRetrieval"], False
+        )
+        self.assertEqual(
+            profiles["keyword_only"]["enableVectorRetrieval"], False
+        )
+        self.assertEqual(
+            profiles["keyword_only"]["enableStructuredRetrieval"], False
+        )
+        self.assertEqual(
+            profiles["keyword_only"]["enableKeywordRetrieval"], True
+        )
+        self.assertTrue(profiles["full_retrieval"]["enableRerank"])
+        self.assertFalse(profiles["full_without_rewrite"]["enableQueryRewrite"])
+
+    def test_ablation_profiles_keep_evaluation_controls_fixed(self):
+        profiles = MODULE.get_ablation_profiles()
+        for config in profiles.values():
+            self.assertFalse(config["enableHistory"])
+            self.assertFalse(config["includeFullKnowledge"])
+            self.assertEqual(config["retrievalTopK"], 8)
+            self.assertEqual(config["contextTopK"], 5)
+
     def test_embedding_model_is_not_loaded_during_module_import(self):
         self.assertIsNone(MODULE._embedder)
 

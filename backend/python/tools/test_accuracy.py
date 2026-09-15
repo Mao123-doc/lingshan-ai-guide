@@ -21,6 +21,46 @@ EVALUATION_CONFIG = {
 }
 
 
+def get_ablation_profiles() -> dict[str, dict]:
+    """Return frozen, named retrieval configurations for ablation runs."""
+    common = {
+        "enableQueryRewrite": True,
+        "enableVectorRetrieval": False,
+        "enableStructuredRetrieval": False,
+        "enableKeywordRetrieval": False,
+        "enableRerank": True,
+        "enableHistory": EVALUATION_CONFIG["enableHistory"],
+        "includeFullKnowledge": EVALUATION_CONFIG["includeFullKnowledge"],
+        "retrievalTopK": EVALUATION_CONFIG["retrievalTopK"],
+        "contextTopK": EVALUATION_CONFIG["contextTopK"],
+    }
+
+    def profile(**overrides: object) -> dict:
+        config = common.copy()
+        config.update(overrides)
+        return config
+
+    return {
+        "vector_only": profile(enableVectorRetrieval=True, enableRerank=False),
+        "structured_only": profile(enableStructuredRetrieval=True, enableRerank=False),
+        "keyword_only": profile(enableKeywordRetrieval=True, enableRerank=False),
+        "full_retrieval": profile(
+            enableVectorRetrieval=True,
+            enableStructuredRetrieval=True,
+            enableKeywordRetrieval=True,
+            enableRerank=True,
+        ),
+        "vector_rerank": profile(enableVectorRetrieval=True, enableRerank=True),
+        "full_without_rewrite": profile(
+            enableQueryRewrite=False,
+            enableVectorRetrieval=True,
+            enableStructuredRetrieval=True,
+            enableKeywordRetrieval=True,
+            enableRerank=True,
+        ),
+    }
+
+
 def initialize_semantic_model() -> bool:
     """Load the optional embedding model only when the runner starts."""
     global _embedder, HAS_EMBED
