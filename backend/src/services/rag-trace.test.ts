@@ -2,7 +2,24 @@ import assert from 'node:assert/strict';
 import {
   createTraceStage,
   createRetrievalTrace,
+  toEvidenceDocuments,
 } from './rag-service';
+
+assert.deepEqual(toEvidenceDocuments([
+  {
+    id: 'chunk_1',
+    text: '证据文本',
+    score: 0.9,
+    metadata: { source: 'knowledge_dataset.txt', category: '景点数据', keywords: ['灵山大佛'] },
+  },
+]), [{
+  id: 'chunk_1',
+  text: '证据文本',
+  score: 0.9,
+  source: 'knowledge_dataset.txt',
+  category: '景点数据',
+  keywords: ['灵山大佛'],
+}]);
 
 const skippedRerank = createTraceStage(true, 'skipped', 'llm_unavailable');
 assert.deepEqual(skippedRerank, {

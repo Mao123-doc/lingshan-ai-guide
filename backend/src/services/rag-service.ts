@@ -27,6 +27,15 @@ interface Chunk {
   };
 }
 
+export interface EvidenceDocument {
+  id: string;
+  text: string;
+  score: number;
+  source: string;
+  category: string;
+  keywords: string[];
+}
+
 interface RAGResult {
   answer: string;
   emotion: string;
@@ -59,6 +68,7 @@ export interface RAGTrace {
   retrievalMode: 'vector' | 'structured' | 'keyword' | 'none';
   retrievedIds: string[];
   retrievedScores: number[];
+  retrievedDocuments: EvidenceDocument[];
   rerankEnabled: boolean;
   rerankedIds: string[];
   contextIds: string[];
@@ -68,6 +78,18 @@ export interface RAGTrace {
   retrieval: RAGRetrievalTrace;
   rerank: RAGTraceStage;
   generation: RAGTraceStage;
+}
+
+/** Expose retrieval evidence for evaluation without changing retrieval decisions. */
+export function toEvidenceDocuments(chunks: Array<Pick<Chunk, 'id' | 'text' | 'score' | 'metadata'>>): EvidenceDocument[] {
+  return chunks.map(chunk => ({
+    id: chunk.id,
+    text: chunk.text,
+    score: chunk.score || 0,
+    source: chunk.metadata.source,
+    category: chunk.metadata.category,
+    keywords: chunk.metadata.keywords,
+  }));
 }
 
 export function createTraceStage(
@@ -710,6 +732,7 @@ export async function queryRAG(
     retrievalMode: searchResult.mode,
     retrievedIds: searchResult.chunks.map(chunk => chunk.id),
     retrievedScores: searchResult.chunks.map(chunk => chunk.score || 0),
+    retrievedDocuments: toEvidenceDocuments(searchResult.chunks),
     rerankEnabled: config.enableRerank,
     rerankedIds: chunks.map(chunk => chunk.id),
     contextIds: contextChunks.map(chunk => chunk.id),
