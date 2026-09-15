@@ -10,6 +10,7 @@ import { searchVectorsWithStatus, isVectorAvailable, waitForVectorService } from
 import { analyzeEmotion } from './emotion-service';
 import { searchStructured, getFieldIndex } from './structured-knowledge';
 import { DEFAULT_RAG_CONFIG, RAGExperimentConfig, resolveRAGConfig } from './rag-config';
+import { fuseCandidates, type RetrievalCandidate, type RetrievalChannel } from './retrieval/hybrid-retriever';
 
 // ============================================================
 // Types
@@ -60,12 +61,27 @@ export interface RAGRetrievalTrace {
   vector: RAGTraceStage;
   structured: RAGTraceStage;
   keyword: RAGTraceStage;
+  candidates?: Array<{
+    canonicalId: string;
+    dedupeKey: string;
+    channel: RetrievalChannel;
+    rank: number;
+    rawScore?: number;
+    rrfScore?: number;
+    channels?: RetrievalChannel[];
+  }>;
+  fusion?: {
+    method: 'rrf';
+    k: number;
+    inputCounts: Record<RetrievalChannel, number>;
+    candidateCount: number;
+  };
 }
 
 export interface RAGTrace {
   originalQuery: string;
   rewrittenQuery: string;
-  retrievalMode: 'vector' | 'structured' | 'keyword' | 'none';
+  retrievalMode: 'vector' | 'structured' | 'keyword' | 'fusion' | 'none';
   retrievedIds: string[];
   retrievedScores: number[];
   retrievedDocuments: EvidenceDocument[];
@@ -153,6 +169,35 @@ export function createRetrievalTrace(observations: {
     keyword.reason = 'previous_stage_returned_results';
   }
   return { vector, structured, keyword };
+}
+
+export function createParallelRetrievalTrace(
+  observations: {
+    vector: RetrievalObservation;
+    structured: RetrievalObservation;
+    keyword: RetrievalObservation;
+  },
+  fusion?: RAGRetrievalTrace['fusion'],
+): RAGRetrievalTrace {
+  const stageFor = (observation: RetrievalObservation): RAGTraceStage => {
+    if (!observation.configured) return createTraceStage(false, 'skipped', 'disabled');
+    if (observation.outcome === 'unavailable' || observation.outcome === 'failed') {
+      return createTraceStage(true, 'failed', observation.reason || 'execution_failed', { resultCount: 0 });
+    }
+    if (observation.resultCount !== undefined) {
+      return createTraceStage(true, 'executed', observation.resultCount === 0 ? 'zero_results' : undefined, {
+        resultCount: observation.resultCount,
+      });
+    }
+    return createTraceStage(true, 'failed', 'not_observed', { resultCount: 0 });
+  };
+
+  return {
+    vector: stageFor(observations.vector),
+    structured: stageFor(observations.structured),
+    keyword: stageFor(observations.keyword),
+    ...(fusion ? { fusion } : {}),
+  };
 }
 
 // ============================================================
@@ -396,89 +441,132 @@ async function searchChunksWithTrace(
     keyword: { configured: config.enableKeywordRetrieval } as RetrievalObservation,
   };
 
-  // 1. Try vector semantic search first
-  if (config.enableVectorRetrieval) {
+  const vectorPromise = (async (): Promise<RetrievalCandidate[]> => {
+    if (!config.enableVectorRetrieval) return [];
     if (!isVectorAvailable()) {
       observations.vector.outcome = 'unavailable';
       observations.vector.reason = 'service_unavailable';
-    } else {
-      const vectorOutcome = await searchVectorsWithStatus(query, topK);
-      observations.vector.outcome = vectorOutcome.status;
-      observations.vector.reason = vectorOutcome.reason;
-      if (vectorOutcome.results.length > 0) {
-        console.log(`[RAG] Vector search returned ${vectorOutcome.results.length} results (top score: ${vectorOutcome.results[0].score})`);
-        observations.vector.resultCount = vectorOutcome.results.length;
-        return { chunks: vectorOutcome.results.map(r => ({
-          id: r.id,
-          text: r.text,
-          score: r.score,
-          metadata: {
-            source: r.metadata.source || '',
-            category: r.metadata.category || '景点数据',
-            keywords: (r.metadata.keywords || '').split(',').filter(Boolean),
-          },
-        })), mode: 'vector', trace: createRetrievalTrace(observations) };
-      }
       observations.vector.resultCount = 0;
+      return [];
     }
-  }
-
-  // 2. Try structured field-level search (primary fallback)
-  let structuredResults: ReturnType<typeof searchStructured> = [];
-  if (config.enableStructuredRetrieval) {
     try {
-      structuredResults = searchStructured(query, topK);
-      observations.structured.outcome = 'executed';
-      observations.structured.resultCount = structuredResults.length;
-    } catch (e: any) {
-      observations.structured.outcome = 'failed';
-      observations.structured.reason = e?.message?.slice(0, 80) || 'execution_failed';
-      throw e;
+      const outcome = await searchVectorsWithStatus(query, topK);
+      observations.vector.outcome = outcome.status;
+      observations.vector.reason = outcome.reason;
+      observations.vector.resultCount = outcome.results.length;
+      return outcome.results.map((result, index) => ({
+        canonicalId: result.id,
+        dedupeKey: `text:${result.text.replace(/\s+/g, '').slice(0, 1000)}`,
+        text: result.text,
+        source: result.metadata.source || '',
+        channel: 'vector' as const,
+        rank: index + 1,
+        rawScore: result.score,
+        metadata: {
+          category: result.metadata.category || '景点数据',
+          keywords: (result.metadata.keywords || '').split(',').filter(Boolean),
+        },
+      }));
+    } catch (error: any) {
+      observations.vector.outcome = 'failed';
+      observations.vector.reason = error?.message?.slice(0, 80) || 'execution_failed';
+      observations.vector.resultCount = 0;
+      return [];
     }
-  }
-  if (structuredResults.length > 0) {
-    console.log(`[RAG] Structured search: ${structuredResults.length} results`);
-    return { chunks: structuredResults.map(r => ({
-      id: `${r.spotId}_${r.fieldName}`,
-      text: `【${r.spotName}】${r.fieldLabel}：${r.text}`,
-      score: r.score,
-      metadata: {
-        source: 'structured_dataset',
-        category: r.fieldLabel,
-        keywords: [r.spotName],
-      },
-    })), mode: 'structured', trace: createRetrievalTrace(observations) };
-  }
+  })();
 
-  // 3. Fallback to keyword + chunk matching
-  if (!config.enableKeywordRetrieval) {
-    return { chunks: [], mode: 'none', trace: createRetrievalTrace(observations) };
-  }
-  try {
-    if (knowledgeChunks.length === 0) {
-      knowledgeChunks = buildChunks();
+  const structuredPromise = (async (): Promise<RetrievalCandidate[]> => {
+    if (!config.enableStructuredRetrieval) return [];
+    try {
+      const results = searchStructured(query, topK);
+      observations.structured.outcome = 'executed';
+      observations.structured.resultCount = results.length;
+      return results.map((result, index) => ({
+        canonicalId: `${result.spotId}_${result.fieldName}`,
+        dedupeKey: `structured:${result.spotId}_${result.fieldName}`,
+        text: `【${result.spotName}】${result.fieldLabel}：${result.text}`,
+        source: 'structured_dataset',
+        channel: 'structured' as const,
+        rank: index + 1,
+        rawScore: result.score,
+        metadata: { category: result.fieldLabel, keywords: [result.spotName] },
+      }));
+    } catch (error: any) {
+      observations.structured.outcome = 'failed';
+      observations.structured.reason = error?.message?.slice(0, 80) || 'execution_failed';
+      observations.structured.resultCount = 0;
+      return [];
     }
-    const scored = knowledgeChunks.map(chunk => ({
-      chunk,
-      score: keywordScore(chunk, query),
-    }));
-    scored.sort((a, b) => b.score - a.score);
-    const keywordChunks = scored.filter(s => s.score > 0).slice(0, topK).map(s => ({
-      ...s.chunk,
-      score: s.score,
-    }));
-    observations.keyword.outcome = 'executed';
-    observations.keyword.resultCount = keywordChunks.length;
-    return {
-      chunks: keywordChunks,
-      mode: 'keyword',
-      trace: createRetrievalTrace(observations),
-    };
-  } catch (e: any) {
-    observations.keyword.outcome = 'failed';
-    observations.keyword.reason = e?.message?.slice(0, 80) || 'execution_failed';
-    throw e;
-  }
+  })();
+
+  const keywordPromise = (async (): Promise<RetrievalCandidate[]> => {
+    if (!config.enableKeywordRetrieval) return [];
+    try {
+      if (knowledgeChunks.length === 0) knowledgeChunks = buildChunks();
+      const results = knowledgeChunks.map(chunk => ({ chunk, score: keywordScore(chunk, query) }))
+        .filter(result => result.score > 0)
+        .sort((left, right) => right.score - left.score)
+        .slice(0, topK);
+      observations.keyword.outcome = 'executed';
+      observations.keyword.resultCount = results.length;
+      return results.map((result, index) => ({
+        canonicalId: result.chunk.id,
+        dedupeKey: `text:${result.chunk.text.replace(/\s+/g, '').slice(0, 1000)}`,
+        text: result.chunk.text,
+        source: result.chunk.metadata.source,
+        channel: 'keyword' as const,
+        rank: index + 1,
+        rawScore: result.score,
+        metadata: {
+          category: result.chunk.metadata.category,
+          keywords: result.chunk.metadata.keywords,
+        },
+      }));
+    } catch (error: any) {
+      observations.keyword.outcome = 'failed';
+      observations.keyword.reason = error?.message?.slice(0, 80) || 'execution_failed';
+      observations.keyword.resultCount = 0;
+      return [];
+    }
+  })();
+
+  const [vector, structured, keyword] = await Promise.all([vectorPromise, structuredPromise, keywordPromise]);
+  const fusion = fuseCandidates({ vector, structured, keyword });
+  const ranked = fusion.ranked.slice(0, topK);
+  const chunks: Chunk[] = ranked.map(candidate => ({
+    id: candidate.canonicalId,
+    text: candidate.text,
+    score: candidate.rrfScore,
+    metadata: {
+      source: candidate.source,
+      category: typeof candidate.metadata.category === 'string' ? candidate.metadata.category : '景点数据',
+      keywords: Array.isArray(candidate.metadata.keywords) ? candidate.metadata.keywords.map(String) : [],
+    },
+  }));
+  const enabledChannels = [
+    config.enableVectorRetrieval && 'vector',
+    config.enableStructuredRetrieval && 'structured',
+    config.enableKeywordRetrieval && 'keyword',
+  ].filter(Boolean) as RetrievalChannel[];
+  const mode: RAGTrace['retrievalMode'] = ranked.length === 0
+    ? 'none'
+    : enabledChannels.length > 1 ? 'fusion' : enabledChannels[0];
+  const trace = createParallelRetrievalTrace(observations, {
+    method: 'rrf',
+    k: fusion.rrfK,
+    inputCounts: fusion.channelCounts,
+    candidateCount: fusion.candidates.length,
+  });
+  trace.candidates = fusion.ranked.map(candidate => ({
+    canonicalId: candidate.canonicalId,
+    dedupeKey: candidate.dedupeKey,
+    channel: candidate.channel,
+    rank: candidate.rank,
+    rawScore: candidate.rawScore,
+    rrfScore: candidate.rrfScore,
+    channels: candidate.channels,
+  }));
+  return { chunks, mode, trace };
 }
 
 export async function searchChunks(
