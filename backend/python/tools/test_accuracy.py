@@ -5,15 +5,24 @@ Checks answer quality via keyword overlap and semantic similarity.
 import json, sys, os, time, uuid
 from pathlib import Path
 
-# Try to import semantic scoring
-try:
-    from sentence_transformers import SentenceTransformer
-    _embedder = SentenceTransformer("BAAI/bge-large-zh-v1.5", device="cpu")
-    _embedder.encode(["test"])
-    HAS_EMBED = True
-except Exception:
-    _embedder = None
-    HAS_EMBED = False
+_embedder = None
+HAS_EMBED = False
+
+
+def initialize_semantic_model() -> bool:
+    """Load the optional embedding model only when the runner starts."""
+    global _embedder, HAS_EMBED
+    if HAS_EMBED and _embedder is not None:
+        return True
+    try:
+        from sentence_transformers import SentenceTransformer
+        _embedder = SentenceTransformer("BAAI/bge-large-zh-v1.5", device="cpu")
+        _embedder.encode(["test"])
+        HAS_EMBED = True
+    except Exception:
+        _embedder = None
+        HAS_EMBED = False
+    return HAS_EMBED
 
 
 def load_questions() -> list:
@@ -177,6 +186,7 @@ def summarize_results(results: list, questions: list) -> dict:
 
 
 def main():
+    initialize_semantic_model()
     print("=" * 60)
     print("  灵山胜境 AI 导游 — 标准测试集准确率评估")
     print("=" * 60)

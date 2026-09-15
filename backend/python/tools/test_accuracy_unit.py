@@ -26,6 +26,9 @@ SPEC.loader.exec_module(MODULE)
 
 
 class EvaluationBaselineTests(unittest.TestCase):
+    def test_embedding_model_is_not_loaded_during_module_import(self):
+        self.assertIsNone(MODULE._embedder)
+
     def test_question_set_has_explicit_fact_contract(self):
         questions = json.loads(
             Path(__file__).with_name("test_questions.json").read_text(encoding="utf-8")
