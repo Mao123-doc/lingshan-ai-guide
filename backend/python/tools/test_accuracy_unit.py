@@ -2,6 +2,7 @@ import importlib.util
 import sys
 import types
 import unittest
+import json
 from pathlib import Path
 
 
@@ -25,6 +26,17 @@ SPEC.loader.exec_module(MODULE)
 
 
 class EvaluationBaselineTests(unittest.TestCase):
+    def test_question_set_has_explicit_fact_contract(self):
+        questions = json.loads(
+            Path(__file__).with_name("test_questions.json").read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(len(questions), 50)
+        for question in questions:
+            self.assertIn(question.get("expected_behavior"), {"answer", "abstain"})
+            self.assertIsInstance(question.get("facts"), list)
+            self.assertGreater(len(question["facts"]), 0)
+
     def test_session_id_is_unique_per_question(self):
         first = MODULE.build_session_id("run-1", {"id": 1})
         second = MODULE.build_session_id("run-1", {"id": 2})
