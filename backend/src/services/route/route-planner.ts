@@ -78,7 +78,10 @@ export interface RoutePlanResult extends RoutePlan {
 }
 
 export function planRoute(scene: SceneState, graph: RouteGraph, maxStops = 6): RoutePlanResult {
-  const missing = scene.missingCriticalFields.filter(field => ['currentLocation', 'currentTime', 'remainingMinutes'].includes(field));
+  const missing = [...new Set([
+    ...scene.missingCriticalFields,
+    ...(!scene.currentTime ? ['currentTime'] : []),
+  ])].filter(field => ['currentLocation', 'currentTime', 'remainingMinutes'].includes(field));
   if (missing.length > 0 || !scene.currentLocation || !scene.currentTime || scene.remainingMinutes === undefined) {
     return {
       feasible: false,
