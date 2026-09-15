@@ -1,0 +1,16 @@
+{
+  "git_sha": "635ebb65f593c6ab86927694811a540dc4fe8f85",
+  "gold_sha256": "cbfab53440321a0c453699459897c48b7cd0b473e2c42478e785c9de5d70bba6",
+  "legacy_manifest_sha256": "cd71744c620d69965c5c47ec8212e2c55d79117f5dad91c41283861aade12c45",
+  "legacy_dataset_sha256": "5BFC1C7928FB1280146575938DF73803F08C7E57040F5B947CE49AB7D6071168",
+  "knowledge_sha256": [
+    {
+      "path": "data/raw/knowledge_guide.txt",
+      "sha256": "F5E51A9D6390AA3AC9D6CECB5936416B4C1299692F265254F40981239DBD703F"
+    },
+    {
+      "path": "data/raw/knowledge_dataset.txt",
+      "sha256": "A63301E735F5D5D9EF22FC55EE392FE59DE8117D735E822B60C8BE08B34B5A94"
+    }
+  ]
+}

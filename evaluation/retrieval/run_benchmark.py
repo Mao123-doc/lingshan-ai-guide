@@ -62,8 +62,9 @@ PROFILES: dict[str, dict[str, Any]] = {
         "enableKeywordRetrieval": True,
         "enableRerank": False,
     },
-    # These names follow the goal's experiment matrix.  The current base
-    # implementation is still a priority fallback; the summary says so.
+    # These names follow the goal's experiment matrix. The current full
+    # implementation executes enabled channels in parallel and fuses them
+    # with RRF; the recorded semantics must remain explicit in every artifact.
     "fused": {
         **COMMON_CONFIG,
         "enableVectorRetrieval": True,
@@ -225,7 +226,7 @@ def run_profile(
         by_category.setdefault(category, []).append(item)
     return {
         "profile": name,
-        "retrieval_semantics": "legacy_priority_fallback",
+        "retrieval_semantics": "parallel_rrf_fusion",
         "config": config,
         "raw_records": raw_records,
         "scored_records": scored_records,
@@ -276,7 +277,7 @@ def main() -> None:
         "gold_record_count": len(gold_records),
         "runtime": runtime,
         "profile_configs": {name: PROFILES[name] for name in profiles},
-        "retrieval_semantics": "legacy_priority_fallback",
+        "retrieval_semantics": "parallel_rrf_fusion",
     })
     write_json(output_dir / "hashes.json", {
         "git_sha": git_sha(),
@@ -296,7 +297,7 @@ def main() -> None:
         "git_sha": git_sha(),
         "gold_record_count": len(gold_records),
         "profiles": {name: result["metrics"] for name, result in results.items()},
-        "retrieval_semantics": "legacy_priority_fallback",
+        "retrieval_semantics": "parallel_rrf_fusion",
         "fallback_policy": "local_fallback records are excluded from retrieval metric denominators and retained in raw results",
     })
     print(json.dumps({name: result["metrics"] for name, result in results.items()}, ensure_ascii=False, indent=2))
