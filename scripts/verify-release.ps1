@@ -198,6 +198,20 @@ Invoke-ReleaseCheck 'backend-api-contract-and-security' {
   npm exec -- tsx --test tests/**/*.test.ts
   Pop-Location
 }
+Invoke-ReleaseCheck 'backend-service-quality-benchmarks' {
+  Push-Location backend
+  try {
+    $serviceTests = Get-ChildItem -Path 'src/services' -Filter '*.test.ts' -Recurse | Sort-Object FullName
+    foreach ($serviceTest in $serviceTests) {
+      npm exec -- tsx $serviceTest.FullName
+      if ($LASTEXITCODE -ne 0) {
+        throw "Service quality benchmark failed: $($serviceTest.FullName)"
+      }
+    }
+  } finally {
+    Pop-Location
+  }
+}
 Invoke-ReleaseCheck 'backend-build' {
   npm --prefix backend run build
 }

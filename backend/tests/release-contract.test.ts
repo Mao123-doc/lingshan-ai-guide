@@ -7,9 +7,15 @@ test('release evidence contracts are versioned and sanitized', () => {
   const root = path.resolve(__dirname, '../..');
   const runtimeDoc = path.join(root, 'docs', 'testing', 'runtime-smoke.md');
   const gateConfig = path.join(root, 'evaluation', 'retrieval', 'retrieval_gate_config.json');
+  const releaseScript = path.join(root, 'scripts', 'verify-release.ps1');
 
   assert.equal(fs.existsSync(runtimeDoc), true);
   assert.equal(fs.existsSync(gateConfig), true);
   assert.match(fs.readFileSync(runtimeDoc, 'utf8'), /require-no-fallback/);
   assert.equal(JSON.parse(fs.readFileSync(gateConfig, 'utf8')).schema_version, 1);
+
+  const releaseScriptText = fs.readFileSync(releaseScript, 'utf8');
+  assert.match(releaseScriptText, /backend-service-quality-benchmarks/);
+  assert.match(releaseScriptText, /src[\\/]services/);
+  assert.match(releaseScriptText, /\*\.test\.ts/);
 });
