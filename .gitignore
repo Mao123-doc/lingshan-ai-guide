@@ -35,6 +35,7 @@ data/tts-cache/
 
 # Evaluation evidence generated locally
 results/runtime_smoke.json
+data/test_results.json
 evaluation/verification/*.json
 !evaluation/verification/.gitkeep
 evaluation/verification/release-manifest.json
