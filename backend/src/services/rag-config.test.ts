@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DEFAULT_RAG_CONFIG, resolveRAGConfig } from './rag-config';
 import { buildTourGuideMessages } from './llm-service';
-import { buildRetrievedContext, orderContextBySourceAuthority } from './rag-service';
+import { buildRetrievedContext, orderContextBySourceAuthority, selectContextChunks } from './rag-service';
 
 const defaults = resolveRAGConfig();
 assert.deepEqual(defaults, DEFAULT_RAG_CONFIG);
@@ -58,5 +58,13 @@ const orderedEvidence = orderContextBySourceAuthority([
   { id: 'dataset-1', text: '数据集补充', score: 1, metadata: { source: 'knowledge_dataset.txt', category: '参数', keywords: [] } },
 ]);
 assert.deepEqual(orderedEvidence.map(chunk => chunk.id), ['guide-1', 'dataset-1', 'structured-1']);
+
+const contextWithReservedGuide = selectContextChunks([
+  { id: 'dataset-1', text: '数据集事实', score: 1, metadata: { source: 'knowledge_dataset.txt', category: '参数', keywords: [] } },
+  { id: 'structured-1', text: '结构化事实', score: 1, metadata: { source: 'structured_dataset', category: '参数', keywords: [] } },
+  { id: 'guide-history', text: '灵山胜境历史背景', score: 1, metadata: { source: 'knowledge_guide.txt', category: '历史', keywords: [] } },
+  { id: 'guide-1', text: '灵山胜境占地面积约30万平方米', score: 1, metadata: { source: 'knowledge_guide.txt', category: '概况', keywords: [] } },
+], 2, '灵山胜境 占地面积');
+assert.deepEqual(contextWithReservedGuide.map(chunk => chunk.id), ['guide-1', 'dataset-1']);
 
 console.log('RAG config tests passed');

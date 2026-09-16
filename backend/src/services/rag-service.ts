@@ -596,6 +596,31 @@ export function orderContextBySourceAuthority(chunks: Chunk[]): Chunk[] {
     .map(item => item.chunk);
 }
 
+/** Keep the context budget fixed while reserving one authoritative guide chunk when available. */
+export function selectContextChunks(chunks: Chunk[], contextTopK: number, query = ''): Chunk[] {
+  if (contextTopK <= 0 || chunks.length === 0) return [];
+
+  const selected = chunks.slice(0, contextTopK);
+  const queryText = query.replace(/[^\u4e00-\u9fffA-Za-z0-9]/g, '');
+  const queryBigrams = new Set(Array.from({ length: Math.max(0, queryText.length - 1) }, (_, index) => queryText.slice(index, index + 2)));
+  const lexicalEvidenceScore = (chunk: Chunk) => {
+    if (queryBigrams.size === 0) return 0;
+    return Array.from(queryBigrams).filter(bigram => chunk.text.includes(bigram)).length;
+  };
+  const authoritative = chunks
+    .map((chunk, index) => ({ chunk, index }))
+    .filter(item => sourceAuthority(item.chunk.metadata.source) === 0)
+    .sort((left, right) => lexicalEvidenceScore(right.chunk) - lexicalEvidenceScore(left.chunk) || left.index - right.index)[0]?.chunk;
+  const hasAuthoritative = selected.some(chunk => sourceAuthority(chunk.metadata.source) === 0);
+
+  if (authoritative && !hasAuthoritative && !selected.some(chunk => chunk.id === authoritative.id)) {
+    if (selected.length >= contextTopK) selected[selected.length - 1] = authoritative;
+    else selected.push(authoritative);
+  }
+
+  return orderContextBySourceAuthority(selected);
+}
+
 export function buildRetrievedContext(chunks: Chunk[]): string {
   if (chunks.length === 0) return '未找到直接相关的内容。';
   return chunks.map((c, i) =>
@@ -826,7 +851,7 @@ export async function queryRAG(
   // 2. Rerank for relevance
   const rerankResult = await rerankChunksWithTrace(query, chunks, config.enableRerank); // use original query for relevance judgment
   chunks = rerankResult.chunks;
-  const contextChunks = orderContextBySourceAuthority(chunks.slice(0, config.contextTopK));
+  const contextChunks = selectContextChunks(chunks, config.contextTopK, searchQuery);
   const rerankedContext = buildRetrievedContext(contextChunks);
   const traceBase = {
     originalQuery: query,
@@ -917,7 +942,7 @@ export async function* streamRAGQuery(
 
   // 2. Rerank
   if (config.enableRerank) chunks = await rerankChunks(query, chunks);
-  const rerankedContext = buildRetrievedContext(orderContextBySourceAuthority(chunks.slice(0, config.contextTopK)));
+  const rerankedContext = buildRetrievedContext(selectContextChunks(chunks, config.contextTopK, searchQuery));
 
   if (!isLLMAvailable()) {
     const result = await queryRAG(query, sessionId, config);
