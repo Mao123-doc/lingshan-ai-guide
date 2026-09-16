@@ -16,18 +16,23 @@ async function waitForFile(filePath: string): Promise<void> {
 
 test('createApp can run against DATA_ROOT without modifying formal data', async () => {
   const formalDataRoot = path.resolve(__dirname, '../../data');
-  const formalFiles = ['conversations.json', 'feedback.json', 'daily_stats.json'];
+  const formalFiles = ['conversations.json', 'feedback.json', 'daily_stats.json', 'dh_config.json'];
   const formalSnapshots = new Map(formalFiles.map(name => {
     const filePath = path.join(formalDataRoot, name);
     return [name, fs.existsSync(filePath) ? fs.readFileSync(filePath) : undefined] as const;
   }));
   const temporaryDataRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'lingshan-test-'));
   process.env.DATA_ROOT = temporaryDataRoot;
+  fs.writeFileSync(path.join(temporaryDataRoot, 'dh_config.json'), JSON.stringify({
+    style_preset: 'isolated_test',
+    voice_id: 'isolated-voice',
+  }));
 
+  let server: ReturnType<typeof createServer> | undefined;
   try {
     const { createApp } = await import('../src/app');
     const app = createApp();
-    const server = createServer(app);
+    server = createServer(app);
 
     await new Promise<void>(resolve => server.listen(0, '127.0.0.1', () => resolve()));
     const address = server.address();
@@ -46,8 +51,15 @@ test('createApp can run against DATA_ROOT without modifying formal data', async 
     assert.equal(feedback.length, 1);
     assert.equal(feedback[0].session_id, 'isolation-session');
 
-    await new Promise<void>(resolve => server.close(() => resolve()));
+    const dhResponse = await fetch(`http://127.0.0.1:${address.port}/api/v1/visitor/dh-config`);
+    assert.equal(dhResponse.status, 200);
+    assert.deepEqual(await dhResponse.json(), {
+      style_preset: 'isolated_test',
+      voice_id: 'isolated-voice',
+    });
+
   } finally {
+    if (server) await new Promise<void>(resolve => server?.close(() => resolve()));
     delete process.env.DATA_ROOT;
     fs.rmSync(temporaryDataRoot, { recursive: true, force: true });
   }

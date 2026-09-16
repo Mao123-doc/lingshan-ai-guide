@@ -14,6 +14,7 @@ import { broadcastQueryEvent } from '../../services/websocket-service';
 import { extractSceneState, SceneStateSchema } from '../../services/scene/scene-state';
 import { loadRouteGraph } from '../../services/route/route-contract';
 import { planRoute } from '../../services/route/route-planner';
+import { resolveDataPath } from '../../config/paths';
 import {
   saveConversation, saveFeedback, getConversationStats,
   getHotQuestions as getDbHotQuestions, classifyQuery,
@@ -753,7 +754,7 @@ function extractSpots(text: string): string[] {
 // ============ Digital Human public config (no auth) ============
 
 visitorRouter.get('/dh-config', (_req: Request, res: Response) => {
-  const configPath = path.resolve(__dirname, '../../../../data/dh_config.json');
+  const configPath = resolveDataPath('dh_config.json');
   let stylePreset = 'zen_red_gold';
   let voiceId = 'zh-CN-XiaoxiaoNeural';
   try {
