@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { DEFAULT_RAG_CONFIG, resolveRAGConfig } from './rag-config';
 import { buildTourGuideMessages } from './llm-service';
-import { buildRetrievedContext } from './rag-service';
+import { buildRetrievedContext, orderContextBySourceAuthority } from './rag-service';
 
 const defaults = resolveRAGConfig();
 assert.deepEqual(defaults, DEFAULT_RAG_CONFIG);
@@ -51,5 +51,12 @@ const evidenceContext = buildRetrievedContext([{
 }]);
 assert.equal(evidenceContext.includes('id=guide-1'), true);
 assert.equal(evidenceContext.includes('source=knowledge_guide.txt'), true);
+
+const orderedEvidence = orderContextBySourceAuthority([
+  { id: 'structured-1', text: '结构化补充', score: 1, metadata: { source: 'structured_dataset', category: '参数', keywords: [] } },
+  { id: 'guide-1', text: '指南事实', score: 1, metadata: { source: 'knowledge_guide.txt', category: '参数', keywords: [] } },
+  { id: 'dataset-1', text: '数据集补充', score: 1, metadata: { source: 'knowledge_dataset.txt', category: '参数', keywords: [] } },
+]);
+assert.deepEqual(orderedEvidence.map(chunk => chunk.id), ['guide-1', 'dataset-1', 'structured-1']);
 
 console.log('RAG config tests passed');

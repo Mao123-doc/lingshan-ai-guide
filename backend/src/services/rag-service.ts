@@ -583,6 +583,19 @@ export async function searchChunks(
 // Context Builder
 // ============================================================
 
+function sourceAuthority(source: string): number {
+  if (source === 'knowledge_guide.txt' || source === 'doc_1') return 0;
+  if (source === 'knowledge_dataset.txt' || source === 'doc_0') return 1;
+  return 2;
+}
+
+export function orderContextBySourceAuthority(chunks: Chunk[]): Chunk[] {
+  return chunks
+    .map((chunk, index) => ({ chunk, index }))
+    .sort((left, right) => sourceAuthority(left.chunk.metadata.source) - sourceAuthority(right.chunk.metadata.source) || left.index - right.index)
+    .map(item => item.chunk);
+}
+
 export function buildRetrievedContext(chunks: Chunk[]): string {
   if (chunks.length === 0) return '未找到直接相关的内容。';
   return chunks.map((c, i) =>
@@ -813,7 +826,7 @@ export async function queryRAG(
   // 2. Rerank for relevance
   const rerankResult = await rerankChunksWithTrace(query, chunks, config.enableRerank); // use original query for relevance judgment
   chunks = rerankResult.chunks;
-  const contextChunks = chunks.slice(0, config.contextTopK);
+  const contextChunks = orderContextBySourceAuthority(chunks.slice(0, config.contextTopK));
   const rerankedContext = buildRetrievedContext(contextChunks);
   const traceBase = {
     originalQuery: query,
@@ -904,7 +917,7 @@ export async function* streamRAGQuery(
 
   // 2. Rerank
   if (config.enableRerank) chunks = await rerankChunks(query, chunks);
-  const rerankedContext = buildRetrievedContext(chunks.slice(0, config.contextTopK));
+  const rerankedContext = buildRetrievedContext(orderContextBySourceAuthority(chunks.slice(0, config.contextTopK)));
 
   if (!isLLMAvailable()) {
     const result = await queryRAG(query, sessionId, config);
