@@ -124,12 +124,36 @@ class EvaluationBaselineTests(unittest.TestCase):
             (23, "佛教文化博览馆位于灵山大佛的座基内。", "location"),
             (30, "灵山胜境是国家AAAAA级旅游景区。", "level"),
             (50, "建议至少安排半天；想深度体验可以安排一整天。", "duration"),
+            (48, "梵宫星空穹顶高28米，用100公斤纯金绘制。", "material"),
         ]
 
         for question_id, answer, fact_id in cases:
             with self.subTest(question_id=question_id):
                 result = MODULE.evaluate_answer(answer, self._question(question_id))
                 self.assertIn(fact_id, result["matched_fact_ids"])
+
+    def test_temple_relics_accept_knowledge_base_aliases(self):
+        result = MODULE.evaluate_answer(
+            "祥符禅寺内有六角古井、千年古银杏和江南第一钟。",
+            self._question(12),
+        )
+
+        self.assertEqual(result["fact_hits"], 3)
+        self.assertTrue(result["passed"])
+
+    def test_five_directions_accept_compact_direction_aliases(self):
+        result = MODULE.evaluate_answer(
+            "五方五佛对应东、南、西、北、中五个方位。",
+            self._question(34),
+        )
+
+        self.assertEqual(result["fact_hits"], 5)
+        self.assertTrue(result["passed"])
+
+    def test_single_character_alias_requires_a_standalone_token(self):
+        self.assertTrue(MODULE._contains_any("东、南、西、北、中五个方位", ["东"]))
+        self.assertFalse(MODULE._contains_any("东阳木雕与中国文化", ["东"]))
+        self.assertFalse(MODULE._contains_any("东阳木雕与中国文化", ["中"]))
 
     def test_numeric_fact_does_not_match_as_part_of_a_longer_number(self):
         self.assertFalse(MODULE._contains_any("高188米", ["88米"]))
