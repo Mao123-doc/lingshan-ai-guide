@@ -233,9 +233,9 @@ function matchSpots(query: string): Array<{ spotName: string; score: number }> {
  */
 function matchFields(query: string): Array<{ fieldName: string; fieldLabel: string; score: number }> {
   const fieldHints: Record<string, string[]> = {
-    params: ['高', '多高', '高度', '米', '重量', '吨', '面积', '平方米', '尺寸', '长', '宽', '参数', '大'],
+    params: ['高', '多高', '高度', '米', '重量', '吨', '面积', '平方米', '尺寸', '长', '宽', '参数', '大', '建筑', '特点', '材质', '结构', '风格'],
     location: ['在哪', '位置', '哪里', '怎么走', '位于'],
-    culture: ['文化', '意义', '象征', '内涵', '佛教', '代表', '历史', '唐代', '北宋'],
+    culture: ['文化', '意义', '象征', '内涵', '佛教', '代表', '历史', '唐代', '北宋', '特点'],
     description: ['介绍', '描述', '什么', '是什么', '详细'],
     highlights: ['亮点', '好玩', '好看', '特色', '打卡', '拍照', '不容错过'],
     openingInfo: ['时间', '几点', '开放', '表演', '演出', '票价', '门票', '免费', '收费', '场次'],
