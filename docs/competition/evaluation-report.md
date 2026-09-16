@@ -25,6 +25,10 @@ Top-K 为 8，Context Top-K 为 5。Local fallback 不计入 Full-RAG，Trace �
 失败题为 #14（多事实问题只回答了题字作者）和 #50（对整个景区游览时长进行谨慎拒答）。
 它们保留在原始结果中，没有通过修改知识库、放宽 Fact Contract 或 fallback 隐藏。
 
+提交后的 5 题 Runtime Smoke（#1、#3、#31、#37、#42）再次确认 health `ok`、LLM 非 offline、
+Vector service 可用，5/5 请求均为真实 Full-RAG，Trace 各阶段与配置一致且无 fallback。
+证据：`evaluation/results/runtime_smoke_20260917_021500_manifest.json`。
+
 ### 模型身份说明
 
 运行配置请求 `deepseek-chat`，Provider trace 实际返回 `deepseek-flash`。该差异已写入
