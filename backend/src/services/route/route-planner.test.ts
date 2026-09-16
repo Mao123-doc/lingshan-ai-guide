@@ -23,6 +23,10 @@ assert.ok(basic.steps.length > 0);
 assert.equal(basic.violations.length, 0);
 assert.ok(basic.totalMinutes <= 180);
 
+const noDirectInterestMatch = planRoute(scene({ currentLocation: 'LS-011', interests: ['nature'] }), graph);
+assert.equal(noDirectInterestMatch.feasible, true);
+assert.ok(noDirectInterestMatch.steps.length > 0);
+
 const mustVisit = planRoute(scene({ mustVisitSpotIds: ['LS-006'] }), graph);
 assert.equal(mustVisit.feasible, true);
 assert.ok(mustVisit.steps.some(step => step.spotId === 'LS-006'));

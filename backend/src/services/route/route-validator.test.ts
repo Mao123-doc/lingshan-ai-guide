@@ -44,6 +44,14 @@ const inaccessiblePlan: RoutePlan = {
 };
 
 assert.equal(validateRoute(basePlan(), baseScene, graph).valid, true); // 1
+assert.equal(validateRoute({
+  startTime: '09:00',
+  steps: [{ spotId: 'south_gate', arrive: '09:12', start: '09:12', end: '09:12', walkMinutes: 12, visitMinutes: 0, reasonCode: 'return' }],
+  totalMinutes: 12,
+  walkingMinutes: 12,
+  visitingMinutes: 0,
+  waitingMinutes: 0,
+}, { ...baseScene, currentLocation: 'LS-006' }, graph).violations.some(violation => violation.code === 'outside_opening_window'), false); // 1b
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'missing' }] }, baseScene, 'unknown_spot'), true); // 2
 assert.equal(has({ ...basePlan(), steps: [...basePlan().steps, { ...basePlan().steps[1] }] }, baseScene, 'duplicate_spot'), true); // 3
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'NH-006', end: '09:35', visitMinutes: 30 }] }, baseScene, 'disconnected'), true); // 4

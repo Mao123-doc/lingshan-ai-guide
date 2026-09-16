@@ -185,7 +185,11 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
 
   const mustSatisfied = (state: SearchState) => scene.mustVisitSpotIds.every(id => state.visited.has(id));
   const feasibleCandidates = allStates.filter(mustSatisfied);
-  const selected = [...(feasibleCandidates.length > 0 ? feasibleCandidates : allStates)].sort((left, right) =>
+  const candidateStates = feasibleCandidates.length > 0 ? feasibleCandidates : allStates;
+  const rankedStates = scene.mustVisitSpotIds.length === 0 && candidateStates.some(state => state.steps.length > 0)
+    ? candidateStates.filter(state => state.steps.length > 0)
+    : candidateStates;
+  const selected = [...rankedStates].sort((left, right) =>
     Number(mustSatisfied(right)) - Number(mustSatisfied(left)) || right.score - left.score || left.time - right.time,
   )[0] || initial;
   const rejectedRequests: Array<{ item: string; reasonCode: string }> = [];

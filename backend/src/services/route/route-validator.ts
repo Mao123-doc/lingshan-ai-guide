@@ -48,9 +48,14 @@ function toMinutes(value: string): number | undefined {
   return hour <= 23 && minute <= 59 ? hour * 60 + minute : undefined;
 }
 
+function windowEndpointToMinutes(value: string): number | undefined {
+  if (value === '24:00') return 24 * 60;
+  return toMinutes(value);
+}
+
 function withinWindows(time: number, windows: string[]): boolean {
   return windows.some(window => {
-    const [start, end] = window.split('-').map(toMinutes);
+    const [start, end] = window.split('-').map(windowEndpointToMinutes);
     if (start === undefined || end === undefined) return false;
     return start <= end ? time >= start && time <= end : time >= start || time <= end;
   });
