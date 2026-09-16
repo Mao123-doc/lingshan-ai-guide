@@ -1,6 +1,6 @@
 {
   "benchmark": "scene_state_v1",
-  "git_sha": "56cfbaa",
+  "git_sha": "0522c3869bf5dd23a35769e0e7f225737a239141",
   "fixture": {
     "path": "evaluation/scene/scene_gold_v1.json",
     "sha256": "A0E32C99AF40D1B16508D19C0825BCDF6D04983E7F10BCF8260D3630AA097A25",
@@ -8,7 +8,7 @@
   },
   "implementation": {
     "path": "backend/src/services/scene/scene-state.ts",
-    "sha256": "4BAAB9FFF20746DB98D5DF291E5E9E79C0A39121617374A8E372C574C0CC9685"
+    "sha256": "7C32240E1BFFECDEF9A3F6232ADDA3515FF35BF212517CEB523228142E2823D9"
   },
   "metrics": {
     "field_accuracy": 1.0,
