@@ -72,6 +72,48 @@ const interests = [
   { key: '祈福', icon: <HeartOutlined />, label: '祈福体验', desc: '吉祥平安之旅' },
 ];
 
+interface RecommendationStep {
+  name: string;
+  reason: string;
+  visit_duration: number;
+}
+
+interface RecommendationResult {
+  total_duration: number;
+  tips: string;
+  route: RecommendationStep[];
+}
+
+interface SceneStep {
+  start: string;
+  end: string;
+  spotId: string;
+  arrive: string;
+  walkMinutes: number;
+  visitMinutes: number;
+  performanceId?: string;
+  performanceStartTime?: string;
+}
+
+interface RejectedRequest {
+  item: string;
+  reasonCode: string;
+}
+
+interface SceneRouteResult {
+  outcome?: RouteOutcome;
+  feasibility?: boolean;
+  scene_state?: { missingCriticalFields?: string[] };
+  route?: {
+    steps?: SceneStep[];
+    totalMinutes?: number;
+    walkingMinutes?: number;
+    visitingMinutes?: number;
+    rejectedRequests?: RejectedRequest[];
+  };
+  evidence?: Array<{ name: string; confidence: string }>;
+}
+
 export default function RecommendPage() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<string[]>([]);
@@ -80,9 +122,9 @@ export default function RecommendPage() {
   const [ageGroup, setAgeGroup] = useState('青年');
   const [budget, setBudget] = useState('舒适型');
   const [loading, setLoading] = useState(false);
-  const [route, setRoute] = useState<any>(null);
+  const [route, setRoute] = useState<RecommendationResult | null>(null);
   const [sceneQuery, setSceneQuery] = useState('我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？');
-  const [sceneRoute, setSceneRoute] = useState<any>(null);
+  const [sceneRoute, setSceneRoute] = useState<SceneRouteResult | null>(null);
   const [sceneLoading, setSceneLoading] = useState(false);
 
   const toggleInterest = (key: string) => {
@@ -129,6 +171,10 @@ export default function RecommendPage() {
   const routeOutcomeLabel = getRouteOutcomeLabel(routeOutcome, routeStepCount);
   const routeIsExecutable = routeOutcome === 'feasible' && routeStepCount > 0;
   const routeHasAdjustedPreferences = routeOutcome === 'feasible_with_rejected_preferences' && routeStepCount > 0;
+  const missingCriticalFields = sceneRoute?.scene_state?.missingCriticalFields ?? [];
+  const rejectedRequests = sceneRoute?.route?.rejectedRequests ?? [];
+  const sceneSteps = sceneRoute?.route?.steps ?? [];
+  const evidence = sceneRoute?.evidence ?? [];
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
@@ -179,33 +225,33 @@ export default function RecommendPage() {
               <Tag>步行 {sceneRoute.route?.walkingMinutes ?? 0} 分钟</Tag>
               <Tag>游览 {sceneRoute.route?.visitingMinutes ?? 0} 分钟</Tag>
             </Space>
-            {sceneRoute.scene_state?.missingCriticalFields?.length > 0 && (
+            {missingCriticalFields.length > 0 && (
               <Alert
                 style={{ marginTop: 14 }}
                 type="warning"
-                message={`需要补充：${sceneRoute.scene_state.missingCriticalFields.join('、')}`}
+                message={`需要补充：${missingCriticalFields.join('、')}`}
               />
             )}
-            {sceneRoute.route?.rejectedRequests?.length > 0 && (
+            {rejectedRequests.length > 0 && (
               <Alert
                 style={{ marginTop: 14 }}
                 type="info"
                 message="系统明确保留了未满足请求"
-                description={sceneRoute.route.rejectedRequests.map((item: any) => `${item.item}：${getRouteRejectionMessage(item.reasonCode)}`).join('；')}
+                description={rejectedRequests.map((item) => `${item.item}：${getRouteRejectionMessage(item.reasonCode)}`).join('；')}
               />
             )}
             <Steps
               style={{ marginTop: 18 }}
               direction="vertical"
-              items={(sceneRoute.route?.steps || []).map((item: any, index: number) => ({
+              items={sceneSteps.map((item, index) => ({
                 title: `${item.start}–${item.end} ${item.spotId}`,
                 description: `到达 ${item.arrive}，步行 ${item.walkMinutes} 分钟，停留 ${item.visitMinutes} 分钟${item.performanceId ? `，演出 ${item.performanceStartTime}` : ''}`,
                 icon: <Tag color="magenta">{index + 1}</Tag>,
               }))}
             />
-            {sceneRoute.evidence?.length > 0 && (
+            {evidence.length > 0 && (
               <Paragraph type="secondary" style={{ marginTop: 12 }}>
-                证据来源：{sceneRoute.evidence.map((item: any) => `${item.name}（${item.confidence}）`).join('、')}
+                证据来源：{evidence.map((item) => `${item.name}（${item.confidence}）`).join('、')}
               </Paragraph>
             )}
           </Card>
@@ -339,7 +385,7 @@ export default function RecommendPage() {
                 <Steps
                   direction="vertical"
                   current={-1}
-                  items={route.route.map((item: any, i: number) => ({
+                  items={route.route.map((item, i) => ({
                     title: <Text strong>{item.name}</Text>,
                     description: (
                       <div>
@@ -386,7 +432,7 @@ export default function RecommendPage() {
                   borderRadius: 12,
                   padding: '16px 20px',
                 }}>
-                  {route.route.map((item: any, i: number) => {
+                  {route.route.map((item, i) => {
                     const img = SPOT_IMAGES[item.name];
                     const isLast = i === route.route.length - 1;
                     return (
