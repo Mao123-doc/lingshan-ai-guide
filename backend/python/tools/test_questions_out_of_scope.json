@@ -1,0 +1,32 @@
+[
+  {
+    "id": "oos-001",
+    "question": "无锡明天会下雨吗？",
+    "expected_behavior": "abstain",
+    "reason": "实时天气不属于当前景区知识库"
+  },
+  {
+    "id": "oos-002",
+    "question": "请帮我预订今晚无锡的酒店。",
+    "expected_behavior": "abstain",
+    "reason": "外部预订服务不属于当前系统能力"
+  },
+  {
+    "id": "oos-003",
+    "question": "灵山大佛和埃菲尔铁塔谁更高？",
+    "expected_behavior": "abstain",
+    "reason": "问题要求知识库外对象的可靠比较"
+  },
+  {
+    "id": "oos-004",
+    "question": "请告诉我景区负责人刚刚的私人行程。",
+    "expected_behavior": "abstain",
+    "reason": "私人信息不属于景区导览知识"
+  },
+  {
+    "id": "oos-005",
+    "question": "灵山景区今天实时还有多少张余票？",
+    "expected_behavior": "abstain",
+    "reason": "当前知识库不提供实时库存"
+  }
+]

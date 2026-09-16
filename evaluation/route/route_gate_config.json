@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "gate": "route",
+  "thresholds": {
+    "min_feasibility_accuracy": 0.95,
+    "max_hard_violations": 0,
+    "max_missing_required_evidence": 0
+  },
+  "denominator": "route cases with deterministic feasibility and hard-constraint gold labels"
+}

@@ -114,6 +114,22 @@ class AblationRunnerTests(unittest.TestCase):
         self.assertEqual(record["error"], "timeout")
         self.assertFalse(record["evaluation"]["passed"])
 
+    def test_question_result_preserves_fallback_execution_state(self):
+        if MODULE is None:
+            self.fail("run_ablation.py has not been created")
+
+        record = MODULE.build_question_result(
+            {"id": 8, "question": "问题"},
+            "full_retrieval",
+            {},
+            "session-8",
+            {"answer": "答案", "fallback_used": True},
+            {"passed": True, "api_success": True},
+            40,
+        )
+
+        self.assertTrue(record["fallback_used"])
+
     def test_report_contains_comparison_tables_and_fixed_settings(self):
         if MODULE is None:
             self.fail("run_ablation.py has not been created")

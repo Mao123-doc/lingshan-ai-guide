@@ -89,6 +89,7 @@ def build_question_result(
         "session_id": session_id,
         "answer": response.get("answer", ""),
         "api_success": api_success,
+        "fallback_used": bool(response.get("fallback_used", False)),
         "error": response.get("error") or evaluation.get("error"),
         "used_llm": response.get("used_llm"),
         "retrieved_chunks": response.get("retrieved_chunks"),
