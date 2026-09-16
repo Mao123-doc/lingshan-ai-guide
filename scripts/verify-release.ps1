@@ -12,6 +12,8 @@ $startedAt = Get-Date
 $commitSha = (& git rev-parse HEAD).Trim()
 $branch = (& git branch --show-current).Trim()
 $checks = [System.Collections.Generic.List[object]]::new()
+$frontendRoot = Join-Path $repoRoot 'frontend'
+$browserServerProcess = $null
 
 function Invoke-ReleaseCheck {
   param(
@@ -28,6 +30,38 @@ function Invoke-ReleaseCheck {
     exit_code = $exitCode
     duration_ms = [int]((Get-Date) - $checkStarted).TotalMilliseconds
   })
+}
+
+function Start-BrowserServer {
+  $process = Start-Process -FilePath 'node' `
+    -ArgumentList @('node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', '5173') `
+    -WorkingDirectory $frontendRoot `
+    -WindowStyle Hidden `
+    -PassThru
+
+  $deadline = (Get-Date).AddSeconds(60)
+  do {
+    if ($process.HasExited) {
+      throw "Vite exited before becoming ready (exit code $($process.ExitCode))."
+    }
+    try {
+      $response = Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:5173/' -TimeoutSec 2
+      if ($response.StatusCode -eq 200) { return $process }
+    } catch {
+      # Keep polling until the bounded startup deadline.
+    }
+    Start-Sleep -Milliseconds 250
+  } while ((Get-Date) -lt $deadline)
+
+  if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue }
+  throw 'Vite did not become ready within 60 seconds.'
+}
+
+function Stop-BrowserServer {
+  param([System.Diagnostics.Process]$Process)
+  if ($null -ne $Process -and -not $Process.HasExited) {
+    Stop-Process -Id $Process.Id -Force -ErrorAction SilentlyContinue
+  }
 }
 
 Invoke-ReleaseCheck 'python-evaluator-and-quality-gates' {
@@ -55,8 +89,20 @@ Invoke-ReleaseCheck 'git-diff-check' {
 }
 
 if ($RunBrowser) {
-  Invoke-ReleaseCheck 'browser-desktop-and-mobile' {
-    npm --prefix frontend run test:e2e -- --project=chromium --project=mobile-chromium
+  try {
+    $browserServerProcess = Start-BrowserServer
+    $previousReuseFlag = $env:PLAYWRIGHT_USE_EXISTING_SERVER
+    $env:PLAYWRIGHT_USE_EXISTING_SERVER = '1'
+    Invoke-ReleaseCheck 'browser-desktop-and-mobile' {
+      npm --prefix frontend run test:e2e -- --project=chromium --project=mobile-chromium
+    }
+  } finally {
+    if ($null -eq $previousReuseFlag) {
+      Remove-Item Env:PLAYWRIGHT_USE_EXISTING_SERVER -ErrorAction SilentlyContinue
+    } else {
+      $env:PLAYWRIGHT_USE_EXISTING_SERVER = $previousReuseFlag
+    }
+    Stop-BrowserServer $browserServerProcess
   }
 }
 
