@@ -100,6 +100,19 @@ class RuntimeSmokeTests(unittest.TestCase):
         self.assertNotIn("DEEPSEEK_API_KEY", str(manifest))
         self.assertNotIn("answer", manifest["records"][0])
 
+    def test_manifest_resolves_current_git_sha_when_not_supplied(self):
+        result = {"health": {}, "records": []}
+
+        with patch.object(
+            MODULE.subprocess,
+            "run",
+            return_value=type("Completed", (), {"stdout": "current-sha\n"})(),
+        ) as run:
+            manifest = MODULE.build_manifest(result)
+
+        self.assertEqual(manifest["commit_sha"], "current-sha")
+        run.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 import time
 import uuid
@@ -49,6 +50,24 @@ def _stage_summary(stage: Any) -> dict[str, Any]:
     }
 
 
+def resolve_commit_sha() -> str:
+    """Resolve the current repository SHA without exposing runtime secrets."""
+    configured = os.environ.get("GIT_COMMIT_SHA")
+    if configured:
+        return configured
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return completed.stdout.strip() or "unknown"
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+
+
 def build_manifest(result: dict[str, Any], commit_sha: str | None = None) -> dict[str, Any]:
     """Build a redacted evidence manifest without answers, credentials or paths."""
     health = result.get("health") or {}
@@ -85,7 +104,7 @@ def build_manifest(result: dict[str, Any], commit_sha: str | None = None) -> dic
     return {
         "schema_version": 1,
         "kind": "full-rag-runtime-smoke",
-        "commit_sha": commit_sha or os.environ.get("GIT_COMMIT_SHA", "unknown"),
+        "commit_sha": commit_sha or resolve_commit_sha(),
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "configuration": EVALUATION_CONFIG,
         "health": {
