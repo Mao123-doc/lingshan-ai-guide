@@ -7,7 +7,8 @@ import {
   CheckCircleFilled,
 } from '@ant-design/icons';
 import { adminAPI } from '../../services/api';
-import DigitalHuman, { ensureAudioContext } from '../../components/visitor/DigitalHuman';
+import DigitalHuman from '../../components/visitor/DigitalHuman';
+import { ensureAudioContext } from '../../components/visitor/audio-context';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -75,8 +76,8 @@ export default function DigitalHumanPage() {
 
   const stopVoice = () => {
     if (sourceNodeRef.current) {
-      try { sourceNodeRef.current.stop(); } catch {}
-      try { sourceNodeRef.current.disconnect(); } catch {}
+      try { sourceNodeRef.current.stop(); } catch { /* already stopped */ }
+      try { sourceNodeRef.current.disconnect(); } catch { /* already disconnected */ }
       sourceNodeRef.current = null;
     }
     if (currentAudio.current) { currentAudio.current.pause(); currentAudio.current = null; }

@@ -8,7 +8,8 @@ import {
   ClearOutlined, CameraOutlined,
   CaretRightOutlined, SettingOutlined,
 } from '@ant-design/icons';
-import DigitalHuman, { ensureAudioContext } from '../../components/visitor/DigitalHuman';
+import DigitalHuman from '../../components/visitor/DigitalHuman';
+import { ensureAudioContext } from '../../components/visitor/audio-context';
 import './QAPage.css';
 
 const API_BASE = '';
@@ -24,6 +25,31 @@ interface ChatMessage {
   ttsStatus?: 'idle' | 'loading' | 'ready' | 'failed';
   ttsAudioBase64?: string | null;
   ttsVisemes?: Array<{ time_ms: number; viseme_id: number }> | null;
+}
+
+interface Viseme {
+  time_ms: number;
+  viseme_id: number;
+}
+
+interface SpeechRecognitionEventLike {
+  results: ArrayLike<{ 0: { transcript: string }; isFinal: boolean }>;
+}
+
+interface SpeechRecognitionLike {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+}
+
+interface SpeechRecognitionWindow extends Window {
+  SpeechRecognition?: new () => SpeechRecognitionLike;
+  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
 }
 
 const QUICK_CHIPS = [
@@ -59,12 +85,11 @@ export default function QAPage() {
 
   // -- refs (ref-driven audio: no stale closures, survives React re-renders) --
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<any>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
-  const visemeTimerRef = useRef<any>(null);
+  const visemeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playingMsgIdRef = useRef<string | null>(null);
   const handleSendFnRef = useRef<((text?: string) => void) | null>(null);
 
@@ -73,14 +98,14 @@ export default function QAPage() {
   const stopPlayback = useCallback(() => {
     // Mechanism 3: Web Audio API — stop & disconnect source node
     if (sourceNodeRef.current) {
-      try { sourceNodeRef.current.stop(); } catch {}
-      try { sourceNodeRef.current.disconnect(); } catch {}
+      try { sourceNodeRef.current.stop(); } catch { /* already stopped */ }
+      try { sourceNodeRef.current.disconnect(); } catch { /* already disconnected */ }
       sourceNodeRef.current = null;
     }
     // Legacy HTML5 audio fallback
     if (audioRef.current) {
-      try { audioRef.current.pause(); } catch {}
-      try { audioRef.current.currentTime = 0; } catch {}
+      try { audioRef.current.pause(); } catch { /* already paused */ }
+      try { audioRef.current.currentTime = 0; } catch { /* audio element is unavailable */ }
       audioRef.current = null;
     }
     if (visemeTimerRef.current) {
@@ -108,7 +133,7 @@ export default function QAPage() {
 
   const playAudioDirect = useCallback(async (
     audioB64: string,
-    visemes: any[] | null | undefined,
+    visemes: Viseme[] | null | undefined,
     msgId: string,
   ) => {
     const TAG = `[TTS:${msgId.slice(-6)}]`;
@@ -148,7 +173,7 @@ export default function QAPage() {
       sourceNode.connect(analyser);
       sourceNodeRef.current = sourceNode;
 
-      const visemeData: any[] = visemes || [];
+      const visemeData: Viseme[] = visemes || [];
       const VISEME_OFFSET_MS = SILENCE_SEC * 1000;
       if (visemeTimerRef.current) clearInterval(visemeTimerRef.current);
       const startTime = performance.now();
@@ -172,15 +197,15 @@ export default function QAPage() {
       }, 25);
 
       const cleanup = () => {
-        try { sourceNode.stop(); } catch {}
-        try { sourceNode.disconnect(); } catch {}
+        try { sourceNode.stop(); } catch { /* already stopped */ }
+        try { sourceNode.disconnect(); } catch { /* already disconnected */ }
         if (sourceNodeRef.current === sourceNode) sourceNodeRef.current = null;
         if (playingMsgIdRef.current === msgId) {
           stopPlayback();
           if (conversationMode) {
             setTimeout(() => {
               if (recognitionRef.current && playingMsgIdRef.current === null) {
-                try { recognitionRef.current.start(); setIsListening(true); setDhStatus('listening'); } catch {}
+                try { recognitionRef.current.start(); setIsListening(true); setDhStatus('listening'); } catch { /* recognition unavailable */ }
               }
             }, 800);
           }
@@ -195,8 +220,8 @@ export default function QAPage() {
       console.timeEnd(`${TAG} total`);
       console.log(`${TAG} ✅ 播放已触发`);
 
-    } catch (err: any) {
-      console.error(`${TAG} ❌ 播放失败:`, err.message);
+    } catch (err: unknown) {
+      console.error(`${TAG} ❌ 播放失败:`, err instanceof Error ? err.message : String(err));
       stopPlayback();
     }
   }, [stopPlayback, conversationMode]);
@@ -212,7 +237,7 @@ export default function QAPage() {
         .replace(/\*(.+?)\*/g, '$1')
         .replace(/_(.+?)_/g, '$1')
         .replace(/`{1,3}[^`]*`{1,3}/g, '')
-        .replace(/[>*_~`#\[\]()|\\]/g, '')
+        .replace(/[>*_~`#\u005b\]()|\\]/g, '')
         .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
         .replace(/[\u{2600}-\u{27BF}]/gu, '')
         .replace(/[\u{2300}-\u{23FF}]/gu, '')
@@ -265,7 +290,7 @@ export default function QAPage() {
 
   // ==================== Manual play button handler ============================
 
-  const handlePlayClick = useCallback(async (msgId: string, text: string, cachedAudio: string | null | undefined, cachedVisemes: any[] | null | undefined) => {
+  const handlePlayClick = useCallback(async (msgId: string, text: string, cachedAudio: string | null | undefined, cachedVisemes: Viseme[] | null | undefined) => {
     if (playingMsgIdRef.current === msgId) {
       stopPlayback();
       return;
@@ -347,7 +372,7 @@ export default function QAPage() {
                 // Auto-play if enabled
                 cacheAndMaybePlay(aiMsgId, fullAnswer, autoPlay);
               }
-            } catch {}
+          } catch { /* ignore malformed stream event */ }
           }
           if (Date.now() - lastChunk > 30000) break;
         } catch { break; }
@@ -417,7 +442,7 @@ export default function QAPage() {
         setCurrentEmotion('greet');
         preCacheTTS(fallbackId, fallbackText);
       });
-  }, []);
+  }, [preCacheTTS]);
 
   // ==================== URL query param ======================================
 
@@ -436,13 +461,14 @@ export default function QAPage() {
   // ==================== Voice input (Web Speech API) =========================
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const speechWindow = window as SpeechRecognitionWindow;
+    const SpeechRecognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
     const r = new SpeechRecognition();
     r.lang = 'zh-CN';
     r.interimResults = true;   // show partial results
     r.continuous = false;
-    r.onresult = (e: any) => {
+    r.onresult = (e: SpeechRecognitionEventLike) => {
       const txt = e.results[0][0].transcript;
       setInput(txt);
       if (e.results[0].isFinal) {
@@ -692,7 +718,6 @@ export default function QAPage() {
           title="拍照识别景点"
         />
         <Input.TextArea
-          ref={inputRef}
           value={input}
           onChange={e => setInput(e.target.value)}
           onPressEnter={e => { if (!e.shiftKey) { e.preventDefault(); handleSend(); } }}
