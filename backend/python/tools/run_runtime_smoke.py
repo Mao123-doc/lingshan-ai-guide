@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 import uuid
@@ -35,6 +36,71 @@ SMOKE_QUESTION_IDS = (1, 3, 31, 37, 42)
 def console_json(value: dict[str, Any]) -> str:
     """Render JSON using ASCII escapes for Windows legacy consoles."""
     return json.dumps(value, ensure_ascii=True, indent=2)
+
+
+def _stage_summary(stage: Any) -> dict[str, Any]:
+    if not isinstance(stage, dict):
+        return {"configured": None, "executed": None, "status": "missing"}
+    return {
+        "configured": stage.get("configured"),
+        "executed": stage.get("executed"),
+        "status": stage.get("status"),
+        "reason": stage.get("reason"),
+    }
+
+
+def build_manifest(result: dict[str, Any], commit_sha: str | None = None) -> dict[str, Any]:
+    """Build a redacted evidence manifest without answers, credentials or paths."""
+    health = result.get("health") or {}
+    records = []
+    for record in result.get("records", []):
+        trace = record.get("trace") or {}
+        retrieval = trace.get("retrieval") or {}
+        evaluation = record.get("evaluation") or {}
+        records.append({
+            "question_id": record.get("question_id"),
+            "api_success": record.get("api_success"),
+            "used_llm": record.get("used_llm"),
+            "fallback_used": record.get("fallback_used"),
+            "full_rag": record.get("full_rag"),
+            "latency_ms": record.get("latency_ms"),
+            "retrieved_ids": trace.get("retrievedIds", []),
+            "context_ids": trace.get("contextIds", []),
+            "stages": {
+                "rewrite": _stage_summary(trace.get("rewrite")),
+                "vector": _stage_summary(retrieval.get("vector")),
+                "structured": _stage_summary(retrieval.get("structured")),
+                "keyword": _stage_summary(retrieval.get("keyword")),
+                "rerank": _stage_summary(trace.get("rerank")),
+                "generation": _stage_summary(trace.get("generation")),
+            },
+            "evaluation": {
+                "fact_hits": evaluation.get("fact_hits"),
+                "min_fact_hits": evaluation.get("min_fact_hits"),
+                "fact_recall": evaluation.get("fact_recall"),
+                "passed": evaluation.get("passed"),
+            },
+        })
+
+    return {
+        "schema_version": 1,
+        "kind": "full-rag-runtime-smoke",
+        "commit_sha": commit_sha or os.environ.get("GIT_COMMIT_SHA", "unknown"),
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "configuration": EVALUATION_CONFIG,
+        "health": {
+            "status": health.get("status"),
+            "llm": health.get("llm"),
+            "vector_search": health.get("vector_search"),
+            "knowledge_chunks": health.get("knowledge_chunks"),
+            "knowledge_indexed": health.get("knowledge_indexed"),
+        },
+        "question_ids": result.get("question_ids", []),
+        "full_rag_count": result.get("full_rag_count", 0),
+        "ready": result.get("ready", False),
+        "failures": result.get("failures", []),
+        "records": records,
+    }
 
 
 def get_health(base_url: str, timeout: int = 10) -> dict[str, Any]:
@@ -103,6 +169,7 @@ def run_smoke(
     base_url: str,
     require_llm: bool = True,
     require_vector: bool = True,
+    require_no_fallback: bool = True,
     health_payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     health = health_payload if health_payload is not None else get_health(base_url)
@@ -113,6 +180,7 @@ def run_smoke(
         "health": health,
         "failures": health_failures,
         "question_ids": list(SMOKE_QUESTION_IDS),
+        "require_no_fallback": require_no_fallback,
         "records": [],
     }
     if health_failures:
@@ -138,7 +206,10 @@ def run_smoke(
         result["records"].append(record)
 
     result["full_rag_count"] = sum(bool(record["full_rag"]) for record in result["records"])
-    result["ready"] = result["full_rag_count"] == len(SMOKE_QUESTION_IDS)
+    if require_no_fallback:
+        result["ready"] = result["full_rag_count"] == len(SMOKE_QUESTION_IDS)
+    else:
+        result["ready"] = all(record["api_success"] for record in result["records"])
     if not result["ready"]:
         result["failures"].append("not_full_rag")
     return result
@@ -149,19 +220,33 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--api-base", default="http://127.0.0.1:8010")
     parser.add_argument("--require-llm", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--require-vector", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--require-no-fallback", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument(
         "--output",
         type=Path,
         default=PROJECT_ROOT / "results" / "runtime_smoke.json",
+    )
+    parser.add_argument(
+        "--manifest-output",
+        type=Path,
+        default=PROJECT_ROOT / "evaluation" / "verification" / "runtime-smoke-latest.json",
     )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    result = run_smoke(args.api_base, args.require_llm, args.require_vector)
+    result = run_smoke(
+        args.api_base,
+        args.require_llm,
+        args.require_vector,
+        args.require_no_fallback,
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    manifest = build_manifest(result)
+    args.manifest_output.parent.mkdir(parents=True, exist_ok=True)
+    args.manifest_output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(console_json(result))
     return 0 if result["ready"] else 1
 

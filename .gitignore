@@ -33,6 +33,11 @@ data/model_cache/
 # TTS cache
 data/tts-cache/
 
+# Evaluation evidence generated locally
+results/runtime_smoke.json
+evaluation/verification/*.json
+!evaluation/verification/.gitkeep
+
 # Logs
 *.log
 

@@ -67,6 +67,39 @@ class RuntimeSmokeTests(unittest.TestCase):
 
         self.assertTrue(rendered.isascii())
 
+    def test_manifest_contains_only_sanitized_runtime_evidence(self):
+        result = {
+            "schema_version": 1,
+            "health": {
+                "status": "ok",
+                "llm": "deepseek-chat",
+                "vector_search": True,
+                "knowledge_chunks": 57,
+            },
+            "question_ids": [1, 3, 31, 37, 42],
+            "full_rag_count": 5,
+            "records": [{
+                "question_id": 1,
+                "api_success": True,
+                "used_llm": True,
+                "fallback_used": False,
+                "full_rag": True,
+                "latency_ms": 100,
+                "trace": {
+                    "rewrite": {"configured": True, "status": "executed"},
+                    "generation": {"configured": True, "status": "executed"},
+                },
+                "evaluation": {"fact_hits": 1, "min_fact_hits": 1, "passed": True},
+            }],
+        }
+
+        manifest = MODULE.build_manifest(result, "abc123")
+
+        self.assertEqual(manifest["commit_sha"], "abc123")
+        self.assertEqual(manifest["full_rag_count"], 5)
+        self.assertNotIn("DEEPSEEK_API_KEY", str(manifest))
+        self.assertNotIn("answer", manifest["records"][0])
+
 
 if __name__ == "__main__":
     unittest.main()
