@@ -49,7 +49,15 @@ export function createApp(): Express {
 
   app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error('Unhandled error:', err);
-    res.status(500).json({ error: '服务器内部错误', detail: err.message });
+    const status = err?.code === 'LIMIT_FILE_SIZE'
+      ? 413
+      : Number.isInteger(err?.status) && err.status >= 400 && err.status < 500
+        ? err.status
+        : 500;
+    res.status(status).json({
+      error: status === 400 ? '请求格式错误' : status === 413 ? '上传文件过大' : '服务器内部错误',
+      detail: err.message,
+    });
   });
 
   return app;

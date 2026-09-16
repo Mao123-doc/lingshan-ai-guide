@@ -37,6 +37,7 @@ data/tts-cache/
 results/runtime_smoke.json
 evaluation/verification/*.json
 !evaluation/verification/.gitkeep
+evaluation/verification/release-manifest.json
 
 # Logs
 *.log

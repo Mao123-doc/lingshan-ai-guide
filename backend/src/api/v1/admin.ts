@@ -15,23 +15,49 @@ import { resolveDataPath } from '../../config/paths';
 
 const adminRouter = Router();
 
+function csvCell(value: unknown): string {
+  let text = String(value ?? '');
+  if (/^[\t\r\n =+\-@]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
 // ============================================================
 // Upload & Doc Processing
 // ============================================================
-const uploadDir = resolveDataPath('uploads');
-const KB_DOCS_DIR = resolveDataPath('kb_docs');
-try { fs.mkdirSync(uploadDir, { recursive: true }); } catch {}
-try { fs.mkdirSync(KB_DOCS_DIR, { recursive: true }); } catch {}
+function getUploadDir(): string {
+  const dir = resolveDataPath('uploads');
+  try { fs.mkdirSync(dir, { recursive: true }); } catch {}
+  return dir;
+}
+
+function getKbDocsDir(): string {
+  const dir = resolveDataPath('kb_docs');
+  try { fs.mkdirSync(dir, { recursive: true }); } catch {}
+  return dir;
+}
 
 const storage = multer.diskStorage({
-  destination: uploadDir,
+  destination: (_req, _file, cb) => cb(null, getUploadDir()),
   filename: (_req, file, cb) => {
     const id = uuidv4();
     const ext = path.extname(file.originalname);
     cb(null, `${id}${ext}`);
   },
 });
-const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
+const upload = multer({
+  storage,
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    if (['.txt', '.docx', '.xlsx', '.xls'].includes(extension)) {
+      cb(null, true);
+      return;
+    }
+    const error = new Error('不支持的文件类型') as Error & { status?: number };
+    error.status = 400;
+    cb(error);
+  },
+});
 
 /** Parse uploaded docx and extract text for knowledge base */
 async function parseDocument(filePath: string, ext: string): Promise<string> {
@@ -234,7 +260,7 @@ adminRouter.post('/knowledge/documents', upload.single('file'), async (req: Requ
     if (text && text.length > 50) {
       // Save parsed text to kb_docs for re-indexing
       docId = uuidv4();
-      const docPath = path.join(KB_DOCS_DIR, `${docId}.txt`);
+      const docPath = path.join(getKbDocsDir(), `${docId}.txt`);
       fs.writeFileSync(docPath, text);
       status = 'indexed';
     }
@@ -280,6 +306,7 @@ adminRouter.get('/knowledge/documents', (_req: Request, res: Response) => {
       }
     }
     // 2. Uploaded files
+    const uploadDir = getUploadDir();
     if (fs.existsSync(uploadDir)) {
       const entries = fs.readdirSync(uploadDir);
       for (const entry of entries) {
@@ -295,11 +322,12 @@ adminRouter.get('/knowledge/documents', (_req: Request, res: Response) => {
       }
     }
     // 3. Parsed KB docs
-    if (fs.existsSync(KB_DOCS_DIR)) {
-      const kbEntries = fs.readdirSync(KB_DOCS_DIR);
+    const kbDocsDir = getKbDocsDir();
+    if (fs.existsSync(kbDocsDir)) {
+      const kbEntries = fs.readdirSync(kbDocsDir);
       for (const entry of kbEntries) {
         if (entry.startsWith('.')) continue;
-        const stat = fs.statSync(path.join(KB_DOCS_DIR, entry));
+        const stat = fs.statSync(path.join(kbDocsDir, entry));
         if (!docs.find(d => d.name === entry)) {
           docs.push({
             id: entry,
@@ -317,10 +345,14 @@ adminRouter.get('/knowledge/documents', (_req: Request, res: Response) => {
 
 adminRouter.delete('/knowledge/documents/:id', (req: Request, res: Response) => {
   const id = req.params.id as string;
+  if (!id || id === '.' || id === '..' || id !== path.basename(id) || path.isAbsolute(id)) {
+    res.status(404).json({ error: '文档不存在' });
+    return;
+  }
   let deleted = false;
   try {
-    const p1 = path.join(uploadDir, id);
-    const p2 = path.join(KB_DOCS_DIR, id);
+    const p1 = path.join(getUploadDir(), id);
+    const p2 = path.join(getKbDocsDir(), id);
     if (fs.existsSync(p1)) { fs.unlinkSync(p1); deleted = true; }
     if (fs.existsSync(p2)) { fs.unlinkSync(p2); deleted = true; }
   } catch {}
@@ -487,14 +519,14 @@ adminRouter.get('/conversations/export', (req: Request, res: Response) => {
   // Build CSV
   const headers = ['时间', '会话ID', '问题分类', '用户问题', 'AI回复', '情感', '耗时(ms)', '评价'];
   const rows = result.items.map(c => [
-    c.timestamp,
-    c.session_id,
+    csvCell(c.timestamp),
+    csvCell(c.session_id),
     c.category || 'other',
-    `"${(c.query || '').replace(/"/g, '""')}"`,
-    `"${(c.answer || '').replace(/"/g, '""')}"`,
-    c.emotion,
+    csvCell(c.query),
+    csvCell(c.answer),
+    csvCell(c.emotion),
     c.response_time_ms,
-    c.feedback || '',
+    csvCell(c.feedback),
   ]);
 
   const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
