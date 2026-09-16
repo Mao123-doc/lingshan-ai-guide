@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { DEFAULT_RAG_CONFIG, resolveRAGConfig } from './rag-config';
 import { buildTourGuideMessages } from './llm-service';
+import { buildRetrievedContext } from './rag-service';
 
 const defaults = resolveRAGConfig();
 assert.deepEqual(defaults, DEFAULT_RAG_CONFIG);
@@ -37,7 +38,18 @@ const retrievalOnlyMessages = buildTourGuideMessages(
   { includeFullKnowledge: false },
 );
 assert.equal(retrievalOnlyMessages.length, 2);
-assert.equal(retrievalOnlyMessages[0].content.includes('景区指南'), false);
+assert.equal(retrievalOnlyMessages[0].content.includes('灵山胜境坐落于江苏省无锡市'), false);
 assert.equal(retrievalOnlyMessages[0].content.includes('[片段1] 检索内容'), true);
+assert.equal(retrievalOnlyMessages[0].content.includes('不同来源并且存在冲突'), true);
+assert.equal(retrievalOnlyMessages[0].content.includes('knowledge_guide.txt'), true);
+
+const evidenceContext = buildRetrievedContext([{
+  id: 'guide-1',
+  text: '总高27.5米，青铜重量260吨。',
+  score: 1,
+  metadata: { source: 'knowledge_guide.txt', category: '建筑参数', keywords: [] },
+}]);
+assert.equal(evidenceContext.includes('id=guide-1'), true);
+assert.equal(evidenceContext.includes('source=knowledge_guide.txt'), true);
 
 console.log('RAG config tests passed');

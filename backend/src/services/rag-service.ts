@@ -583,10 +583,10 @@ export async function searchChunks(
 // Context Builder
 // ============================================================
 
-function buildRetrievedContext(chunks: Chunk[]): string {
+export function buildRetrievedContext(chunks: Chunk[]): string {
   if (chunks.length === 0) return '未找到直接相关的内容。';
   return chunks.map((c, i) =>
-    `[片段${i + 1}] (${c.metadata.category})\n${c.text}`
+    `[片段${i + 1}] (id=${c.id}; source=${c.metadata.source}; category=${c.metadata.category})\n${c.text}`
   ).join('\n\n');
 }
 
