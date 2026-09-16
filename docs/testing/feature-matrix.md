@@ -1,6 +1,6 @@
 # Feature Test Matrix
 
-本文档是当前 `codex/scene-agent-upgrade` 分支的测试合同清单。每个 API 至少需要一个成功契约、一个非法输入或失败契约；Admin API 还必须有未授权契约。
+本文档是当前 `codex/competition-hardening` 分支的测试合同清单。每个 API 至少需要一个成功契约、一个非法输入或失败契约；Admin API 还必须有未授权契约。
 
 ## API inventory
 
