@@ -11,14 +11,15 @@ import {
 } from '../../db/store';
 import { reindexKnowledgeBase, getKnowledgeStats, initKnowledgeBase } from '../../services/rag-service';
 import { isLLMAvailable, getActiveModelName, callLLM, callMultimodalLLM } from '../../services/llm-service';
+import { resolveDataPath } from '../../config/paths';
 
 const adminRouter = Router();
 
 // ============================================================
 // Upload & Doc Processing
 // ============================================================
-const uploadDir = path.resolve(__dirname, '../../../../data/uploads');
-const KB_DOCS_DIR = path.resolve(__dirname, '../../../../data/kb_docs');
+const uploadDir = resolveDataPath('uploads');
+const KB_DOCS_DIR = resolveDataPath('kb_docs');
 try { fs.mkdirSync(uploadDir, { recursive: true }); } catch {}
 try { fs.mkdirSync(KB_DOCS_DIR, { recursive: true }); } catch {}
 
@@ -262,7 +263,7 @@ adminRouter.get('/knowledge/documents', (_req: Request, res: Response) => {
   const docs: Array<{ id: string; name: string; size: number; date: string; status: string }> = [];
   try {
     // 1. Source knowledge files (data/raw/)
-    const rawDir = path.resolve(__dirname, '../../../../data/raw');
+    const rawDir = resolveDataPath('raw');
     if (fs.existsSync(rawDir)) {
       const rawEntries = fs.readdirSync(rawDir);
       for (const entry of rawEntries) {
@@ -407,7 +408,7 @@ adminRouter.post('/vision/recognize', upload.single('image'), async (req: Reques
 // ============ Digital Human Configuration ============
 
 adminRouter.get('/digital-human/appearance', (_req: Request, res: Response) => {
-  const configPath = path.resolve(__dirname, '../../../../data/dh_config.json');
+  const configPath = resolveDataPath('dh_config.json');
   let config: any = {
     id: 'config_001',
     name: '灵小禅',
@@ -437,7 +438,7 @@ adminRouter.get('/digital-human/appearance', (_req: Request, res: Response) => {
 });
 
 adminRouter.put('/digital-human/appearance', (req: Request, res: Response) => {
-  const configPath = path.resolve(__dirname, '../../../../data/dh_config.json');
+  const configPath = resolveDataPath('dh_config.json');
   try {
     fs.writeFileSync(configPath, JSON.stringify(req.body, null, 2));
     res.json({ status: 'ok', message: '数字人配置已保存' });

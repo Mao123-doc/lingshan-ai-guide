@@ -47,7 +47,7 @@ function getFallbackConfig(): LLMConfig | null {
   return {
     apiKey,
     model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
-    baseURL: 'https://api.deepseek.com/v1',
+    baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
   };
 }
 

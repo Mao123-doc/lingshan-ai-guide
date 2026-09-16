@@ -11,6 +11,7 @@ import { analyzeEmotion } from './emotion-service';
 import { searchStructured, getFieldIndex } from './structured-knowledge';
 import { DEFAULT_RAG_CONFIG, RAGExperimentConfig, resolveRAGConfig } from './rag-config';
 import { fuseCandidates, type RetrievalCandidate, type RetrievalChannel } from './retrieval/hybrid-retriever';
+import { resolveDataPath } from '../config/paths';
 
 // ============================================================
 // Types
@@ -268,10 +269,10 @@ function detectCategory(text: string): string {
 
 let knowledgeChunks: Chunk[] = [];
 let isIndexed = false;
-const CHUNKS_CACHE_FILE = path.resolve(__dirname, '../../../data/chunks_cache.json');
+const CHUNKS_CACHE_FILE = resolveDataPath('chunks_cache.json');
 
 function loadKnowledgeTexts(): string[] {
-  const dataDir = path.resolve(__dirname, '../../../data/raw');
+  const dataDir = resolveDataPath('raw');
   const texts: string[] = [];
 
   // Load all txt files
@@ -316,8 +317,8 @@ function isCacheStale(): boolean {
   try {
     if (!fs.existsSync(CHUNKS_CACHE_FILE)) return true;
     const cacheMtime = fs.statSync(CHUNKS_CACHE_FILE).mtimeMs;
-    const guidePath = path.resolve(__dirname, '../../../data/raw/knowledge_guide.txt');
-    const datasetPath = path.resolve(__dirname, '../../../data/raw/knowledge_dataset.txt');
+    const guidePath = resolveDataPath('raw', 'knowledge_guide.txt');
+    const datasetPath = resolveDataPath('raw', 'knowledge_dataset.txt');
     const guideMtime = fs.statSync(guidePath).mtimeMs;
     const datasetMtime = fs.statSync(datasetPath).mtimeMs;
     return guideMtime > cacheMtime || datasetMtime > cacheMtime;

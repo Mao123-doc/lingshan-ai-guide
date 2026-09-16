@@ -4,8 +4,9 @@
  */
 import fs from 'fs';
 import path from 'path';
+import { getDataRoot } from '../config/paths';
 
-const DATA_DIR = path.resolve(__dirname, '../../../data');
+const DATA_DIR = getDataRoot();
 const CONVERSATIONS_FILE = path.join(DATA_DIR, 'conversations.json');
 const FEEDBACK_FILE = path.join(DATA_DIR, 'feedback.json');
 const DAILY_STATS_FILE = path.join(DATA_DIR, 'daily_stats.json');
