@@ -956,10 +956,15 @@ export async function reindexKnowledgeBase(): Promise<{ chunkCount: number; inde
   // Trigger vector rebuild and wait for it
   try {
     const { rebuildVectorIndex } = await import('./vector-search-service');
-    await Promise.race([
-      rebuildVectorIndex(),
-      new Promise(r => setTimeout(r, 30000)),
-    ]);
+    let timeout: NodeJS.Timeout | undefined;
+    try {
+      await Promise.race([
+        rebuildVectorIndex(),
+        new Promise(resolve => { timeout = setTimeout(resolve, 30000); }),
+      ]);
+    } finally {
+      if (timeout) clearTimeout(timeout);
+    }
   } catch (e: any) {
     console.warn('[RAG] Vector rebuild failed:', e?.message);
   }
