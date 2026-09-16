@@ -17,6 +17,24 @@ assert.deepEqual(canonical.preferredPerformanceIds, [PERFORMANCE_IDS.JIXIANGSONG
 assert.equal(canonical.preferredPerformanceTimes?.[PERFORMANCE_IDS.JIXIANGSONG], '14:00');
 assert.deepEqual(canonical.missingCriticalFields, ['currentTime']);
 
+const separatedTimes = extractSceneState(
+  '我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？现在上午10点',
+);
+assert.equal(separatedTimes.currentTime, '10:00');
+assert.equal(separatedTimes.preferredPerformanceTimes?.[PERFORMANCE_IDS.JIXIANGSONG], '14:00');
+
+const numericPerformanceTime = extractSceneState('现在是10:00，想看14:00的《吉祥颂》，还剩5小时。');
+assert.equal(numericPerformanceTime.currentTime, '10:00');
+assert.equal(numericPerformanceTime.preferredPerformanceTimes?.[PERFORMANCE_IDS.JIXIANGSONG], '14:00');
+
+const halfHourPerformanceTime = extractSceneState('现在下午1点，想看下午两点半的《吉祥颂》，还剩3小时。');
+assert.equal(halfHourPerformanceTime.currentTime, '13:00');
+assert.equal(halfHourPerformanceTime.preferredPerformanceTimes?.[PERFORMANCE_IDS.JIXIANGSONG], '14:30');
+
+const currentTimeOnly = extractSceneState('现在上午10点，想看《吉祥颂》，还剩5小时。');
+assert.equal(currentTimeOnly.currentTime, '10:00');
+assert.equal(currentTimeOnly.preferredPerformanceTimes, undefined);
+
 const wheelchair = extractSceneState('我坐轮椅，从南门进入，只有90分钟，想去灵山梵宫。');
 assert.equal(wheelchair.currentLocation, 'south_gate');
 assert.equal(wheelchair.mobility, 'wheelchair');

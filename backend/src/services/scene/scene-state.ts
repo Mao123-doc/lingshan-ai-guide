@@ -135,6 +135,24 @@ function detectVisitedSpotIds(query: string): string[] {
   return SPOT_ALIASES.filter(spot => spot.names.some(name => visitedPhrase.includes(name))).map(spot => spot.id);
 }
 
+const TIME_TOKEN_PATTERN = /(上午|下午|早上|晚上)?\s*([一二两三四五六七八九十\d]{1,3})(?:(?::|：)([0-5]\d)|点(半)?)/g;
+
+function parseTimeToken(match: RegExpMatchArray): string | undefined {
+  const hour = parseChineseInteger(match[2]);
+  if (hour === undefined || hour > 23) return undefined;
+  const minute = match[3] || (match[4] ? '30' : '00');
+  const adjusted = match[1] && ['下午', '晚上'].includes(match[1]) && hour < 12
+    ? hour + 12
+    : !match[1] && hour > 0 && hour < 8 ? hour + 12 : hour;
+  return `${String(adjusted).padStart(2, '0')}:${minute}`;
+}
+
+function isCurrentTimeToken(clause: string, match: RegExpMatchArray): boolean {
+  const start = match.index ?? 0;
+  const prefix = clause.slice(Math.max(0, start - 12), start);
+  return /(?:现在是|当前是|现在|当前|时间是)\s*(?:上午|下午|早上|晚上)?\s*$/.test(prefix);
+}
+
 function detectPerformance(query: string): { ids: string[]; times?: Record<string, string> } {
   const performance = query.includes('吉祥颂') || query.includes('灵山吉祥颂')
     ? PERFORMANCE_IDS.JIXIANGSONG
@@ -142,16 +160,16 @@ function detectPerformance(query: string): { ids: string[]; times?: Record<strin
       ? PERFORMANCE_IDS.JIULONG
       : undefined;
   if (!performance) return { ids: [] };
-  const timeMatches = [...query.matchAll(/(上午|下午|早上|晚上)?\s*([一二两三四五六七八九十\d]{1,3})(?:(?::|：)([0-5]\d)|点(半)?)/g)];
-  const time = timeMatches.at(-1);
+  const marker = performance === PERFORMANCE_IDS.JIXIANGSONG ? '吉祥颂' : '九龙灌浴';
+  const clause = query.split(/[，。！？!?；;]/).find(part => part.includes(marker)) || query;
+  const markerIndex = clause.indexOf(marker);
+  const timeMatches = [...clause.matchAll(TIME_TOKEN_PATTERN)]
+    .filter(match => !isCurrentTimeToken(clause, match))
+    .sort((left, right) => Math.abs((left.index ?? 0) - markerIndex) - Math.abs((right.index ?? 0) - markerIndex));
+  const time = timeMatches[0];
   if (!time) return { ids: [performance] };
-  const hour = parseChineseInteger(time[2]);
-  if (hour === undefined || hour > 23) return { ids: [performance] };
-  const minute = time[3] || (time[4] ? '30' : '00');
-  const adjusted = time[1] && ['下午', '晚上'].includes(time[1]) && hour < 12
-    ? hour + 12
-    : !time[1] && hour > 0 && hour < 8 ? hour + 12 : hour;
-  return { ids: [performance], times: { [performance]: `${String(adjusted).padStart(2, '0')}:${minute}` } };
+  const parsed = parseTimeToken(time);
+  return parsed ? { ids: [performance], times: { [performance]: parsed } } : { ids: [performance] };
 }
 
 export function extractSceneState(query: string): SceneState {
