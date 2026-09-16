@@ -1,6 +1,6 @@
 import type { SceneState } from '../scene/scene-state';
 import type { RouteGraph, RouteSpot } from './route-contract';
-import { validateRoute, type RoutePlan, type RouteStep, type RouteViolation } from './route-validator';
+import { validateRoute, type RouteOutcome, type RoutePlan, type RouteStep, type RouteViolation } from './route-validator';
 
 interface SearchState {
   current: string;
@@ -73,11 +73,27 @@ function makePlan(startTime: string, state: SearchState, rejectedRequests: Array
 }
 
 export interface RoutePlanResult extends RoutePlan {
+  outcome: RouteOutcome;
   feasible: boolean;
   violations: RouteViolation[];
 }
 
-export function planRoute(scene: SceneState, graph: RouteGraph, maxStops = 6): RoutePlanResult {
+function performanceRejectionReason(id: string, scene: SceneState, graph: RouteGraph): string {
+  const performance = graph.performances.find(item => item.id === id);
+  const current = scene.currentTime ? toMinutes(scene.currentTime) : undefined;
+  const requested = scene.preferredPerformanceTimes?.[id];
+  if (!performance) return 'performance_unavailable';
+  if (requested && !performance.start_times.includes(requested)) return 'performance_unavailable';
+  if (requested && current !== undefined && toMinutes(requested) < current) return 'performance_already_started';
+  if (requested && current !== undefined && scene.remainingMinutes !== undefined) {
+    const spot = graph.spots.find(item => item.id === performance.location_id);
+    const deadline = current + scene.remainingMinutes;
+    if (toMinutes(requested) + (spot?.visit_minutes || 0) > deadline) return 'performance_outside_time_budget';
+  }
+  return 'performance_unavailable';
+}
+
+function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: number, allowPerformancePreferences: boolean): RoutePlanResult {
   const missing = [...new Set([
     ...scene.missingCriticalFields,
     ...(!scene.currentTime ? ['currentTime'] : []),
@@ -85,6 +101,7 @@ export function planRoute(scene: SceneState, graph: RouteGraph, maxStops = 6): R
   if (missing.length > 0 || !scene.currentLocation || !scene.currentTime || scene.remainingMinutes === undefined) {
     return {
       feasible: false,
+      outcome: 'needs_clarification',
       startTime: scene.currentTime || '00:00',
       steps: [],
       totalMinutes: 0,
@@ -123,7 +140,7 @@ export function planRoute(scene: SceneState, graph: RouteGraph, maxStops = 6): R
         if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && (!edge.accessible || !spot.mobility.wheelchair_accessible)) continue;
         const arrive = state.time + edge.walk_minutes;
         if (!openAt(spot, arrive)) continue;
-        const preference = requestedPerformance(scene, graph, spot.id);
+        const preference = allowPerformancePreferences ? requestedPerformance(scene, graph, spot.id) : undefined;
         let stepStart = arrive;
         let performanceId: string | undefined;
         let performanceStartTime: string | undefined;
@@ -173,10 +190,47 @@ export function planRoute(scene: SceneState, graph: RouteGraph, maxStops = 6): R
   )[0] || initial;
   const rejectedRequests: Array<{ item: string; reasonCode: string }> = [];
   for (const id of scene.mustVisitSpotIds) if (!selected.visited.has(id)) rejectedRequests.push({ item: id, reasonCode: 'must_visit_unreachable' });
-  for (const id of scene.preferredPerformanceIds) if (!selected.steps.some(step => step.performanceId === id)) rejectedRequests.push({ item: id, reasonCode: 'performance_unavailable' });
+  const rejectedPerformanceIds = scene.preferredPerformanceIds.filter(id => !selected.steps.some(step => step.performanceId === id));
+  for (const id of rejectedPerformanceIds) rejectedRequests.push({ item: id, reasonCode: performanceRejectionReason(id, scene, graph) });
   const satisfiedConstraints = scene.mustVisitSpotIds.filter(id => selected.visited.has(id)).map(id => `must_visit:${id}`);
   const plan = makePlan(startTime, selected, rejectedRequests, satisfiedConstraints);
   const validation = validateRoute(plan, scene, graph);
   const hardViolations = validation.violations.filter(violation => violation.code !== 'missing_preferred_performance');
-  return { ...plan, feasible: hardViolations.length === 0 && rejectedRequests.every(request => request.reasonCode !== 'must_visit_unreachable'), violations: validation.violations };
+  const hardRequestRejected = rejectedRequests.some(request => request.reasonCode === 'must_visit_unreachable');
+
+  if (allowPerformancePreferences && rejectedPerformanceIds.length > 0 && !hardRequestRejected && hardViolations.length === 0) {
+    const alternative = planRouteInternal({
+      ...scene,
+      preferredPerformanceIds: [],
+      preferredPerformanceTimes: undefined,
+    }, graph, maxStops, false);
+    if (alternative.feasible && alternative.steps.length > 0) {
+      return {
+        ...alternative,
+        outcome: 'feasible_with_rejected_preferences',
+        rejectedRequests,
+      };
+    }
+  }
+
+  const noSteps = selected.steps.length === 0;
+  if (noSteps && rejectedPerformanceIds.length > 0 && !rejectedRequests.some(request => request.reasonCode === 'no_alternative_route')) {
+    rejectedRequests.push({ item: 'route', reasonCode: 'no_alternative_route' });
+  }
+  const outcome: RouteOutcome = hardViolations.length > 0 || hardRequestRejected || noSteps
+    ? 'infeasible'
+    : rejectedPerformanceIds.length > 0
+      ? 'feasible_with_rejected_preferences'
+      : 'feasible';
+  return {
+    ...plan,
+    feasible: outcome !== 'infeasible',
+    outcome,
+    rejectedRequests,
+    violations: validation.violations,
+  };
+}
+
+export function planRoute(scene: SceneState, graph: RouteGraph, maxStops = 6): RoutePlanResult {
+  return planRouteInternal(scene, graph, maxStops, true);
 }

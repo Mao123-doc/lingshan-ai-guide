@@ -30,13 +30,27 @@ assert.ok(mustVisit.satisfiedConstraints?.includes('must_visit:LS-006'));
 
 const preference = planRoute(scene({ currentTime: '13:00', preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
 assert.equal(preference.feasible, true);
+assert.equal(preference.outcome, 'feasible');
 assert.ok(preference.steps.some(step => step.performanceId === 'performance_lingshan_jixiangsong'));
 assert.equal(preference.violations.length, 0);
 
 const unavailable = planRoute(scene({ currentTime: '14:10', preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
 assert.equal(unavailable.feasible, true);
-assert.deepEqual(unavailable.rejectedRequests, [{ item: 'performance_lingshan_jixiangsong', reasonCode: 'performance_unavailable' }]);
+assert.equal(unavailable.outcome, 'feasible_with_rejected_preferences');
+assert.ok(unavailable.steps.length > 0);
+assert.deepEqual(unavailable.rejectedRequests, [{ item: 'performance_lingshan_jixiangsong', reasonCode: 'performance_already_started' }]);
 assert.equal(unavailable.violations.length, 0);
+
+const outsideBudget = planRoute(scene({ currentTime: '10:00', remainingMinutes: 180, preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
+assert.notEqual(outsideBudget.outcome, 'feasible');
+assert.ok(outsideBudget.steps.length > 0 || outsideBudget.outcome === 'infeasible');
+assert.ok(outsideBudget.rejectedRequests?.some(request => request.reasonCode === 'performance_outside_time_budget'));
+
+const noAlternative = planRoute(scene({ currentTime: '10:00', remainingMinutes: 1, preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
+assert.equal(noAlternative.outcome, 'infeasible');
+assert.equal(noAlternative.feasible, false);
+assert.equal(noAlternative.steps.length, 0);
+assert.ok(noAlternative.rejectedRequests?.some(request => request.reasonCode === 'no_alternative_route'));
 
 const wheelchair = planRoute(scene({ mobility: 'wheelchair', mustVisitSpotIds: ['NH-006'], remainingMinutes: 600 }), graph, 12);
 assert.equal(wheelchair.feasible, false);

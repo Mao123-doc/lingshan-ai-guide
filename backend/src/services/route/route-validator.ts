@@ -13,7 +13,10 @@ export interface RouteStep {
   performanceStartTime?: string;
 }
 
+export type RouteOutcome = 'feasible' | 'feasible_with_rejected_preferences' | 'needs_clarification' | 'infeasible';
+
 export interface RoutePlan {
+  outcome?: RouteOutcome;
   feasible?: boolean;
   startTime: string;
   steps: RouteStep[];
