@@ -42,6 +42,16 @@ const failedRetrieval = createTraceStage(true, 'failed', 'request_failed');
 assert.equal(failedRetrieval.executed, true);
 assert.equal(failedRetrieval.status, 'failed');
 
+const modelIdentity = createTraceStage(true, 'executed', undefined, {
+  modelIdentity: {
+    status: 'mismatch',
+    requestedModel: 'deepseek-chat',
+    providerModel: 'deepseek-flash',
+  },
+});
+assert.equal(modelIdentity.modelIdentity?.status, 'mismatch');
+assert.equal(modelIdentity.modelIdentity?.providerModel, 'deepseek-flash');
+
 const structuredFallback = createRetrievalTrace({
   vector: { configured: true, outcome: 'unavailable' },
   structured: { configured: true, resultCount: 5 },

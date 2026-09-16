@@ -27,6 +27,50 @@ interface LLMConfig {
   baseURL: string;
 }
 
+export type ModelIdentityStatus = 'match' | 'mismatch' | 'unknown';
+
+export type ModelIdentity = {
+  status: ModelIdentityStatus;
+  requestedModel: string;
+  providerModel?: string;
+};
+
+export function extractProviderModel(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object') return undefined;
+  const model = (data as { model?: unknown }).model;
+  return typeof model === 'string' && model.trim() ? model.trim() : undefined;
+}
+
+export function assessModelIdentity(
+  requestedModel: string,
+  providerModel: string | undefined,
+): ModelIdentity {
+  if (!providerModel) {
+    return { status: 'unknown', requestedModel, providerModel };
+  }
+  return {
+    status: providerModel === requestedModel ? 'match' : 'mismatch',
+    requestedModel,
+    providerModel,
+  };
+}
+
+export type LLMCallResult = {
+  content: string;
+  modelIdentity: ModelIdentity;
+};
+
+export function buildLLMCallResult(
+  content: string,
+  requestedModel: string,
+  data: unknown,
+): LLMCallResult {
+  return {
+    content,
+    modelIdentity: assessModelIdentity(requestedModel, extractProviderModel(data)),
+  };
+}
+
 // ============================================================
 // Configuration
 // ============================================================
@@ -182,12 +226,12 @@ ${datasetSummary.substring(0, 8000)}`;
 // Non-streaming LLM Call
 // ============================================================
 
-export async function callLLM(
+export async function callLLMWithMetadata(
   messages: ChatMessage[],
   options?: { temperature?: number; max_tokens?: number }
-): Promise<string> {
+): Promise<LLMCallResult> {
   const config = getLLMConfig();
-  if (!config) return '';
+  if (!config) return buildLLMCallResult('', 'local-fallback', undefined);
 
   try {
     const controller = new AbortController();
@@ -215,11 +259,15 @@ export async function callLLM(
         console.error('LLM API error:', JSON.stringify(data.error).slice(0, 200));
         const fb = getFallbackConfig();
         if (fb && config.baseURL !== fb.baseURL) {
-          return callWithConfig(fb, messages, options);
+          return callWithConfigWithMetadata(fb, messages, options);
         }
-        return '';
+        return buildLLMCallResult('', config.model, data);
       }
-      return data?.choices?.[0]?.message?.content || '';
+      return buildLLMCallResult(
+        data?.choices?.[0]?.message?.content || '',
+        config.model,
+        data,
+      );
     } catch (e) {
       clearTimeout(timeout);
       throw e;
@@ -230,15 +278,22 @@ export async function callLLM(
     } else {
       console.error('LLM call failed:', error?.message || error);
     }
-    return '';
+    return buildLLMCallResult('', config.model, undefined);
   }
 }
 
-async function callWithConfig(
-  config: LLMConfig,
+export async function callLLM(
   messages: ChatMessage[],
   options?: { temperature?: number; max_tokens?: number }
 ): Promise<string> {
+  return (await callLLMWithMetadata(messages, options)).content;
+}
+
+async function callWithConfigWithMetadata(
+  config: LLMConfig,
+  messages: ChatMessage[],
+  options?: { temperature?: number; max_tokens?: number }
+): Promise<LLMCallResult> {
   try {
     const response = await fetch(`${config.baseURL}/chat/completions`, {
       method: 'POST',
@@ -254,9 +309,13 @@ async function callWithConfig(
       }),
     });
     const data = await response.json() as any;
-    return data?.choices?.[0]?.message?.content || '';
+    return buildLLMCallResult(
+      data?.choices?.[0]?.message?.content || '',
+      config.model,
+      data,
+    );
   } catch {
-    return '';
+    return buildLLMCallResult('', config.model, undefined);
   }
 }
 

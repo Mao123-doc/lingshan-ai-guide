@@ -47,6 +47,7 @@ def _stage_summary(stage: Any) -> dict[str, Any]:
         "executed": stage.get("executed"),
         "status": stage.get("status"),
         "reason": stage.get("reason"),
+        "model_identity": stage.get("modelIdentity"),
     }
 
 

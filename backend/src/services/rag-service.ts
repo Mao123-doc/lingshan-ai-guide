@@ -5,7 +5,13 @@
  */
 import fs from 'fs';
 import path from 'path';
-import { callLLM, streamLLM, buildTourGuideMessages, isLLMAvailable } from './llm-service';
+import {
+  callLLMWithMetadata,
+  streamLLM,
+  buildTourGuideMessages,
+  isLLMAvailable,
+  type ModelIdentity,
+} from './llm-service';
 import { searchVectorsWithStatus, isVectorAvailable, waitForVectorService } from './vector-search-service';
 import { analyzeEmotion } from './emotion-service';
 import { searchStructured, getFieldIndex } from './structured-knowledge';
@@ -56,6 +62,7 @@ export interface RAGTraceStage {
   reason?: string;
   resultCount?: number;
   fallbackUsed?: boolean;
+  modelIdentity?: ModelIdentity;
 }
 
 export interface RAGRetrievalTrace {
@@ -113,7 +120,7 @@ export function createTraceStage(
   configured: boolean,
   status: RAGTraceStatus,
   reason?: string,
-  details?: Pick<RAGTraceStage, 'resultCount' | 'fallbackUsed'>,
+  details?: Pick<RAGTraceStage, 'resultCount' | 'fallbackUsed' | 'modelIdentity'>,
 ): RAGTraceStage {
   const stage: RAGTraceStage = {
     configured,
@@ -123,6 +130,7 @@ export function createTraceStage(
   if (reason) stage.reason = reason;
   if (details?.resultCount !== undefined) stage.resultCount = details.resultCount;
   if (details?.fallbackUsed !== undefined) stage.fallbackUsed = details.fallbackUsed;
+  if (details?.modelIdentity !== undefined) stage.modelIdentity = details.modelIdentity;
   return stage;
 }
 
@@ -715,7 +723,7 @@ async function rewriteQueryWithTrace(
   }
 
   try {
-    const result = await callLLM([
+    const result = await callLLMWithMetadata([
       {
         role: 'system',
         content: `你是景区查询改写助手。将游客的口语化问题改写为精准的搜索关键词。
@@ -733,15 +741,30 @@ async function rewriteQueryWithTrace(
       { role: 'user', content: query },
     ], { temperature: 0.1, max_tokens: 30 });
 
-    const rewritten = result?.trim();
+    const rewritten = result.content?.trim();
     if (!rewritten) {
-      return { query, trace: createTraceStage(true, 'failed', 'llm_call_failed') };
+      return {
+        query,
+        trace: createTraceStage(true, 'failed', 'llm_call_failed', {
+          modelIdentity: result.modelIdentity,
+        }),
+      };
     }
     if (rewritten && rewritten.length >= 2 && rewritten !== query) {
       console.log(`[RAG] Query rewritten: "${query}" → "${rewritten}"`);
-      return { query: rewritten, trace: createTraceStage(true, 'executed') };
+      return {
+        query: rewritten,
+        trace: createTraceStage(true, 'executed', undefined, {
+          modelIdentity: result.modelIdentity,
+        }),
+      };
     }
-    return { query, trace: createTraceStage(true, 'executed') };
+    return {
+      query,
+      trace: createTraceStage(true, 'executed', undefined, {
+        modelIdentity: result.modelIdentity,
+      }),
+    };
   } catch {
     return { query, trace: createTraceStage(true, 'failed', 'llm_call_failed') };
   }
@@ -779,7 +802,7 @@ async function rerankChunksWithTrace(
       `[${i}] (${c.metadata.category}) ${c.text.slice(0, 250)}`
     ).join('\n---\n');
 
-    const result = await callLLM([
+    const result = await callLLMWithMetadata([
       {
         role: 'system',
         content: `你是搜索相关性评分专家。给定游客问题和检索到的文档片段，选出最相关的片段。
@@ -802,7 +825,7 @@ ${snippets}
     ], { temperature: 0.05, max_tokens: 30 });
 
     // Parse ranking
-    const indices = (result || '').split(/[,，\s]+/)
+    const indices = (result.content || '').split(/[,，\s]+/)
       .map(s => parseInt(s.trim(), 10))
       .filter(n => !isNaN(n) && n >= 0 && n < chunks.length);
 
@@ -814,9 +837,21 @@ ${snippets}
       if (oldTop !== newTop) {
         console.log(`[RAG] Reranked: top result changed from "${oldTop}..." → "${newTop}..."`);
       }
-      return { chunks: reranked, trace: createTraceStage(true, 'executed', undefined, { resultCount: reranked.length }) };
+      return {
+        chunks: reranked,
+        trace: createTraceStage(true, 'executed', undefined, {
+          resultCount: reranked.length,
+          modelIdentity: result.modelIdentity,
+        }),
+      };
     }
-    return { chunks, trace: createTraceStage(true, 'failed', 'invalid_response', { resultCount: chunks.length }) };
+    return {
+      chunks,
+      trace: createTraceStage(true, 'failed', 'invalid_response', {
+        resultCount: chunks.length,
+        modelIdentity: result.modelIdentity,
+      }),
+    };
   } catch (e: any) {
     console.warn(`[RAG] Rerank failed: ${e.message?.slice(0, 80)}`);
     return { chunks, trace: createTraceStage(true, 'failed', 'llm_call_failed', { resultCount: chunks.length }) };
@@ -881,10 +916,14 @@ export async function queryRAG(
       content: h.content,
     })), { includeFullKnowledge: config.includeFullKnowledge });
 
-    const answer = await callLLM(messages, { temperature: 0.3, max_tokens: 280 });
+    const generation = await callLLMWithMetadata(messages, { temperature: 0.3, max_tokens: 280 });
+    const answer = generation.content;
 
     if (answer) {
-      traceBase.generation = createTraceStage(true, 'executed', undefined, { fallbackUsed: false });
+      traceBase.generation = createTraceStage(true, 'executed', undefined, {
+        fallbackUsed: false,
+        modelIdentity: generation.modelIdentity,
+      });
       addToHistory(sessionId, 'user', query);
       addToHistory(sessionId, 'assistant', answer);
 
@@ -897,7 +936,10 @@ export async function queryRAG(
         trace: traceBase,
       };
     }
-    traceBase.generation = createTraceStage(true, 'failed', 'llm_call_failed', { fallbackUsed: true });
+    traceBase.generation = createTraceStage(true, 'failed', 'llm_call_failed', {
+      fallbackUsed: true,
+      modelIdentity: generation.modelIdentity,
+    });
   } else {
     traceBase.generation = createTraceStage(true, 'skipped', 'llm_unavailable', { fallbackUsed: true });
   }

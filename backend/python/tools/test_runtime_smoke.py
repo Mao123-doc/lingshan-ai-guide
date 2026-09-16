@@ -87,7 +87,15 @@ class RuntimeSmokeTests(unittest.TestCase):
                 "latency_ms": 100,
                 "trace": {
                     "rewrite": {"configured": True, "status": "executed"},
-                    "generation": {"configured": True, "status": "executed"},
+                    "generation": {
+                        "configured": True,
+                        "status": "executed",
+                        "modelIdentity": {
+                            "status": "mismatch",
+                            "requestedModel": "deepseek-chat",
+                            "providerModel": "deepseek-flash",
+                        },
+                    },
                 },
                 "evaluation": {"fact_hits": 1, "min_fact_hits": 1, "passed": True},
             }],
@@ -99,6 +107,10 @@ class RuntimeSmokeTests(unittest.TestCase):
         self.assertEqual(manifest["full_rag_count"], 5)
         self.assertNotIn("DEEPSEEK_API_KEY", str(manifest))
         self.assertNotIn("answer", manifest["records"][0])
+        self.assertEqual(
+            manifest["records"][0]["stages"]["generation"]["model_identity"]["status"],
+            "mismatch",
+        )
 
     def test_manifest_resolves_current_git_sha_when_not_supplied(self):
         result = {"health": {}, "records": []}
