@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import unittest
 from pathlib import Path
 
@@ -66,6 +67,17 @@ class QualityGateTests(unittest.TestCase):
         self.assertEqual(result['refusal_total'], 2)
         self.assertEqual(result['refusal_accuracy'], 0.5)
         self.assertIn('refusal_accuracy_below_threshold', result['failures'])
+
+    def test_out_of_scope_contract_has_diverse_versioned_cases(self):
+        contract_path = Path(__file__).with_name('test_questions_out_of_scope.json')
+        cases = json.loads(contract_path.read_text(encoding='utf-8'))
+
+        self.assertGreaterEqual(len(cases), 20)
+        self.assertEqual(len({case['id'] for case in cases}), len(cases))
+        self.assertEqual(len({case['question'] for case in cases}), len(cases))
+        self.assertGreaterEqual(len({case['category'] for case in cases}), 8)
+        self.assertTrue(all(case['expected_behavior'] == 'abstain' for case in cases))
+        self.assertTrue(all(case.get('reason') for case in cases))
 
     def test_route_hard_violations_always_block(self):
         result = MODULE.evaluate_run(
