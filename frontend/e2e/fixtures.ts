@@ -1,10 +1,10 @@
 import { expect, test as base, type Page } from '@playwright/test';
 
 export const test = base.extend({
-  page: async ({ page }, use) => {
+  page: async ({ page }, runFixture) => {
     const pageErrors: string[] = [];
     page.on('pageerror', error => pageErrors.push(error.message));
-    await use(page);
+    await runFixture(page);
     if (pageErrors.length > 0) {
       throw new Error(`Uncaught page exception(s): ${pageErrors.join(' | ')}`);
     }
