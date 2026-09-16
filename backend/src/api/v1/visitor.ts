@@ -446,6 +446,7 @@ visitorRouter.post('/route/plan', (req: Request, res: Response) => {
       scene_state: planningSceneState,
       route,
       feasibility: route.feasible,
+      outcome: route.outcome,
       explanation: {
         satisfied_constraints: route.satisfiedConstraints || [],
         rejected_requests: route.rejectedRequests || [],

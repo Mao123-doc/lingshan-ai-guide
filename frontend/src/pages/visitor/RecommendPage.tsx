@@ -7,6 +7,7 @@ import {
 } from '@ant-design/icons';
 import { visitorAPI } from '../../services/api';
 import { openBaiduNavigation } from '../../utils/navigation';
+import { getRouteOutcomeLabel, getRouteRejectionMessage, type RouteOutcome } from './route-outcome';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -123,6 +124,12 @@ export default function RecommendPage() {
     }
   };
 
+  const routeStepCount = sceneRoute?.route?.steps?.length ?? 0;
+  const routeOutcome = (sceneRoute?.outcome ?? (sceneRoute?.feasibility ? 'feasible' : 'infeasible')) as RouteOutcome;
+  const routeOutcomeLabel = getRouteOutcomeLabel(routeOutcome, routeStepCount);
+  const routeIsExecutable = routeOutcome === 'feasible' && routeStepCount > 0;
+  const routeHasAdjustedPreferences = routeOutcome === 'feasible_with_rejected_preferences' && routeStepCount > 0;
+
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {/* Header */}
@@ -161,12 +168,12 @@ export default function RecommendPage() {
 
         {sceneRoute && (
           <Card
-            title={sceneRoute.feasibility ? '✅ 场景路线结果' : '⚠️ 当前约束无法完全满足'}
+            title={routeIsExecutable || routeHasAdjustedPreferences ? '✅ 场景路线结果' : '⚠️ 场景路线结果'}
             style={{ borderRadius: 16, marginBottom: 20, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
           >
             <Space wrap>
-              <Tag color={sceneRoute.feasibility ? 'green' : 'orange'}>
-                {sceneRoute.feasibility ? '路线可执行' : '需要调整约束'}
+              <Tag color={routeIsExecutable ? 'green' : routeHasAdjustedPreferences ? 'gold' : 'orange'}>
+                {routeOutcomeLabel}
               </Tag>
               <Tag>总时长 {sceneRoute.route?.totalMinutes ?? 0} 分钟</Tag>
               <Tag>步行 {sceneRoute.route?.walkingMinutes ?? 0} 分钟</Tag>
@@ -184,7 +191,7 @@ export default function RecommendPage() {
                 style={{ marginTop: 14 }}
                 type="info"
                 message="系统明确保留了未满足请求"
-                description={sceneRoute.route.rejectedRequests.map((item: any) => `${item.item}：${item.reasonCode}`).join('；')}
+                description={sceneRoute.route.rejectedRequests.map((item: any) => `${item.item}：${getRouteRejectionMessage(item.reasonCode)}`).join('；')}
               />
             )}
             <Steps
