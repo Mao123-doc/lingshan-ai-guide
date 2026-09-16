@@ -1,4 +1,17 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, test as base, type Page } from '@playwright/test';
+
+export const test = base.extend({
+  page: async ({ page }, use) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', error => pageErrors.push(error.message));
+    await use(page);
+    if (pageErrors.length > 0) {
+      throw new Error(`Uncaught page exception(s): ${pageErrors.join(' | ')}`);
+    }
+  },
+});
+
+export { expect };
 
 export async function mockVisitorApis(page: Page) {
   await page.route('**/api/v1/visitor/**', async route => {

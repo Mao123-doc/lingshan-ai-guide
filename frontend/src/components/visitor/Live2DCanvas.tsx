@@ -29,6 +29,11 @@ const EMOTION_EXP: Record<string, number> = {
   idle: 0,
 };
 
+function hasCubism2Runtime(): boolean {
+  return typeof window !== 'undefined'
+    && Boolean((window as Window & { Live2D?: unknown }).Live2D);
+}
+
 // ---- types -----------------------------------------------------------------
 interface Props {
   width: number;
@@ -80,6 +85,14 @@ export default function Live2DCanvas({
     let cancelled = false;
 
     (async () => {
+      // The current hibiki asset is Cubism 2. Avoid importing the plugin when
+      // its required global runtime is absent; the parent then renders the
+      // existing static portrait fallback without an uncaught page error.
+      if (!hasCubism2Runtime()) {
+        if (!cancelled) onError?.();
+        return;
+      }
+
       // Dynamic imports to avoid bundling issues if Live2D isn't available
       const [PIXI, { Live2DModel }] = await Promise.all([
         import('pixi.js'),

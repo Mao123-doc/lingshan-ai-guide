@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test';
-import { mockVisitorApis } from './fixtures';
+import { expect, test, mockVisitorApis } from './fixtures';
 
 test.use({ viewport: { width: 412, height: 915 } });
 

@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test';
-import { loginAsAdmin, mockVisitorApis } from './fixtures';
+import { expect, test, loginAsAdmin, mockVisitorApis } from './fixtures';
 
 test('J01 home capability opens QA module', async ({ page }) => {
   await page.goto('/');
