@@ -8,6 +8,7 @@ import {
   AimOutlined, LoadingOutlined,
 } from '@ant-design/icons';
 import { openBaiduNavigation, type LatLng } from '../../utils/navigation';
+import { getCapabilityRoute } from './home-capabilities';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -223,7 +224,20 @@ export default function HomePage() {
             { icon: <SmileOutlined />, title: '情感互动', desc: 'AI导游具有丰富的情感表达，提供亲切温暖的陪伴体验', color: '#fa8c16' },
           ].map((f, i) => (
             <Col xs={24} sm={12} md={6} key={i}>
-              <Card className="feature-card" hoverable>
+              <Card
+                className="feature-card"
+                hoverable
+                role="button"
+                tabIndex={0}
+                aria-label={`${f.title}，点击进入`}
+                onClick={() => navigate(getCapabilityRoute(f.title))}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    navigate(getCapabilityRoute(f.title));
+                  }
+                }}
+              >
                 <div className="feature-icon" style={{ color: f.color }}>{f.icon}</div>
                 <Title level={5}>{f.title}</Title>
                 <Paragraph type="secondary">{f.desc}</Paragraph>
