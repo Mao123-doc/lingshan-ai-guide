@@ -79,6 +79,20 @@ class EvaluationBaselineTests(unittest.TestCase):
         self.assertEqual(result["min_fact_hits"], 4)
         self.assertTrue(result["passed"])
 
+    def test_grounded_paraphrases_are_accepted_by_fact_contracts(self):
+        cases = [
+            (10, "五印坛城是典型的藏式碉楼建筑风格。", "style"),
+            (12, "祥符禅寺内有千年古银杏。", "ginkgo"),
+            (23, "佛教文化博览馆位于灵山大佛的座基内。", "location"),
+            (30, "灵山胜境是国家AAAAA级旅游景区。", "level"),
+            (50, "建议至少安排半天；想深度体验可以安排一整天。", "duration"),
+        ]
+
+        for question_id, answer, fact_id in cases:
+            with self.subTest(question_id=question_id):
+                result = MODULE.evaluate_answer(answer, self._question(question_id))
+                self.assertIn(fact_id, result["matched_fact_ids"])
+
     def test_numeric_fact_does_not_match_as_part_of_a_longer_number(self):
         self.assertFalse(MODULE._contains_any("高188米", ["88米"]))
 
