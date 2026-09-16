@@ -62,6 +62,11 @@ class RuntimeSmokeTests(unittest.TestCase):
         self.assertIn("llm_unavailable", result["failures"])
         load_questions.assert_not_called()
 
+    def test_console_json_is_safe_for_windows_legacy_encoding(self):
+        rendered = MODULE.console_json({"answer": "答案 💡"})
+
+        self.assertTrue(rendered.isascii())
+
 
 if __name__ == "__main__":
     unittest.main()

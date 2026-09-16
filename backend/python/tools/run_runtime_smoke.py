@@ -32,6 +32,11 @@ from test_accuracy import (  # noqa: E402
 SMOKE_QUESTION_IDS = (1, 3, 31, 37, 42)
 
 
+def console_json(value: dict[str, Any]) -> str:
+    """Render JSON using ASCII escapes for Windows legacy consoles."""
+    return json.dumps(value, ensure_ascii=True, indent=2)
+
+
 def get_health(base_url: str, timeout: int = 10) -> dict[str, Any]:
     request = urllib.request.Request(base_url.rstrip("/") + "/health")
     try:
@@ -157,7 +162,7 @@ def main() -> int:
     result = run_smoke(args.api_base, args.require_llm, args.require_vector)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print(console_json(result))
     return 0 if result["ready"] else 1
 
 
