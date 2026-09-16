@@ -71,13 +71,51 @@ class EvaluationBaselineTests(unittest.TestCase):
     def test_history_route_with_required_spots_passes_fact_coverage(self):
         question = self._question(37)
         result = MODULE.evaluate_answer(
-            "历史文化路线：祥符禅寺→灵山大佛→灵山梵宫→无尽意斋。",
+            "历史文化路线：祥符禅寺→灵山大佛→灵山梵宫→五印坛城。",
             question,
         )
 
         self.assertEqual(result["fact_hits"], 4)
         self.assertEqual(result["min_fact_hits"], 4)
         self.assertTrue(result["passed"])
+
+    def test_history_route_from_knowledge_guide_passes_fact_coverage(self):
+        question = self._question(37)
+        result = MODULE.evaluate_answer(
+            "历史文化路线：祥符禅寺→灵山大佛→灵山梵宫→五印坛城→三圣殿。",
+            question,
+        )
+
+        self.assertTrue(result["passed"])
+
+    def test_family_route_from_knowledge_guide_passes_fact_coverage(self):
+        question = self._question(38)
+        result = MODULE.evaluate_answer(
+            "亲子路线：九龙灌浴→百子戏弥勒→灵山梵宫→五印坛城。",
+            question,
+        )
+
+        self.assertTrue(result["passed"])
+
+    def test_history_route_with_noncanonical_old_spot_does_not_replace_a_required_fact(self):
+        question = self._question(37)
+        result = MODULE.evaluate_answer(
+            "历史文化路线：祥符禅寺→灵山大佛→灵山梵宫→无尽意斋。",
+            question,
+        )
+
+        self.assertEqual(result["fact_hits"], 3)
+        self.assertFalse(result["passed"])
+
+    def test_family_route_with_noncanonical_other_area_spot_does_not_replace_a_required_fact(self):
+        question = self._question(38)
+        result = MODULE.evaluate_answer(
+            "亲子路线：九龙灌浴→百子戏弥勒→梵天花海。",
+            question,
+        )
+
+        self.assertEqual(result["fact_hits"], 2)
+        self.assertFalse(result["passed"])
 
     def test_grounded_paraphrases_are_accepted_by_fact_contracts(self):
         cases = [
