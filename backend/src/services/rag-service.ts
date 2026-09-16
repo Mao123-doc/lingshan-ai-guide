@@ -778,6 +778,29 @@ async function rewriteQuery(query: string): Promise<string> {
 // Reranker — LLM-based relevance scoring
 // ============================================================
 
+export function parseRerankOrder(
+  content: string,
+  candidateCount: number,
+): { indices: number[]; validCount: number } {
+  const seen = new Set<number>();
+  const validIndices: number[] = [];
+
+  for (const token of content.split(/[,，\s]+/)) {
+    const index = Number.parseInt(token.trim(), 10);
+    if (!Number.isInteger(index) || index < 0 || index >= candidateCount || seen.has(index)) continue;
+    seen.add(index);
+    validIndices.push(index);
+  }
+
+  const remainingIndices = Array.from({ length: candidateCount }, (_, index) => index)
+    .filter(index => !seen.has(index));
+
+  return {
+    indices: [...validIndices, ...remainingIndices],
+    validCount: validIndices.length,
+  };
+}
+
 /**
  * Use LLM to re-rank search results by relevance to the query.
  * Graded, not just pointwise — asks the model to pick the best matches.
@@ -825,12 +848,11 @@ ${snippets}
     ], { temperature: 0.05, max_tokens: 30 });
 
     // Parse ranking
-    const indices = (result.content || '').split(/[,，\s]+/)
-      .map(s => parseInt(s.trim(), 10))
-      .filter(n => !isNaN(n) && n >= 0 && n < chunks.length);
+    const parsedOrder = parseRerankOrder(result.content || '', chunks.length);
 
-    if (indices.length >= 2) {
-      const reranked = indices.map(i => chunks[i]);
+    if (parsedOrder.validCount >= 1) {
+      const reranked = parsedOrder.indices.map(i => chunks[i]);
+      const rerankReason = parsedOrder.validCount < chunks.length ? 'partial_response' : undefined;
       // Log the improvement for debugging
       const oldTop = chunks[0]?.text.slice(0, 40);
       const newTop = reranked[0]?.text.slice(0, 40);
@@ -839,7 +861,7 @@ ${snippets}
       }
       return {
         chunks: reranked,
-        trace: createTraceStage(true, 'executed', undefined, {
+        trace: createTraceStage(true, 'executed', rerankReason, {
           resultCount: reranked.length,
           modelIdentity: result.modelIdentity,
         }),
