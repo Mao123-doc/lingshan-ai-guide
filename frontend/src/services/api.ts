@@ -42,6 +42,8 @@ export const visitorAPI = {
   getSpotDetail: (id: string) => api.get(`/visitor/spots/${id}`),
   recommend: (payload: any) =>
     api.post('/visitor/recommend', payload),
+  planRoute: (query: string, sceneState?: any) =>
+    api.post('/visitor/route/plan', { query, scene_state: sceneState }),
   submitFeedback: (sessionId: string, rating: number, comment: string) =>
     api.post('/visitor/feedback', { session_id: sessionId, rating, comment }),
   getHotQuestions: () => api.get('/visitor/hot-questions'),

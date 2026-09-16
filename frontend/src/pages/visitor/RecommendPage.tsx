@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Typography, Card, Tag, Row, Col, Steps, Select, Space } from 'antd';
+import { Button, Typography, Card, Tag, Row, Col, Steps, Select, Space, Input, Alert } from 'antd';
 import {
   HistoryOutlined, EnvironmentOutlined, HomeOutlined,
   HeartOutlined, BuildOutlined, StarOutlined, ClockCircleOutlined,
 } from '@ant-design/icons';
 import { visitorAPI } from '../../services/api';
 import { openBaiduNavigation } from '../../utils/navigation';
+import { getRouteOutcomeLabel, getRouteRejectionMessage, type RouteOutcome } from './route-outcome';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -80,6 +81,9 @@ export default function RecommendPage() {
   const [budget, setBudget] = useState('舒适型');
   const [loading, setLoading] = useState(false);
   const [route, setRoute] = useState<any>(null);
+  const [sceneQuery, setSceneQuery] = useState('我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？');
+  const [sceneRoute, setSceneRoute] = useState<any>(null);
+  const [sceneLoading, setSceneLoading] = useState(false);
 
   const toggleInterest = (key: string) => {
     setSelected(prev =>
@@ -107,6 +111,25 @@ export default function RecommendPage() {
     }
   };
 
+  const handleScenePlan = async () => {
+    setSceneRoute(null);
+    setSceneLoading(true);
+    try {
+      const res = await visitorAPI.planRoute(sceneQuery);
+      setSceneRoute(res.data);
+    } catch (err) {
+      console.error('Scene route error:', err);
+    } finally {
+      setSceneLoading(false);
+    }
+  };
+
+  const routeStepCount = sceneRoute?.route?.steps?.length ?? 0;
+  const routeOutcome = (sceneRoute?.outcome ?? (sceneRoute?.feasibility ? 'feasible' : 'infeasible')) as RouteOutcome;
+  const routeOutcomeLabel = getRouteOutcomeLabel(routeOutcome, routeStepCount);
+  const routeIsExecutable = routeOutcome === 'feasible' && routeStepCount > 0;
+  const routeHasAdjustedPreferences = routeOutcome === 'feasible_with_rejected_preferences' && routeStepCount > 0;
+
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {/* Header */}
@@ -123,6 +146,71 @@ export default function RecommendPage() {
       </div>
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 20px' }}>
+        <Card
+          title="🧭 场景约束路线规划"
+          style={{ borderRadius: 16, marginBottom: 20, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+        >
+          <Paragraph type="secondary">
+            告诉导游你现在在哪里、还剩多久、同行人和必须看的演出；系统会先提取约束，再由确定性路线引擎检查是否可行。
+          </Paragraph>
+          <Input.TextArea
+            value={sceneQuery}
+            onChange={event => setSceneQuery(event.target.value)}
+            autoSize={{ minRows: 2, maxRows: 4 }}
+            placeholder="例如：我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？"
+          />
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <Button type="primary" onClick={handleScenePlan} loading={sceneLoading} disabled={!sceneQuery.trim()}>
+              生成可执行路线
+            </Button>
+          </div>
+        </Card>
+
+        {sceneRoute && (
+          <Card
+            title={routeIsExecutable || routeHasAdjustedPreferences ? '✅ 场景路线结果' : '⚠️ 场景路线结果'}
+            style={{ borderRadius: 16, marginBottom: 20, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+          >
+            <Space wrap>
+              <Tag color={routeIsExecutable ? 'green' : routeHasAdjustedPreferences ? 'gold' : 'orange'}>
+                {routeOutcomeLabel}
+              </Tag>
+              <Tag>总时长 {sceneRoute.route?.totalMinutes ?? 0} 分钟</Tag>
+              <Tag>步行 {sceneRoute.route?.walkingMinutes ?? 0} 分钟</Tag>
+              <Tag>游览 {sceneRoute.route?.visitingMinutes ?? 0} 分钟</Tag>
+            </Space>
+            {sceneRoute.scene_state?.missingCriticalFields?.length > 0 && (
+              <Alert
+                style={{ marginTop: 14 }}
+                type="warning"
+                message={`需要补充：${sceneRoute.scene_state.missingCriticalFields.join('、')}`}
+              />
+            )}
+            {sceneRoute.route?.rejectedRequests?.length > 0 && (
+              <Alert
+                style={{ marginTop: 14 }}
+                type="info"
+                message="系统明确保留了未满足请求"
+                description={sceneRoute.route.rejectedRequests.map((item: any) => `${item.item}：${getRouteRejectionMessage(item.reasonCode)}`).join('；')}
+              />
+            )}
+            <Steps
+              style={{ marginTop: 18 }}
+              direction="vertical"
+              items={(sceneRoute.route?.steps || []).map((item: any, index: number) => ({
+                title: `${item.start}–${item.end} ${item.spotId}`,
+                description: `到达 ${item.arrive}，步行 ${item.walkMinutes} 分钟，停留 ${item.visitMinutes} 分钟${item.performanceId ? `，演出 ${item.performanceStartTime}` : ''}`,
+                icon: <Tag color="magenta">{index + 1}</Tag>,
+              }))}
+            />
+            {sceneRoute.evidence?.length > 0 && (
+              <Paragraph type="secondary" style={{ marginTop: 12 }}>
+                证据来源：{sceneRoute.evidence.map((item: any) => `${item.name}（${item.confidence}）`).join('、')}
+              </Paragraph>
+            )}
+          </Card>
+        )}
+
         {/* Interest Selection */}
         <Card
           title="选择您的兴趣偏好"

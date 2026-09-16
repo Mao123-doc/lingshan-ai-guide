@@ -6,9 +6,11 @@
 import fs from 'fs';
 import path from 'path';
 import { callLLM, streamLLM, buildTourGuideMessages, isLLMAvailable } from './llm-service';
-import { searchVectors, isVectorAvailable, waitForVectorService } from './vector-search-service';
+import { searchVectorsWithStatus, isVectorAvailable, waitForVectorService } from './vector-search-service';
 import { analyzeEmotion } from './emotion-service';
 import { searchStructured, getFieldIndex } from './structured-knowledge';
+import { DEFAULT_RAG_CONFIG, RAGExperimentConfig, resolveRAGConfig } from './rag-config';
+import { fuseCandidates, type RetrievalCandidate, type RetrievalChannel } from './retrieval/hybrid-retriever';
 
 // ============================================================
 // Types
@@ -17,6 +19,7 @@ import { searchStructured, getFieldIndex } from './structured-knowledge';
 interface Chunk {
   id: string;
   text: string;
+  score?: number;
   embedding?: number[];
   metadata: {
     source: string;
@@ -25,12 +28,176 @@ interface Chunk {
   };
 }
 
+export interface EvidenceDocument {
+  id: string;
+  text: string;
+  score: number;
+  source: string;
+  category: string;
+  keywords: string[];
+}
+
 interface RAGResult {
   answer: string;
   emotion: string;
   relatedSpots: string[];
   usedLLM: boolean;
   retrievedChunks: number;
+  trace: RAGTrace;
+}
+
+export type RAGTraceStatus = 'executed' | 'skipped' | 'failed';
+
+export interface RAGTraceStage {
+  configured: boolean;
+  executed: boolean;
+  status: RAGTraceStatus;
+  reason?: string;
+  resultCount?: number;
+  fallbackUsed?: boolean;
+}
+
+export interface RAGRetrievalTrace {
+  vector: RAGTraceStage;
+  structured: RAGTraceStage;
+  keyword: RAGTraceStage;
+  candidates?: Array<{
+    canonicalId: string;
+    dedupeKey: string;
+    channel: RetrievalChannel;
+    rank: number;
+    rawScore?: number;
+    rrfScore?: number;
+    channels?: RetrievalChannel[];
+  }>;
+  fusion?: {
+    method: 'rrf';
+    k: number;
+    inputCounts: Record<RetrievalChannel, number>;
+    candidateCount: number;
+  };
+}
+
+export interface RAGTrace {
+  originalQuery: string;
+  rewrittenQuery: string;
+  retrievalMode: 'vector' | 'structured' | 'keyword' | 'fusion' | 'none';
+  retrievedIds: string[];
+  retrievedScores: number[];
+  retrievedDocuments: EvidenceDocument[];
+  rerankEnabled: boolean;
+  rerankedIds: string[];
+  contextIds: string[];
+  historyMessageCount: number;
+  fullKnowledgeIncluded: boolean;
+  rewrite: RAGTraceStage;
+  retrieval: RAGRetrievalTrace;
+  rerank: RAGTraceStage;
+  generation: RAGTraceStage;
+}
+
+/** Expose retrieval evidence for evaluation without changing retrieval decisions. */
+export function toEvidenceDocuments(chunks: Array<Pick<Chunk, 'id' | 'text' | 'score' | 'metadata'>>): EvidenceDocument[] {
+  return chunks.map(chunk => ({
+    id: chunk.id,
+    text: chunk.text,
+    score: chunk.score || 0,
+    source: chunk.metadata.source,
+    category: chunk.metadata.category,
+    keywords: chunk.metadata.keywords,
+  }));
+}
+
+export function createTraceStage(
+  configured: boolean,
+  status: RAGTraceStatus,
+  reason?: string,
+  details?: Pick<RAGTraceStage, 'resultCount' | 'fallbackUsed'>,
+): RAGTraceStage {
+  const stage: RAGTraceStage = {
+    configured,
+    executed: status !== 'skipped',
+    status,
+  };
+  if (reason) stage.reason = reason;
+  if (details?.resultCount !== undefined) stage.resultCount = details.resultCount;
+  if (details?.fallbackUsed !== undefined) stage.fallbackUsed = details.fallbackUsed;
+  return stage;
+}
+
+type RetrievalObservation = {
+  configured: boolean;
+  outcome?: 'unavailable' | 'failed' | 'executed';
+  resultCount?: number;
+  reason?: string;
+};
+
+export function createRetrievalTrace(observations: {
+  vector: RetrievalObservation;
+  structured: RetrievalObservation;
+  keyword: RetrievalObservation;
+}): RAGRetrievalTrace {
+  const stageFor = (observation: RetrievalObservation): RAGTraceStage => {
+    if (!observation.configured) return createTraceStage(false, 'skipped', 'disabled');
+    if (observation.outcome === 'unavailable') {
+      return createTraceStage(true, 'skipped', observation.reason || 'service_unavailable', { resultCount: 0 });
+    }
+    if (observation.outcome === 'failed') {
+      return createTraceStage(true, 'failed', observation.reason || 'execution_failed', { resultCount: 0 });
+    }
+    if (observation.resultCount !== undefined) {
+      return createTraceStage(true, 'executed', observation.resultCount === 0 ? 'zero_results' : undefined, {
+        resultCount: observation.resultCount,
+      });
+    }
+    return createTraceStage(true, 'skipped', 'not_reached', { resultCount: 0 });
+  };
+
+  const vector = stageFor(observations.vector);
+  const structured = stageFor(observations.structured);
+  const keyword = stageFor(observations.keyword);
+  if (vector.resultCount && vector.resultCount > 0) {
+    structured.status = 'skipped';
+    structured.executed = false;
+    structured.reason = 'previous_stage_returned_results';
+    keyword.status = 'skipped';
+    keyword.executed = false;
+    keyword.reason = 'previous_stage_returned_results';
+  } else if (structured.resultCount && structured.resultCount > 0) {
+    keyword.status = 'skipped';
+    keyword.executed = false;
+    keyword.reason = 'previous_stage_returned_results';
+  }
+  return { vector, structured, keyword };
+}
+
+export function createParallelRetrievalTrace(
+  observations: {
+    vector: RetrievalObservation;
+    structured: RetrievalObservation;
+    keyword: RetrievalObservation;
+  },
+  fusion?: RAGRetrievalTrace['fusion'],
+): RAGRetrievalTrace {
+  const stageFor = (observation: RetrievalObservation): RAGTraceStage => {
+    if (!observation.configured) return createTraceStage(false, 'skipped', 'disabled');
+    if (observation.outcome === 'unavailable' || observation.outcome === 'failed') {
+      return createTraceStage(true, 'failed', observation.reason || 'execution_failed', { resultCount: 0 });
+    }
+    if (observation.resultCount !== undefined) {
+      return createTraceStage(true, 'executed', observation.resultCount === 0 ? 'zero_results' : undefined, {
+        resultCount: observation.resultCount,
+      });
+    }
+    return createTraceStage(true, 'failed', 'not_observed', { resultCount: 0 });
+  };
+
+  return {
+    vector: stageFor(observations.vector),
+    structured: stageFor(observations.structured),
+    keyword: stageFor(observations.keyword),
+    ...(fusion ? { fusion } : {}),
+  };
 }
 
 // ============================================================
@@ -263,53 +430,152 @@ function keywordScore(chunk: Chunk, query: string): number {
   return score;
 }
 
-export async function searchChunks(query: string, topK: number = 5): Promise<Chunk[]> {
-  // 1. Try vector semantic search first
-  if (isVectorAvailable()) {
-    try {
-      const vectorResults = await searchVectors(query, topK);
-      if (vectorResults.length > 0) {
-        console.log(`[RAG] Vector search returned ${vectorResults.length} results (top score: ${vectorResults[0].score})`);
-        return vectorResults.map(r => ({
-          id: r.id,
-          text: r.text,
-          metadata: {
-            source: r.metadata.source || '',
-            category: r.metadata.category || '景点数据',
-            keywords: (r.metadata.keywords || '').split(',').filter(Boolean),
-          },
-        }));
-      }
-    } catch (e: any) {
-      console.warn(`[RAG] Vector search failed: ${e.message?.slice(0, 80)}`);
+async function searchChunksWithTrace(
+  query: string,
+  topK: number,
+  config: RAGExperimentConfig,
+): Promise<{ chunks: Chunk[]; mode: RAGTrace['retrievalMode']; trace: RAGRetrievalTrace }> {
+  const observations = {
+    vector: { configured: config.enableVectorRetrieval } as RetrievalObservation,
+    structured: { configured: config.enableStructuredRetrieval } as RetrievalObservation,
+    keyword: { configured: config.enableKeywordRetrieval } as RetrievalObservation,
+  };
+
+  const vectorPromise = (async (): Promise<RetrievalCandidate[]> => {
+    if (!config.enableVectorRetrieval) return [];
+    if (!isVectorAvailable()) {
+      observations.vector.outcome = 'unavailable';
+      observations.vector.reason = 'service_unavailable';
+      observations.vector.resultCount = 0;
+      return [];
     }
-  }
+    try {
+      const outcome = await searchVectorsWithStatus(query, topK);
+      observations.vector.outcome = outcome.status;
+      observations.vector.reason = outcome.reason;
+      observations.vector.resultCount = outcome.results.length;
+      return outcome.results.map((result, index) => ({
+        canonicalId: result.id,
+        dedupeKey: `text:${result.text.replace(/\s+/g, '').slice(0, 1000)}`,
+        text: result.text,
+        source: result.metadata.source || '',
+        channel: 'vector' as const,
+        rank: index + 1,
+        rawScore: result.score,
+        metadata: {
+          category: result.metadata.category || '景点数据',
+          keywords: (result.metadata.keywords || '').split(',').filter(Boolean),
+        },
+      }));
+    } catch (error: any) {
+      observations.vector.outcome = 'failed';
+      observations.vector.reason = error?.message?.slice(0, 80) || 'execution_failed';
+      observations.vector.resultCount = 0;
+      return [];
+    }
+  })();
 
-  // 2. Try structured field-level search (primary fallback)
-  const structuredResults = searchStructured(query, topK);
-  if (structuredResults.length > 0) {
-    console.log(`[RAG] Structured search: ${structuredResults.length} results`);
-    return structuredResults.map(r => ({
-      id: `${r.spotId}_${r.fieldName}`,
-      text: `【${r.spotName}】${r.fieldLabel}：${r.text}`,
-      metadata: {
+  const structuredPromise = (async (): Promise<RetrievalCandidate[]> => {
+    if (!config.enableStructuredRetrieval) return [];
+    try {
+      const results = searchStructured(query, topK);
+      observations.structured.outcome = 'executed';
+      observations.structured.resultCount = results.length;
+      return results.map((result, index) => ({
+        canonicalId: `${result.spotId}_${result.fieldName}`,
+        dedupeKey: `structured:${result.spotId}_${result.fieldName}`,
+        text: `【${result.spotName}】${result.fieldLabel}：${result.text}`,
         source: 'structured_dataset',
-        category: r.fieldLabel,
-        keywords: [r.spotName],
-      },
-    }));
-  }
+        channel: 'structured' as const,
+        rank: index + 1,
+        rawScore: result.score,
+        metadata: { category: result.fieldLabel, keywords: [result.spotName] },
+      }));
+    } catch (error: any) {
+      observations.structured.outcome = 'failed';
+      observations.structured.reason = error?.message?.slice(0, 80) || 'execution_failed';
+      observations.structured.resultCount = 0;
+      return [];
+    }
+  })();
 
-  // 3. Fallback to keyword + chunk matching
-  if (knowledgeChunks.length === 0) {
-    knowledgeChunks = buildChunks();
-  }
-  const scored = knowledgeChunks.map(chunk => ({
-    chunk,
-    score: keywordScore(chunk, query),
+  const keywordPromise = (async (): Promise<RetrievalCandidate[]> => {
+    if (!config.enableKeywordRetrieval) return [];
+    try {
+      if (knowledgeChunks.length === 0) knowledgeChunks = buildChunks();
+      const results = knowledgeChunks.map(chunk => ({ chunk, score: keywordScore(chunk, query) }))
+        .filter(result => result.score > 0)
+        .sort((left, right) => right.score - left.score)
+        .slice(0, topK);
+      observations.keyword.outcome = 'executed';
+      observations.keyword.resultCount = results.length;
+      return results.map((result, index) => ({
+        canonicalId: result.chunk.id,
+        dedupeKey: `text:${result.chunk.text.replace(/\s+/g, '').slice(0, 1000)}`,
+        text: result.chunk.text,
+        source: result.chunk.metadata.source,
+        channel: 'keyword' as const,
+        rank: index + 1,
+        rawScore: result.score,
+        metadata: {
+          category: result.chunk.metadata.category,
+          keywords: result.chunk.metadata.keywords,
+        },
+      }));
+    } catch (error: any) {
+      observations.keyword.outcome = 'failed';
+      observations.keyword.reason = error?.message?.slice(0, 80) || 'execution_failed';
+      observations.keyword.resultCount = 0;
+      return [];
+    }
+  })();
+
+  const [vector, structured, keyword] = await Promise.all([vectorPromise, structuredPromise, keywordPromise]);
+  const fusion = fuseCandidates({ vector, structured, keyword });
+  const ranked = fusion.ranked.slice(0, topK);
+  const chunks: Chunk[] = ranked.map(candidate => ({
+    id: candidate.canonicalId,
+    text: candidate.text,
+    score: candidate.rrfScore,
+    metadata: {
+      source: candidate.source,
+      category: typeof candidate.metadata.category === 'string' ? candidate.metadata.category : '景点数据',
+      keywords: Array.isArray(candidate.metadata.keywords) ? candidate.metadata.keywords.map(String) : [],
+    },
   }));
-  scored.sort((a, b) => b.score - a.score);
-  return scored.filter(s => s.score > 0).slice(0, topK).map(s => s.chunk);
+  const enabledChannels = [
+    config.enableVectorRetrieval && 'vector',
+    config.enableStructuredRetrieval && 'structured',
+    config.enableKeywordRetrieval && 'keyword',
+  ].filter(Boolean) as RetrievalChannel[];
+  const mode: RAGTrace['retrievalMode'] = ranked.length === 0
+    ? 'none'
+    : enabledChannels.length > 1 ? 'fusion' : enabledChannels[0];
+  const trace = createParallelRetrievalTrace(observations, {
+    method: 'rrf',
+    k: fusion.rrfK,
+    inputCounts: fusion.channelCounts,
+    candidateCount: fusion.candidates.length,
+  });
+  trace.candidates = fusion.ranked.map(candidate => ({
+    canonicalId: candidate.canonicalId,
+    dedupeKey: candidate.dedupeKey,
+    channel: candidate.channel,
+    rank: candidate.rank,
+    rawScore: candidate.rawScore,
+    rrfScore: candidate.rrfScore,
+    channels: candidate.channels,
+  }));
+  return { chunks, mode, trace };
+}
+
+export async function searchChunks(
+  query: string,
+  topK: number = 5,
+  config: RAGExperimentConfig = DEFAULT_RAG_CONFIG,
+): Promise<Chunk[]> {
+  const result = await searchChunksWithTrace(query, topK, config);
+  return result.chunks;
 }
 
 // ============================================================
@@ -392,11 +658,22 @@ function extractRelatedSpots(text: string): string[] {
  * Rewrite a colloquial user query into a search-optimized form.
  * Uses LLM when available; returns original query on failure.
  */
-async function rewriteQuery(query: string): Promise<string> {
-  if (!isLLMAvailable() || query.length < 3) return query;
+async function rewriteQueryWithTrace(
+  query: string,
+  configured: boolean,
+): Promise<{ query: string; trace: RAGTraceStage }> {
+  if (!configured) return { query, trace: createTraceStage(false, 'skipped', 'disabled') };
+  if (!isLLMAvailable()) {
+    return { query, trace: createTraceStage(true, 'skipped', 'llm_unavailable') };
+  }
+  if (query.length < 3) {
+    return { query, trace: createTraceStage(true, 'skipped', 'query_too_short') };
+  }
 
   // Quick check: already search-friendly (short, keyword-like)?
-  if (query.length <= 8 && !/[？?吗呢吧啊呀]/.test(query)) return query;
+  if (query.length <= 8 && !/[？?吗呢吧啊呀]/.test(query)) {
+    return { query, trace: createTraceStage(true, 'skipped', 'already_search_friendly') };
+  }
 
   try {
     const result = await callLLM([
@@ -418,13 +695,21 @@ async function rewriteQuery(query: string): Promise<string> {
     ], { temperature: 0.1, max_tokens: 30 });
 
     const rewritten = result?.trim();
+    if (!rewritten) {
+      return { query, trace: createTraceStage(true, 'failed', 'llm_call_failed') };
+    }
     if (rewritten && rewritten.length >= 2 && rewritten !== query) {
       console.log(`[RAG] Query rewritten: "${query}" → "${rewritten}"`);
-      return rewritten;
+      return { query: rewritten, trace: createTraceStage(true, 'executed') };
     }
-  } catch { /* fall through */ }
+    return { query, trace: createTraceStage(true, 'executed') };
+  } catch {
+    return { query, trace: createTraceStage(true, 'failed', 'llm_call_failed') };
+  }
+}
 
-  return query;
+async function rewriteQuery(query: string): Promise<string> {
+  return (await rewriteQueryWithTrace(query, true)).query;
 }
 
 // ============================================================
@@ -435,8 +720,20 @@ async function rewriteQuery(query: string): Promise<string> {
  * Use LLM to re-rank search results by relevance to the query.
  * Graded, not just pointwise — asks the model to pick the best matches.
  */
-async function rerankChunks(query: string, chunks: Chunk[]): Promise<Chunk[]> {
-  if (chunks.length <= 2 || !isLLMAvailable()) return chunks;
+async function rerankChunksWithTrace(
+  query: string,
+  chunks: Chunk[],
+  configured: boolean,
+): Promise<{ chunks: Chunk[]; trace: RAGTraceStage }> {
+  if (!configured) {
+    return { chunks, trace: createTraceStage(false, 'skipped', 'disabled') };
+  }
+  if (chunks.length <= 2) {
+    return { chunks, trace: createTraceStage(true, 'skipped', 'insufficient_candidates', { resultCount: chunks.length }) };
+  }
+  if (!isLLMAvailable()) {
+    return { chunks, trace: createTraceStage(true, 'skipped', 'llm_unavailable', { resultCount: chunks.length }) };
+  }
 
   try {
     const snippets = chunks.map((c, i) =>
@@ -478,13 +775,17 @@ ${snippets}
       if (oldTop !== newTop) {
         console.log(`[RAG] Reranked: top result changed from "${oldTop}..." → "${newTop}..."`);
       }
-      return reranked;
+      return { chunks: reranked, trace: createTraceStage(true, 'executed', undefined, { resultCount: reranked.length }) };
     }
+    return { chunks, trace: createTraceStage(true, 'failed', 'invalid_response', { resultCount: chunks.length }) };
   } catch (e: any) {
     console.warn(`[RAG] Rerank failed: ${e.message?.slice(0, 80)}`);
+    return { chunks, trace: createTraceStage(true, 'failed', 'llm_call_failed', { resultCount: chunks.length }) };
   }
+}
 
-  return chunks;
+async function rerankChunks(query: string, chunks: Chunk[]): Promise<Chunk[]> {
+  return (await rerankChunksWithTrace(query, chunks, true)).chunks;
 }
 
 // ============================================================
@@ -494,29 +795,57 @@ ${snippets}
 /**
  * RAG query — vector search + LLM generation.
  */
-export async function queryRAG(query: string, sessionId: string): Promise<RAGResult> {
+export async function queryRAG(
+  query: string,
+  sessionId: string,
+  configOverrides?: Partial<RAGExperimentConfig>,
+): Promise<RAGResult> {
+  const config = resolveRAGConfig(configOverrides);
   // 0. Rewrite query for better search precision
-  const searchQuery = await rewriteQuery(query);
+  const rewriteResult = await rewriteQueryWithTrace(query, config.enableQueryRewrite);
+  const searchQuery = rewriteResult.query;
 
   // 1. Search for relevant chunks
-  let chunks = await searchChunks(searchQuery, 8); // fetch more for reranking
-  const context = buildRetrievedContext(chunks);
+  const searchResult = await searchChunksWithTrace(searchQuery, config.retrievalTopK, config);
+  let chunks = searchResult.chunks;
 
   // 2. Rerank for relevance
-  chunks = await rerankChunks(query, chunks); // use original query for relevance judgment
-  const rerankedContext = buildRetrievedContext(chunks.slice(0, 5));
+  const rerankResult = await rerankChunksWithTrace(query, chunks, config.enableRerank); // use original query for relevance judgment
+  chunks = rerankResult.chunks;
+  const contextChunks = chunks.slice(0, config.contextTopK);
+  const rerankedContext = buildRetrievedContext(contextChunks);
+  const traceBase = {
+    originalQuery: query,
+    rewrittenQuery: searchQuery,
+    retrievalMode: searchResult.mode,
+    retrievedIds: searchResult.chunks.map(chunk => chunk.id),
+    retrievedScores: searchResult.chunks.map(chunk => chunk.score || 0),
+    retrievedDocuments: toEvidenceDocuments(searchResult.chunks),
+    rerankEnabled: config.enableRerank,
+    rerankedIds: chunks.map(chunk => chunk.id),
+    contextIds: contextChunks.map(chunk => chunk.id),
+    historyMessageCount: 0,
+    fullKnowledgeIncluded: config.includeFullKnowledge,
+    rewrite: rewriteResult.trace,
+    retrieval: searchResult.trace,
+    rerank: rerankResult.trace,
+    generation: createTraceStage(true, 'skipped', 'not_started', { fallbackUsed: false }),
+  } satisfies RAGTrace;
 
   // 3. If LLM available, use it for generation
-  if (isLLMAvailable()) {
-    const history = getSessionHistory(sessionId);
+  const llmAvailable = isLLMAvailable();
+  if (llmAvailable) {
+    const history = config.enableHistory ? getSessionHistory(sessionId) : [];
+    traceBase.historyMessageCount = history.length;
     const messages = buildTourGuideMessages(query, rerankedContext, history.map(h => ({
       role: h.role as 'user' | 'assistant',
       content: h.content,
-    })));
+    })), { includeFullKnowledge: config.includeFullKnowledge });
 
     const answer = await callLLM(messages, { temperature: 0.3, max_tokens: 280 });
 
     if (answer) {
+      traceBase.generation = createTraceStage(true, 'executed', undefined, { fallbackUsed: false });
       addToHistory(sessionId, 'user', query);
       addToHistory(sessionId, 'assistant', answer);
 
@@ -526,8 +855,12 @@ export async function queryRAG(query: string, sessionId: string): Promise<RAGRes
         relatedSpots: extractRelatedSpots(answer),
         usedLLM: true,
         retrievedChunks: chunks.length,
+        trace: traceBase,
       };
     }
+    traceBase.generation = createTraceStage(true, 'failed', 'llm_call_failed', { fallbackUsed: true });
+  } else {
+    traceBase.generation = createTraceStage(true, 'skipped', 'llm_unavailable', { fallbackUsed: true });
   }
 
   // 4. Fallback: use retrieved chunks directly
@@ -548,26 +881,32 @@ export async function queryRAG(query: string, sessionId: string): Promise<RAGRes
     relatedSpots: extractRelatedSpots(fallbackAnswer),
     usedLLM: false,
     retrievedChunks: chunks.length,
+    trace: traceBase,
   };
 }
 
 /**
  * Streaming RAG query for SSE.
  */
-export async function* streamRAGQuery(query: string, sessionId: string): AsyncGenerator<string> {
+export async function* streamRAGQuery(
+  query: string,
+  sessionId: string,
+  configOverrides?: Partial<RAGExperimentConfig>,
+): AsyncGenerator<string> {
+  const config = resolveRAGConfig(configOverrides);
   // 0. Rewrite query
-  const searchQuery = await rewriteQuery(query);
+  const searchQuery = config.enableQueryRewrite ? await rewriteQuery(query) : query;
 
   // 1. Search — fetch more for reranking
-  let chunks = await searchChunks(searchQuery, 8);
-  const context = buildRetrievedContext(chunks);
+  const searchResult = await searchChunksWithTrace(searchQuery, config.retrievalTopK, config);
+  let chunks = searchResult.chunks;
 
   // 2. Rerank
-  chunks = await rerankChunks(query, chunks);
-  const rerankedContext = buildRetrievedContext(chunks.slice(0, 5));
+  if (config.enableRerank) chunks = await rerankChunks(query, chunks);
+  const rerankedContext = buildRetrievedContext(chunks.slice(0, config.contextTopK));
 
   if (!isLLMAvailable()) {
-    const result = await queryRAG(query, sessionId);
+    const result = await queryRAG(query, sessionId, config);
     addToHistory(sessionId, 'user', query);
     addToHistory(sessionId, 'assistant', result.answer);
     yield result.answer;
@@ -575,11 +914,11 @@ export async function* streamRAGQuery(query: string, sessionId: string): AsyncGe
   }
 
   // 3. Stream LLM response with adequate token budget
-  const history = getSessionHistory(sessionId);
+  const history = config.enableHistory ? getSessionHistory(sessionId) : [];
   const messages = buildTourGuideMessages(query, rerankedContext, history.map(h => ({
     role: h.role as 'user' | 'assistant',
     content: h.content,
-  })));
+  })), { includeFullKnowledge: config.includeFullKnowledge });
 
   let fullAnswer = '';
   let hasContent = false;
@@ -592,7 +931,7 @@ export async function* streamRAGQuery(query: string, sessionId: string): AsyncGe
   // 3. If LLM streaming produced nothing, fall back to non-streaming
   if (!hasContent) {
     console.warn('[RAG] LLM stream returned empty, falling back to non-streaming');
-    const result = await queryRAG(query, sessionId);
+    const result = await queryRAG(query, sessionId, config);
     if (result.answer && result.answer !== fullAnswer) {
       fullAnswer = result.answer;
       yield result.answer;

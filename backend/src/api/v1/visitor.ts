@@ -6,10 +6,14 @@ import {
   queryRAG, streamRAGQuery, getSessionHistory,
   initKnowledgeBase, getKnowledgeStats,
 } from '../../services/rag-service';
+import type { RAGExperimentConfig } from '../../services/rag-config';
 import { textToSpeech } from '../../services/tts-service';
 import { isLLMAvailable, getActiveModelName, callLLM, callMultimodalLLM, isMultimodalAvailable } from '../../services/llm-service';
 import { analyzeEmotion } from '../../services/emotion-service';
 import { broadcastQueryEvent } from '../../services/websocket-service';
+import { extractSceneState, SceneStateSchema } from '../../services/scene/scene-state';
+import { loadRouteGraph } from '../../services/route/route-contract';
+import { planRoute } from '../../services/route/route-planner';
 import {
   saveConversation, saveFeedback, getConversationStats,
   getHotQuestions as getDbHotQuestions, classifyQuery,
@@ -120,7 +124,7 @@ visitorRouter.get('/spots/:spotId', (req: Request, res: Response) => {
 
 visitorRouter.post('/qa', async (req: Request, res: Response) => {
   try {
-    const { query, session_id } = req.body;
+    const { query, session_id, evaluation_config } = req.body;
     if (!query) {
       return res.status(400).json({ error: '请输入问题' });
     }
@@ -142,7 +146,7 @@ visitorRouter.post('/qa', async (req: Request, res: Response) => {
 
       let fullAnswer = '';
       try {
-        for await (const chunk of streamRAGQuery(query, sessionId)) {
+        for await (const chunk of streamRAGQuery(query, sessionId, evaluation_config as Partial<RAGExperimentConfig> | undefined)) {
           fullAnswer += chunk;
           res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
         }
@@ -185,7 +189,7 @@ visitorRouter.post('/qa', async (req: Request, res: Response) => {
       res.end();
     } else {
       // Non-streaming response
-      const result = await queryRAG(query, sessionId);
+      const result = await queryRAG(query, sessionId, evaluation_config as Partial<RAGExperimentConfig> | undefined);
 
       // Save conversation
       const elapsed = Date.now() - startTime;
@@ -215,9 +219,11 @@ visitorRouter.post('/qa', async (req: Request, res: Response) => {
         related_spots: result.relatedSpots,
         image_urls: getImageUrls(query, result.answer),
         used_llm: result.usedLLM,
-        model: getActiveModelName(),
-        retrieved_chunks: result.retrievedChunks,
-      });
+         model: getActiveModelName(),
+         retrieved_chunks: result.retrievedChunks,
+         response_time_ms: elapsed,
+         evaluation_trace: result.trace,
+       });
     }
   } catch (error: any) {
     console.error('QA error:', error);
@@ -400,6 +406,58 @@ visitorRouter.post('/recommend', (req: Request, res: Response) => {
     profile: { travelType, ageGroup, budget, interests, duration },
     tips,
   });
+});
+
+// ============ Scene-aware route planning ============
+
+visitorRouter.post('/route/plan', (req: Request, res: Response) => {
+  try {
+    const { query, scene_state } = req.body || {};
+    if (typeof query !== 'string' || !query.trim()) {
+      return res.status(400).json({ error: '请输入路线需求' });
+    }
+
+    const extracted = extractSceneState(query);
+    let sceneState = extracted;
+    if (scene_state !== undefined) {
+      const partial = SceneStateSchema.partial().safeParse(scene_state);
+      if (!partial.success) {
+        return res.status(400).json({ error: 'scene_state 不符合数据契约', details: partial.error.flatten() });
+      }
+      sceneState = SceneStateSchema.parse({ ...extracted, ...partial.data });
+    }
+
+    const planningSceneState = !sceneState.currentTime
+      ? { ...sceneState, missingCriticalFields: [...new Set([...sceneState.missingCriticalFields, 'currentTime'])] }
+      : sceneState;
+    const graph = loadRouteGraph();
+    const route = planRoute(planningSceneState, graph, 12);
+    const evidence = route.steps.map(step => {
+      const spot = graph.spots.find(item => item.id === step.spotId);
+      return {
+        spot_id: step.spotId,
+        name: spot?.name,
+        source: spot?.source,
+        confidence: spot?.confidence,
+      };
+    });
+    return res.json({
+      query,
+      scene_state: planningSceneState,
+      route,
+      feasibility: route.feasible,
+      outcome: route.outcome,
+      explanation: {
+        satisfied_constraints: route.satisfiedConstraints || [],
+        rejected_requests: route.rejectedRequests || [],
+        violations: route.violations || [],
+      },
+      evidence,
+    });
+  } catch (error: any) {
+    console.error('Route planning error:', error);
+    return res.status(400).json({ error: '路线需求无法解析', detail: error?.message || 'invalid_request' });
+  }
 });
 
 // ============ Feedback ============

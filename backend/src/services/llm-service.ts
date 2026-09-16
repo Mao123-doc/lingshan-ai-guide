@@ -418,9 +418,10 @@ export async function getEmbeddings(texts: string[]): Promise<number[][]> {
 export function buildTourGuideMessages(
   userQuery: string,
   retrievedContext: string,
-  conversationHistory?: ChatMessage[]
+  conversationHistory?: ChatMessage[],
+  options?: { includeFullKnowledge?: boolean }
 ): ChatMessage[] {
-  const knowledge = loadKnowledgeContext();
+  const knowledge = options?.includeFullKnowledge === false ? '' : loadKnowledgeContext();
 
   const systemPrompt = `你是「灵小禅」——灵山胜境景区的AI数字人导游。你是一位亲切、专业、知识渊博的佛教文化导游，形象是穿着汉服的少女。
 
@@ -438,7 +439,7 @@ export function buildTourGuideMessages(
 - 语气亲切温暖，犹如一位热情的导游
 - 可以适当使用emoji增加亲和力
 
-${knowledge}
+  ${knowledge ? `${knowledge}\n` : ''}
 
 【检索到的相关片段】
 ${retrievedContext || '未检索到相关片段，请基于知识库尽力回答。如果知识库也没有，诚实告知。'}`;

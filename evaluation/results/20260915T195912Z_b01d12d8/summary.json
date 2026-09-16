@@ -1,0 +1,79 @@
+{
+  "run_id": "20260915T195912Z_b01d12d8",
+  "git_sha": "7b5cbd944143c5ca84bc824dbfa7df892f72ff3e",
+  "gold_record_count": 88,
+  "profiles": {
+    "vector_only": {
+      "count": 88,
+      "eligible_count": 88,
+      "observable_count": 88,
+      "local_fallback_count": 0,
+      "recall_at_1": 0.3409,
+      "recall_at_3": 0.8977,
+      "recall_at_5": 0.9886,
+      "mrr_at_5": 0.6259,
+      "no_result_rate": 0.0,
+      "api_failure_rate": 0.0,
+      "latency_p50_ms": 2398.524,
+      "latency_p95_ms": 2923.531
+    },
+    "structured_only": {
+      "count": 88,
+      "eligible_count": 88,
+      "observable_count": 88,
+      "local_fallback_count": 0,
+      "recall_at_1": 0.9318,
+      "recall_at_3": 1.0,
+      "recall_at_5": 1.0,
+      "mrr_at_5": 0.9659,
+      "no_result_rate": 0.0,
+      "api_failure_rate": 0.0,
+      "latency_p50_ms": 2169.314,
+      "latency_p95_ms": 2555.183
+    },
+    "keyword_only": {
+      "count": 88,
+      "eligible_count": 88,
+      "observable_count": 88,
+      "local_fallback_count": 0,
+      "recall_at_1": 0.3182,
+      "recall_at_3": 0.7159,
+      "recall_at_5": 0.8295,
+      "mrr_at_5": 0.5091,
+      "no_result_rate": 0.0,
+      "api_failure_rate": 0.0,
+      "latency_p50_ms": 2215.071,
+      "latency_p95_ms": 2655.438
+    },
+    "fused": {
+      "count": 88,
+      "eligible_count": 88,
+      "observable_count": 88,
+      "local_fallback_count": 0,
+      "recall_at_1": 0.3409,
+      "recall_at_3": 0.9659,
+      "recall_at_5": 0.9886,
+      "mrr_at_5": 0.5947,
+      "no_result_rate": 0.0,
+      "api_failure_rate": 0.0,
+      "latency_p50_ms": 2216.204,
+      "latency_p95_ms": 2701.317
+    },
+    "fused_rerank": {
+      "count": 88,
+      "eligible_count": 88,
+      "observable_count": 88,
+      "local_fallback_count": 0,
+      "recall_at_1": 0.3409,
+      "recall_at_3": 0.9659,
+      "recall_at_5": 0.9886,
+      "mrr_at_5": 0.5947,
+      "no_result_rate": 0.0,
+      "api_failure_rate": 0.0,
+      "latency_p50_ms": 2636.743,
+      "latency_p95_ms": 3212.305
+    }
+  },
+  "retrieval_semantics": "parallel_rrf_fusion",
+  "fallback_policy": "local_fallback records are excluded from retrieval metric denominators and retained in raw results"
+}

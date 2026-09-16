@@ -41,3 +41,6 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+
+# Local linked worktrees
+.worktrees/

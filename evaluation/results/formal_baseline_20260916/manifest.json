@@ -1,0 +1,60 @@
+{
+  "run_id": "formal_baseline_20260916",
+  "profile": "full_retrieval",
+  "git_sha": "cb1ee57faeca33160e17a0b9531459d8d8aa92c5",
+  "dataset": {
+    "path": "backend/python/tools/test_questions.json",
+    "sha256": "5BFC1C7928FB1280146575938DF73803F08C7E57040F5B947CE49AB7D6071168",
+    "count": 50
+  },
+  "knowledge": [
+    {
+      "path": "data/raw/knowledge_guide.txt",
+      "sha256": "F5E51A9D6390AA3AC9D6CECB5936416B4C1299692F265254F40981239DBD703F"
+    },
+    {
+      "path": "data/raw/knowledge_dataset.txt",
+      "sha256": "A63301E735F5D5D9EF22FC55EE392FE59DE8117D735E822B60C8BE08B34B5A94"
+    }
+  ],
+  "config": {
+    "enableQueryRewrite": true,
+    "enableVectorRetrieval": true,
+    "enableStructuredRetrieval": true,
+    "enableKeywordRetrieval": true,
+    "enableRerank": true,
+    "enableHistory": false,
+    "includeFullKnowledge": false,
+    "retrievalTopK": 8,
+    "contextTopK": 5,
+    "temperature": "backend default; not overridden by evaluator",
+    "llm": "deepseek-chat",
+    "embedding": "BAAI/bge-large-zh-v1.5",
+    "retrieval_semantics": "parallel_rrf_fusion",
+    "rrf_k": 60
+  },
+  "runtime": {
+    "backend_health": "llm=deepseek-chat, vector_search=true, knowledge_chunks=57, structured_spots=22, structured_fields=176",
+    "vector_health": "model=BAAI/bge-large-zh-v1.5, chunks=48",
+    "node": "v24.19.0",
+    "python": "3.13.7",
+    "fallback_count": 0,
+    "api_failures": 0,
+    "retrieval_failures": 0
+  },
+  "artifacts": {
+    "raw_results": "full_retrieval.json",
+    "generated_report": "generated_report.md",
+    "raw_results_sha256": "56F192638639BAE3B3146888297A825CC12926DA64505A0577660F6D4C0A485E"
+  },
+  "metrics": {
+    "total": 50,
+    "api_successes": 50,
+    "passed": 39,
+    "pass_rate": 0.78,
+    "fact_recall": 0.855,
+    "avg_latency_ms": 2599.1,
+    "retrieval_success_rate": 1.0
+  },
+  "interpretation": "This is a Fact Contract evaluator baseline, not a real-user accuracy or satisfaction study."
+}

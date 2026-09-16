@@ -1,0 +1,5 @@
+[
+  {"id":"facility_south_gate_toilet","name":"南门卫生间","location_id":"south_gate","accessible":true,"source":"route data placeholder requiring on-site verification","confidence":"estimated"},
+  {"id":"facility_ls011_elevator","name":"灵山大佛无障碍设施","location_id":"LS-011","accessible":true,"source":"route data placeholder requiring on-site verification","confidence":"estimated"},
+  {"id":"facility_ls013_toilet","name":"灵山梵宫卫生间","location_id":"LS-013","accessible":true,"source":"route data placeholder requiring on-site verification","confidence":"estimated"}
+]

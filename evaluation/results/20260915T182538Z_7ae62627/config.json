@@ -1,0 +1,40 @@
+{
+  "run_id": "20260915T182538Z_7ae62627",
+  "profiles": [
+    "structured_only"
+  ],
+  "gold_manifest": "evaluation/retrieval/retrieval_gold_v1.json",
+  "gold_record_count": 88,
+  "runtime": {
+    "backend": {
+      "status": "ok",
+      "service": "灵山胜境 AI 数字人导游",
+      "version": "2.2.0",
+      "llm": "deepseek-chat (DeepSeek)",
+      "knowledge_chunks": 57,
+      "knowledge_indexed": true,
+      "vector_search": true,
+      "structured_spots": 22,
+      "structured_fields": 176
+    },
+    "vector": {
+      "status": "ok",
+      "chunks": 48,
+      "model": "BAAI/bge-large-zh-v1.5"
+    }
+  },
+  "profile_configs": {
+    "structured_only": {
+      "enableQueryRewrite": true,
+      "enableHistory": false,
+      "includeFullKnowledge": false,
+      "retrievalTopK": 8,
+      "contextTopK": 5,
+      "enableVectorRetrieval": false,
+      "enableStructuredRetrieval": true,
+      "enableKeywordRetrieval": false,
+      "enableRerank": false
+    }
+  },
+  "retrieval_semantics": "legacy_priority_fallback"
+}

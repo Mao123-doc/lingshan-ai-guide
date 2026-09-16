@@ -1,0 +1,19 @@
+{
+  "benchmark": "route_validator_v1",
+  "git_sha": "7d655b1",
+  "assets": {
+    "spots": {"path":"data/route/spots.json","sha256":"CBB2DADF1FC84886023A3595E44C085129B3A88BDAE31321A3BB2BA05736F8C2","count":23},
+    "edges": {"path":"data/route/edges.json","sha256":"8F56F3AB2C66A77C7FC40AE4461EBB136C2B278DE8E49B4BA9B5BD60F96E1772","count":28},
+    "performances": {"path":"data/route/performances.json","sha256":"9C12908B67A1E9747F255593879DCC4B7782810FE3E5FE84E5F070353B697BAA","count":2},
+    "facilities": {"path":"data/route/facilities.json","sha256":"74390A21499792B27B90CF964F441E51DF21A2DC8978FF9BD9B1C5851DEC3891","count":3}
+  },
+  "validator": {
+    "contract_sha256":"9A42392807E429587B588D0CD6040E40AD2743B2E97271EB59BA25F6D80D7BA7",
+    "implementation_sha256":"6BAFB3ABDA605527A0C405423AE099EF96364E3E8B1DC5939C05A1C02C7A4EF1",
+    "planner_sha256":"3C9263C98CD486FD3F4C3FCFA6E66C5DCF7FCBF3513DE52C1100B4ABFE493124",
+    "assertions": 30,
+    "schema_valid": true,
+    "invalid_route_rejection": true
+  },
+  "data_quality_note": "Walking durations and unverified facility details are explicitly marked estimated and require field verification."
+}
