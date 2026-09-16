@@ -3,6 +3,7 @@ import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 
 MODULE_PATH = Path(__file__).with_name("run_ablation.py")
@@ -206,6 +207,48 @@ class AblationRunnerTests(unittest.TestCase):
         )
 
         self.assertTrue(record["fallback_used"])
+
+    def test_profile_result_contains_formal_quality_gate(self):
+        if MODULE is None:
+            self.fail("run_ablation.py has not been created")
+
+        question = {"id": 1, "question": "问题"}
+        response = {
+            "answer": "答案",
+            "model": "deepseek-chat (DeepSeek)",
+            "evaluation_trace": {
+                "generation": {
+                    "status": "executed",
+                    "fallbackUsed": False,
+                    "modelIdentity": {
+                        "status": "mismatch",
+                        "requestedModel": "deepseek-chat",
+                        "providerModel": "deepseek-flash",
+                    },
+                },
+            },
+        }
+        evaluation = {"passed": True, "fact_recall": 1.0, "api_success": True}
+
+        with patch.object(MODULE, "call_qa_api_at", return_value=response), \
+             patch.object(MODULE, "evaluate_api_result", return_value=evaluation):
+            result = MODULE.run_profile(
+                "full_retrieval", {}, [question], "run-1", "http://127.0.0.1:8010"
+            )
+
+        self.assertTrue(result["quality_gate"]["eligible"])
+        self.assertEqual(result["quality_gate"]["missing_model_identity_count"], 0)
+
+    def test_quality_gate_summary_distinguishes_failed_profiles(self):
+        if MODULE is None:
+            self.fail("run_ablation.py has not been created")
+
+        self.assertTrue(MODULE.all_quality_gates_pass({
+            "full_retrieval": {"quality_gate": {"eligible": True}},
+        }))
+        self.assertFalse(MODULE.all_quality_gates_pass({
+            "full_retrieval": {"quality_gate": {"eligible": False}},
+        }))
 
     def test_report_contains_comparison_tables_and_fixed_settings(self):
         if MODULE is None:

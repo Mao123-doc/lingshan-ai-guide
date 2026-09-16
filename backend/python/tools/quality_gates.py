@@ -49,6 +49,75 @@ def classify_record(record: dict) -> dict:
     return {'eligible': True, 'outcome': 'eligible'}
 
 
+def validate_formal_run(records: list[dict], expected_count: int) -> dict:
+    """Validate that a saved Full-RAG run is complete and auditable."""
+    failures: list[str] = []
+    question_ids = [record.get('question_id') for record in records]
+
+    def add_failure(name: str) -> None:
+        if name not in failures:
+            failures.append(name)
+
+    if len(records) != expected_count:
+        add_failure('record_count_mismatch')
+    if len(question_ids) != len(set(question_ids)):
+        add_failure('duplicate_question_id')
+
+    api_failures = 0
+    fallback_count = 0
+    trace_inconsistent_count = 0
+    missing_evaluation_count = 0
+    missing_model_identity_count = 0
+    generation_not_executed_count = 0
+
+    for record in records:
+        if not record.get('api_success', False):
+            api_failures += 1
+        if record.get('fallback_used', False):
+            fallback_count += 1
+
+        trace = record.get('trace') or {}
+        if not trace_is_consistent(trace):
+            trace_inconsistent_count += 1
+
+        generation = trace.get('generation') or {}
+        if generation.get('status') != 'executed' or generation.get('fallbackUsed', False):
+            generation_not_executed_count += 1
+
+        identity = generation.get('modelIdentity')
+        if not isinstance(identity, dict) or identity.get('status') == 'unknown':
+            missing_model_identity_count += 1
+
+        if not isinstance(record.get('evaluation'), dict):
+            missing_evaluation_count += 1
+
+    if api_failures:
+        add_failure('api_failure')
+    if fallback_count:
+        add_failure('local_fallback')
+    if trace_inconsistent_count:
+        add_failure('trace_inconsistent')
+    if generation_not_executed_count:
+        add_failure('generation_not_executed')
+    if missing_model_identity_count:
+        add_failure('missing_model_identity')
+    if missing_evaluation_count:
+        add_failure('missing_evaluation')
+
+    return {
+        'eligible': not failures,
+        'failures': failures,
+        'total': len(records),
+        'expected_count': expected_count,
+        'api_failures': api_failures,
+        'fallback_count': fallback_count,
+        'trace_inconsistent_count': trace_inconsistent_count,
+        'generation_not_executed_count': generation_not_executed_count,
+        'missing_model_identity_count': missing_model_identity_count,
+        'missing_evaluation_count': missing_evaluation_count,
+    }
+
+
 def evaluate_run(
     records: list[dict],
     thresholds: dict,

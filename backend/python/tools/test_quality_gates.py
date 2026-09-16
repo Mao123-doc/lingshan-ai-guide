@@ -88,6 +88,57 @@ class QualityGateTests(unittest.TestCase):
         self.assertFalse(result['eligible'])
         self.assertIn('route_hard_violations', result['failures'])
 
+    def test_formal_run_rejects_incomplete_records(self):
+        result = MODULE.validate_formal_run([
+            {
+                'question_id': 1,
+                'api_success': True,
+                'fallback_used': False,
+                'trace': {
+                    'generation': {
+                        'status': 'executed',
+                        'modelIdentity': {
+                            'status': 'mismatch',
+                            'requestedModel': 'deepseek-chat',
+                            'providerModel': 'deepseek-flash',
+                        },
+                    },
+                },
+                'evaluation': {'passed': True},
+            },
+        ], expected_count=2)
+
+        self.assertFalse(result['eligible'])
+        self.assertIn('record_count_mismatch', result['failures'])
+
+    def test_formal_run_accepts_complete_nonfallback_trace_records(self):
+        records = []
+        for question_id in (1, 2):
+            records.append({
+                'question_id': question_id,
+                'api_success': True,
+                'fallback_used': False,
+                'trace': {
+                    'generation': {
+                        'status': 'executed',
+                        'fallbackUsed': False,
+                        'modelIdentity': {
+                            'status': 'mismatch',
+                            'requestedModel': 'deepseek-chat',
+                            'providerModel': 'deepseek-flash',
+                        },
+                    },
+                },
+                'evaluation': {'passed': True},
+            })
+
+        result = MODULE.validate_formal_run(records, expected_count=2)
+
+        self.assertTrue(result['eligible'])
+        self.assertEqual(result['fallback_count'], 0)
+        self.assertEqual(result['trace_inconsistent_count'], 0)
+        self.assertEqual(result['missing_model_identity_count'], 0)
+
     def test_versioned_gate_config_contains_explicit_thresholds(self):
         config_path = Path(__file__).resolve().parents[3] / 'evaluation' / 'retrieval' / 'retrieval_gate_config.json'
         config = MODULE.load_gate_config(config_path.resolve())

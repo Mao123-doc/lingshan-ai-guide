@@ -24,6 +24,7 @@ from test_accuracy import (  # noqa: E402
     get_ablation_profiles,
     load_questions,
 )
+from quality_gates import validate_formal_run  # noqa: E402
 
 
 PROFILE_FILES = {
@@ -414,8 +415,16 @@ def run_profile(
         "question_count": len(questions),
         "records": records,
         "metrics": aggregate_records(records),
+        "quality_gate": validate_formal_run(records, expected_count=len(questions)),
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+def all_quality_gates_pass(results: dict[str, dict]) -> bool:
+    return bool(results) and all(
+        bool((result.get("quality_gate") or {}).get("eligible"))
+        for result in results.values()
+    )
 
 
 def write_json(path: Path, value: dict) -> None:
@@ -523,6 +532,20 @@ def main() -> None:
         args.report_path.parent.mkdir(parents=True, exist_ok=True)
         args.report_path.write_text(build_ablation_report(results), encoding="utf-8")
         print(json.dumps({name: value["metrics"] for name, value in results.items()}, ensure_ascii=False, indent=2))
+        if not all_quality_gates_pass(results):
+            print(
+                json.dumps(
+                    {
+                        name: value.get("quality_gate")
+                        for name, value in results.items()
+                        if not (value.get("quality_gate") or {}).get("eligible")
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
 
 
 if __name__ == "__main__":
