@@ -35,7 +35,12 @@ assert.ok(mustVisit.satisfiedConstraints?.includes('must_visit:LS-006'));
 const preference = planRoute(scene({ currentTime: '13:00', preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
 assert.equal(preference.feasible, true);
 assert.equal(preference.outcome, 'feasible');
-assert.ok(preference.steps.some(step => step.performanceId === 'performance_lingshan_jixiangsong'));
+const performanceStep = preference.steps.find(step => step.performanceId === 'performance_lingshan_jixiangsong');
+assert.ok(performanceStep);
+assert.equal(performanceStep?.performanceStartTime, '14:00');
+assert.equal(performanceStep?.performanceDurationMinutes, 20);
+assert.equal(performanceStep?.visitMinutes, 20);
+assert.equal(performanceStep?.end, '14:20');
 assert.equal(preference.violations.length, 0);
 
 const unavailable = planRoute(scene({ currentTime: '14:10', preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);

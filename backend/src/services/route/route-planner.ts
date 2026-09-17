@@ -47,14 +47,14 @@ function spotInterestScore(spot: RouteSpot, interests: string[]): number {
   return score;
 }
 
-function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string): { id: string; time?: number } | undefined {
+function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string): { id: string; time?: number; durationMinutes: number } | undefined {
   const performance = graph.performances.find(item => item.location_id === spotId && scene.preferredPerformanceIds.includes(item.id));
   if (!performance) return undefined;
   const requested = scene.preferredPerformanceTimes?.[performance.id];
-  if (requested) return { id: performance.id, time: toMinutes(requested) };
+  if (requested) return { id: performance.id, time: toMinutes(requested), durationMinutes: performance.duration_minutes };
   const current = scene.currentTime ? toMinutes(scene.currentTime) : 0;
   const next = performance.start_times.map(toMinutes).find(time => time >= current);
-  return { id: performance.id, time: next };
+  return { id: performance.id, time: next, durationMinutes: performance.duration_minutes };
 }
 
 function makePlan(startTime: string, state: SearchState, rejectedRequests: Array<{ item: string; reasonCode: string }>, satisfiedConstraints: string[]): RoutePlan {
@@ -86,9 +86,8 @@ function performanceRejectionReason(id: string, scene: SceneState, graph: RouteG
   if (requested && !performance.start_times.includes(requested)) return 'performance_unavailable';
   if (requested && current !== undefined && toMinutes(requested) < current) return 'performance_already_started';
   if (requested && current !== undefined && scene.remainingMinutes !== undefined) {
-    const spot = graph.spots.find(item => item.id === performance.location_id);
     const deadline = current + scene.remainingMinutes;
-    if (toMinutes(requested) + (spot?.visit_minutes || 0) > deadline) return 'performance_outside_time_budget';
+    if (toMinutes(requested) + performance.duration_minutes > deadline) return 'performance_outside_time_budget';
   }
   return 'performance_unavailable';
 }
@@ -144,12 +143,15 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
         let stepStart = arrive;
         let performanceId: string | undefined;
         let performanceStartTime: string | undefined;
+        let performanceDurationMinutes: number | undefined;
         if (preference?.time !== undefined && preference.time >= arrive) {
           stepStart = preference.time;
           performanceId = preference.id;
           performanceStartTime = clock(preference.time);
+          performanceDurationMinutes = preference.durationMinutes;
         }
-        const end = stepStart + spot.visit_minutes;
+        const visitMinutes = performanceDurationMinutes ?? spot.visit_minutes;
+        const end = stepStart + visitMinutes;
         if (!openAt(spot, end) || end > deadline) continue;
         const nextVisited = new Set(state.visited);
         nextVisited.add(spot.id);
@@ -165,14 +167,15 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
             start: clock(stepStart),
             end: clock(end),
             walkMinutes: edge.walk_minutes,
-            visitMinutes: spot.visit_minutes,
+            visitMinutes,
+            ...(performanceDurationMinutes !== undefined ? { performanceDurationMinutes } : {}),
             reasonCode: scene.mustVisitSpotIds.includes(spot.id) ? 'must_visit' : 'interest_match',
             ...(performanceId ? { performanceId, performanceStartTime } : {}),
           }],
           visited: nextVisited,
           score,
           walking: state.walking + edge.walk_minutes,
-          visiting: state.visiting + spot.visit_minutes,
+          visiting: state.visiting + visitMinutes,
           waiting: state.waiting + (stepStart - arrive),
         });
       }

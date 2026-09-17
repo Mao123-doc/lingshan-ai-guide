@@ -79,6 +79,27 @@ assert.equal(has(inaccessiblePlan, { ...baseScene, mobility: 'wheelchair' }, 'mo
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'LS-001', performanceId: 'performance_lingshan_jixiangsong', performanceStartTime: '14:00' }] }, baseScene, 'performance_location_mismatch'), true); // 25
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'LS-001', performanceId: 'performance_lingshan_jixiangsong', performanceStartTime: '14:00' }] }, { ...baseScene, preferredPerformanceIds: ['performance_lingshan_jixiangsong'] }, 'performance_location_mismatch'), true); // 26
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'LS-013', arrive: '08:30', start: '08:30', end: '09:30', visitMinutes: 60, performanceId: 'performance_lingshan_jixiangsong', performanceStartTime: '10:35' }] }, baseScene, 'outside_opening_window'), true); // 27
+const validPerformancePlan: RoutePlan = {
+  startTime: '13:00',
+  steps: [{
+    spotId: 'LS-013',
+    arrive: '13:18',
+    start: '14:00',
+    end: '14:20',
+    walkMinutes: 18,
+    visitMinutes: 20,
+    performanceDurationMinutes: 20,
+    reasonCode: 'preferred_performance',
+    performanceId: 'performance_lingshan_jixiangsong',
+    performanceStartTime: '14:00',
+  }],
+  totalMinutes: 80,
+  walkingMinutes: 18,
+  visitingMinutes: 20,
+  waitingMinutes: 42,
+};
+assert.equal(validateRoute(validPerformancePlan, { ...baseScene, currentTime: '13:00', remainingMinutes: 120 }, graph).valid, true); // 27b
+assert.equal(has({ ...validPerformancePlan, steps: [{ ...validPerformancePlan.steps[0], end: '14:40', visitMinutes: 40, performanceDurationMinutes: 40 }] }, { ...baseScene, currentTime: '13:00' }, 'performance_duration_mismatch'), true); // 27c
 assert.equal(has({ ...basePlan(), steps: [{ ...basePlan().steps[0], spotId: 'LS-001', arrive: '09:05', start: '09:05', end: '09:20', visitMinutes: 15 }, { ...basePlan().steps[1], arrive: '09:22', start: '09:22', end: '09:37' }] }, baseScene, 'disconnected'), false); // 28
 assert.equal(validateRoute(basePlan(), { ...baseScene, remainingMinutes: undefined }, graph).valid, true); // 29
 assert.equal(validateRouteGraph(graph).length, 0); // 30

@@ -8,6 +8,7 @@ export interface RouteStep {
   end: string;
   walkMinutes: number;
   visitMinutes: number;
+  performanceDurationMinutes?: number;
   reasonCode: string;
   performanceId?: string;
   performanceStartTime?: string;
@@ -125,9 +126,6 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
     if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && !spot.mobility.wheelchair_accessible) {
       violations.push({ code: 'mobility_inaccessible_spot', message: `景点无已确认无障碍条件：${spot.name}`, stepIndex: index });
     }
-    if (step.visitMinutes !== spot.visit_minutes) {
-      violations.push({ code: 'visit_duration_mismatch', message: `停留时间与数据合同不一致：${spot.name}`, stepIndex: index });
-    }
     if (step.performanceId) {
       const performance = graph.performances.find(item => item.id === step.performanceId);
       if (!performance) {
@@ -136,7 +134,18 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
         violations.push({ code: 'performance_location_mismatch', message: `演出地点不匹配：${performance.name}`, stepIndex: index });
       } else if (step.performanceStartTime && !performance.start_times.includes(step.performanceStartTime)) {
         violations.push({ code: 'performance_time_mismatch', message: `演出时间不在数据合同中：${step.performanceStartTime}`, stepIndex: index });
+      } else {
+        const performanceStart = step.performanceStartTime ? toMinutes(step.performanceStartTime) : undefined;
+        const expectedEnd = performanceStart === undefined ? undefined : performanceStart + performance.duration_minutes;
+        if (step.performanceDurationMinutes !== performance.duration_minutes || step.visitMinutes !== performance.duration_minutes) {
+          violations.push({ code: 'performance_duration_mismatch', message: `演出时长与数据合同不一致：${performance.name}`, stepIndex: index });
+        }
+        if (performanceStart !== undefined && (stepStart !== performanceStart || end !== expectedEnd)) {
+          violations.push({ code: 'performance_time_axis_mismatch', message: `演出时间轴与数据合同不一致：${performance.name}`, stepIndex: index });
+        }
       }
+    } else if (step.visitMinutes !== spot.visit_minutes) {
+      violations.push({ code: 'visit_duration_mismatch', message: `停留时间与数据合同不一致：${spot.name}`, stepIndex: index });
     }
     previous = step.spotId;
     previousEnd = end;
