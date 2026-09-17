@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { visitorAPI } from '../../services/api';
 import { openBaiduNavigation } from '../../utils/navigation';
-import { getRouteOutcomeLabel, getRouteRejectionMessage, type RouteOutcome } from './route-outcome';
+import { getRouteOutcomeLabel, getRouteRejectionMessage, getRouteRequestLabel, type RouteOutcome } from './route-outcome';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -91,7 +91,9 @@ interface SceneStep {
   arrive: string;
   walkMinutes: number;
   visitMinutes: number;
+  waitingMinutes?: number;
   performanceId?: string;
+  performanceName?: string;
   performanceStartTime?: string;
 }
 
@@ -109,9 +111,21 @@ interface SceneRouteResult {
     totalMinutes?: number;
     walkingMinutes?: number;
     visitingMinutes?: number;
+    waitingMinutes?: number;
     rejectedRequests?: RejectedRequest[];
   };
   evidence?: Array<{ name: string; confidence: string }>;
+}
+
+const CLARIFICATION_PROMPTS: Record<string, string> = {
+  currentTime: '请告诉我现在几点，例如“现在上午10点”或“10:00”，这样才能判断能否赶上目标演出。',
+  current_time: '请告诉我现在几点，例如“现在上午10点”或“10:00”，这样才能判断能否赶上目标演出。',
+  currentLocation: '请告诉我现在位于景区哪里，例如“景区入口”或“灵山大佛附近”。',
+  remainingMinutes: '请告诉我还剩多少游览时间，例如“还有3小时”或“剩90分钟”。',
+};
+
+function getClarificationPrompt(field: string): string {
+  return CLARIFICATION_PROMPTS[field] || `请补充路线信息：${field}。`;
 }
 
 export default function RecommendPage() {
@@ -126,6 +140,7 @@ export default function RecommendPage() {
   const [sceneQuery, setSceneQuery] = useState('我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？');
   const [sceneRoute, setSceneRoute] = useState<SceneRouteResult | null>(null);
   const [sceneLoading, setSceneLoading] = useState(false);
+  const [clarificationInput, setClarificationInput] = useState('');
 
   const toggleInterest = (key: string) => {
     setSelected(prev =>
@@ -153,17 +168,26 @@ export default function RecommendPage() {
     }
   };
 
-  const handleScenePlan = async () => {
+  const handleScenePlan = async (query = sceneQuery) => {
     setSceneRoute(null);
     setSceneLoading(true);
     try {
-      const res = await visitorAPI.planRoute(sceneQuery);
+      const res = await visitorAPI.planRoute(query);
       setSceneRoute(res.data);
     } catch (err) {
       console.error('Scene route error:', err);
     } finally {
       setSceneLoading(false);
     }
+  };
+
+  const handleSceneClarification = async () => {
+    const supplement = clarificationInput.trim();
+    if (!supplement) return;
+    const combinedQuery = `${sceneQuery.trim()}，${supplement}`;
+    setSceneQuery(combinedQuery);
+    setClarificationInput('');
+    await handleScenePlan(combinedQuery);
   };
 
   const routeStepCount = sceneRoute?.route?.steps?.length ?? 0;
@@ -192,12 +216,12 @@ export default function RecommendPage() {
       </div>
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 20px' }}>
-        <Card
-          title="🧭 场景约束路线规划"
+          <Card
+          title="🧭 按你的情况规划路线"
           style={{ borderRadius: 16, marginBottom: 20, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
         >
           <Paragraph type="secondary">
-            告诉导游你现在在哪里、还剩多久、同行人和必须看的演出；系统会先提取约束，再由确定性路线引擎检查是否可行。
+            告诉我你现在在哪里、还剩多久、和谁一起，我会先确认时间是否来得及，再为你安排路线。
           </Paragraph>
           <Input.TextArea
             value={sceneQuery}
@@ -206,15 +230,15 @@ export default function RecommendPage() {
             placeholder="例如：我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？"
           />
           <div style={{ textAlign: 'center', marginTop: 16 }}>
-            <Button type="primary" onClick={handleScenePlan} loading={sceneLoading} disabled={!sceneQuery.trim()}>
-              生成可执行路线
+            <Button type="primary" onClick={() => void handleScenePlan()} loading={sceneLoading} disabled={!sceneQuery.trim()}>
+              帮我规划路线
             </Button>
           </div>
         </Card>
 
         {sceneRoute && (
           <Card
-            title={routeIsExecutable || routeHasAdjustedPreferences ? '✅ 场景路线结果' : '⚠️ 场景路线结果'}
+            title={routeIsExecutable || routeHasAdjustedPreferences ? '✅ 为你安排的路线' : '⚠️ 路线安排提示'}
             style={{ borderRadius: 16, marginBottom: 20, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
           >
             <Space wrap>
@@ -224,36 +248,64 @@ export default function RecommendPage() {
               <Tag>总时长 {sceneRoute.route?.totalMinutes ?? 0} 分钟</Tag>
               <Tag>步行 {sceneRoute.route?.walkingMinutes ?? 0} 分钟</Tag>
               <Tag>游览 {sceneRoute.route?.visitingMinutes ?? 0} 分钟</Tag>
+              {(sceneRoute.route?.waitingMinutes ?? 0) > 0 && (
+                <Tag>等待 {sceneRoute.route?.waitingMinutes} 分钟</Tag>
+              )}
             </Space>
             {missingCriticalFields.length > 0 && (
-              <Alert
-                style={{ marginTop: 14 }}
-                type="warning"
-                message={`需要补充：${missingCriticalFields.join('、')}`}
-              />
+              <Space direction="vertical" style={{ width: '100%', marginTop: 14 }} size={10}>
+                <Alert
+                  type="warning"
+                  message="还需要补充一点信息"
+                  description={missingCriticalFields.map(getClarificationPrompt).join(' ')}
+                />
+                <Space.Compact block>
+                  <Input
+                    aria-label="路线补充信息"
+                    value={clarificationInput}
+                    onChange={event => setClarificationInput(event.target.value)}
+                    onPressEnter={() => void handleSceneClarification()}
+                    placeholder="例如：现在上午10点"
+                  />
+                  <Button
+                    type="primary"
+                    onClick={() => void handleSceneClarification()}
+                    disabled={!clarificationInput.trim()}
+                    loading={sceneLoading}
+                  >
+                    补充并重新规划
+                  </Button>
+                </Space.Compact>
+              </Space>
             )}
             {rejectedRequests.length > 0 && (
               <Alert
                 style={{ marginTop: 14 }}
                 type="info"
-                message="系统明确保留了未满足请求"
-                description={rejectedRequests.map((item) => `${item.item}：${getRouteRejectionMessage(item.reasonCode)}`).join('；')}
+                message="有一项安排暂时无法加入路线"
+                description={rejectedRequests.map((item) => `${getRouteRequestLabel(item.item)}：${getRouteRejectionMessage(item.reasonCode)}`).join('；')}
               />
             )}
             <Steps
               style={{ marginTop: 18 }}
               direction="vertical"
-              items={sceneSteps.map((item, index) => ({
-                title: `${item.start}–${item.end} ${item.spotId}`,
-                description: `到达 ${item.arrive}，步行 ${item.walkMinutes} 分钟，停留 ${item.visitMinutes} 分钟${item.performanceId ? `，演出 ${item.performanceStartTime}` : ''}`,
-                icon: <Tag color="magenta">{index + 1}</Tag>,
-              }))}
+              items={sceneSteps.map((item, index) => {
+                const spotName = evidence[index]?.name || '下一站';
+                if (item.performanceId) {
+                  const performanceName = item.performanceName || '目标演出';
+                  return {
+                    title: `${item.start}–${item.end} 观看${performanceName}`,
+                    description: `${item.arrive} 到达${spotName}，步行 ${item.walkMinutes} 分钟${item.waitingMinutes ? `，等待 ${item.waitingMinutes} 分钟后观看` : '，到达后观看'}`,
+                    icon: <Tag color="magenta">{index + 1}</Tag>,
+                  };
+                }
+                return {
+                  title: `${item.start}–${item.end} ${spotName}`,
+                  description: `到达 ${item.arrive}，步行 ${item.walkMinutes} 分钟，停留 ${item.visitMinutes} 分钟`,
+                  icon: <Tag color="magenta">{index + 1}</Tag>,
+                };
+              })}
             />
-            {evidence.length > 0 && (
-              <Paragraph type="secondary" style={{ marginTop: 12 }}>
-                证据来源：{evidence.map((item) => `${item.name}（${item.confidence}）`).join('、')}
-              </Paragraph>
-            )}
           </Card>
         )}
 

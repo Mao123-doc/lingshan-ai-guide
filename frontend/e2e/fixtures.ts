@@ -36,6 +36,7 @@ export async function mockVisitorApis(page: Page) {
         feasibility: true,
         route: { steps: [{ spotId: 'LS-011', start: '10:00', end: '11:00', arrive: '10:10', walkMinutes: 10, visitMinutes: 50 }], totalMinutes: 60, walkingMinutes: 10, visitingMinutes: 50 },
         scene_state: { missingCriticalFields: [], hardConstraints: [] },
+        evidence: [{ name: '灵山大佛', confidence: 'high' }],
       } });
     }
     if (url.pathname.endsWith('/recommend')) {

@@ -36,12 +36,14 @@ test('J04 voice unsupported path stays usable', async ({ page }) => {
   await expect(page.getByPlaceholder(/想问什么|正在聆听/)).toBeVisible();
 });
 
-test('J05 feasible scene route shows executable outcome', async ({ page }) => {
+test('J05 feasible scene route shows visitor-friendly outcome', async ({ page }) => {
   await mockVisitorApis(page);
   await page.goto('/recommend');
   await page.getByPlaceholder(/我带腿脚不方便的妈妈/).fill('我在景区入口，还有三小时');
-  await page.getByRole('button', { name: '生成可执行路线' }).click();
-  await expect(page.getByText('路线可执行')).toBeVisible();
+  await page.getByRole('button', { name: '帮我规划路线' }).click();
+  await expect(page.getByText('可以按这条路线游览')).toBeVisible();
+  await expect(page.getByText('灵山大佛')).toBeVisible();
+  await expect(page.getByText('LS-011')).not.toBeVisible();
 });
 
 test('J06 recommendation renders route cards', async ({ page }) => {

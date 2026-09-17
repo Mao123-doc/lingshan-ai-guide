@@ -43,14 +43,14 @@ function spotInterestScore(spot: RouteSpot, interests: string[]): number {
   return score;
 }
 
-function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string): { id: string; time?: number; durationMinutes: number } | undefined {
+function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string): { id: string; name: string; time?: number; durationMinutes: number } | undefined {
   const performance = graph.performances.find(item => item.location_id === spotId && scene.preferredPerformanceIds.includes(item.id));
   if (!performance) return undefined;
   const requested = scene.preferredPerformanceTimes?.[performance.id];
-  if (requested) return { id: performance.id, time: toMinutes(requested), durationMinutes: performance.duration_minutes };
+  if (requested) return { id: performance.id, name: performance.name, time: toMinutes(requested), durationMinutes: performance.duration_minutes };
   const current = scene.currentTime ? toMinutes(scene.currentTime) : 0;
   const next = performance.start_times.map(toMinutes).find(time => time >= current);
-  return { id: performance.id, time: next, durationMinutes: performance.duration_minutes };
+  return { id: performance.id, name: performance.name, time: next, durationMinutes: performance.duration_minutes };
 }
 
 function makePlan(startTime: string, state: SearchState, rejectedRequests: Array<{ item: string; reasonCode: string }>, satisfiedConstraints: string[]): RoutePlan {
@@ -138,11 +138,13 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
         const preference = allowPerformancePreferences ? requestedPerformance(scene, graph, spot.id) : undefined;
         let stepStart = arrive;
         let performanceId: string | undefined;
+        let performanceName: string | undefined;
         let performanceStartTime: string | undefined;
         let performanceDurationMinutes: number | undefined;
         if (preference?.time !== undefined && preference.time >= arrive) {
           stepStart = preference.time;
           performanceId = preference.id;
+          performanceName = preference.name;
           performanceStartTime = clock(preference.time);
           performanceDurationMinutes = preference.durationMinutes;
         }
@@ -168,7 +170,8 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
             ...(performanceDurationMinutes !== undefined ? { performanceDurationMinutes } : {}),
             pathSpotIds: path.spotIds,
             reasonCode: scene.mustVisitSpotIds.includes(spot.id) ? 'must_visit' : 'interest_match',
-            ...(performanceId ? { performanceId, performanceStartTime } : {}),
+            ...(stepStart > arrive ? { waitingMinutes: stepStart - arrive } : {}),
+            ...(performanceId ? { performanceId, performanceName, performanceStartTime } : {}),
           }],
           visited: nextVisited,
           score,

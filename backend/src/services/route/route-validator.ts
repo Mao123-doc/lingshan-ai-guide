@@ -8,10 +8,12 @@ export interface RouteStep {
   end: string;
   walkMinutes: number;
   visitMinutes: number;
+  waitingMinutes?: number;
   performanceDurationMinutes?: number;
   pathSpotIds?: string[];
   reasonCode: string;
   performanceId?: string;
+  performanceName?: string;
   performanceStartTime?: string;
 }
 
