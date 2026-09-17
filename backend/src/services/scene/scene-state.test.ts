@@ -35,6 +35,18 @@ const currentTimeOnly = extractSceneState('现在上午10点，想看《吉祥�
 assert.equal(currentTimeOnly.currentTime, '10:00');
 assert.equal(currentTimeOnly.preferredPerformanceTimes, undefined);
 
+const noonDigital = extractSceneState('现在中午12点，我在景区入口，想看《吉祥颂》，还剩3小时。');
+assert.equal(noonDigital.currentTime, '12:00');
+assert.deepEqual(noonDigital.missingCriticalFields, []);
+
+const noonChinese = extractSceneState('当前中午十二点，我在景区入口，想看《吉祥颂》，还剩3小时。');
+assert.equal(noonChinese.currentTime, '12:00');
+assert.deepEqual(noonChinese.missingCriticalFields, []);
+
+const halfHourCurrentTime = extractSceneState('现在下午一点半，我在景区入口，想看《吉祥颂》，还剩3小时。');
+assert.equal(halfHourCurrentTime.currentTime, '13:30');
+assert.deepEqual(halfHourCurrentTime.missingCriticalFields, []);
+
 const wheelchair = extractSceneState('我坐轮椅，从南门进入，只有90分钟，想去灵山梵宫。');
 assert.equal(wheelchair.currentLocation, 'south_gate');
 assert.equal(wheelchair.mobility, 'wheelchair');
