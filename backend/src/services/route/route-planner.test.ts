@@ -32,6 +32,16 @@ assert.equal(mustVisit.feasible, true);
 assert.ok(mustVisit.steps.some(step => step.spotId === 'LS-006'));
 assert.ok(mustVisit.satisfiedConstraints?.includes('must_visit:LS-006'));
 
+const multiEdgeMustVisit = planRoute(scene({ mustVisitSpotIds: ['LS-003'] }), graph, 1);
+assert.equal(multiEdgeMustVisit.feasible, true);
+assert.deepEqual(multiEdgeMustVisit.steps[0]?.pathSpotIds, ['south_gate', 'LS-001', 'LS-002', 'LS-003']);
+assert.equal(multiEdgeMustVisit.steps[0]?.walkMinutes, 11);
+
+const usefulLimitedItinerary = planRoute(scene({ currentTime: '10:00', remainingMinutes: 180, mobility: 'limited', interests: [] }), graph, 12);
+assert.equal(usefulLimitedItinerary.feasible, true);
+assert.ok(usefulLimitedItinerary.steps.length >= 2);
+assert.ok(usefulLimitedItinerary.totalMinutes > 20);
+
 const preference = planRoute(scene({ currentTime: '13:00', preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
 assert.equal(preference.feasible, true);
 assert.equal(preference.outcome, 'feasible');

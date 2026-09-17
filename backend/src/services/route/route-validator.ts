@@ -9,6 +9,7 @@ export interface RouteStep {
   walkMinutes: number;
   visitMinutes: number;
   performanceDurationMinutes?: number;
+  pathSpotIds?: string[];
   reasonCode: string;
   performanceId?: string;
   performanceStartTime?: string;
@@ -113,14 +114,27 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
     }
 
     if (previous) {
-      const edge = findEdge(graph, previous, step.spotId);
-      if (!edge) {
-        violations.push({ code: 'disconnected', message: `地点不可连续到达：${previous} -> ${step.spotId}`, stepIndex: index });
-      } else {
-        computedWalking += edge.walk_minutes;
-        if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && !edge.accessible) {
-          violations.push({ code: 'mobility_inaccessible_edge', message: `行动能力不适合通行：${previous} -> ${step.spotId}`, stepIndex: index });
+      const segment = step.pathSpotIds?.length ? step.pathSpotIds : [previous, step.spotId];
+      if (segment[0] !== previous || segment[segment.length - 1] !== step.spotId) {
+        violations.push({ code: 'invalid_path', message: `路径首尾与步骤不一致：${previous} -> ${step.spotId}`, stepIndex: index });
+      }
+      let segmentWalking = 0;
+      for (let segmentIndex = 0; segmentIndex < segment.length - 1; segmentIndex += 1) {
+        const segmentFrom = segment[segmentIndex];
+        const segmentTo = segment[segmentIndex + 1];
+        const edge = findEdge(graph, segmentFrom, segmentTo);
+        if (!edge) {
+          violations.push({ code: 'disconnected', message: `地点不可连续到达：${segmentFrom} -> ${segmentTo}`, stepIndex: index });
+          continue;
         }
+        segmentWalking += edge.walk_minutes;
+        if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && !edge.accessible) {
+          violations.push({ code: 'mobility_inaccessible_edge', message: `行动能力不适合通行：${segmentFrom} -> ${segmentTo}`, stepIndex: index });
+        }
+      }
+      computedWalking += segmentWalking;
+      if (step.walkMinutes !== segmentWalking) {
+        violations.push({ code: 'step_walking_time_mismatch', message: `步骤步行时长与路网不一致：${step.spotId}`, stepIndex: index });
       }
     }
     if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && !spot.mobility.wheelchair_accessible) {

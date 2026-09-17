@@ -1,6 +1,7 @@
 import type { SceneState } from '../scene/scene-state';
 import type { RouteGraph, RouteSpot } from './route-contract';
 import { validateRoute, type RouteOutcome, type RoutePlan, type RouteStep, type RouteViolation } from './route-validator';
+import { findPath } from './pathfinding';
 
 interface SearchState {
   current: string;
@@ -28,11 +29,6 @@ function openAt(spot: RouteSpot, time: number): boolean {
     const [start, end] = window.split('-').map(toMinutes);
     return start <= end ? time >= start && time <= end : time >= start || time <= end;
   });
-}
-
-function edgeBetween(graph: RouteGraph, from: string, to: string) {
-  return graph.edges.find(edge => edge.from === from && edge.to === to)
-    || graph.edges.find(edge => edge.from === to && edge.to === from);
 }
 
 function spotInterestScore(spot: RouteSpot, interests: string[]): number {
@@ -134,10 +130,10 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
     for (const state of beam) {
       for (const spot of candidates) {
         if (state.visited.has(spot.id)) continue;
-        const edge = edgeBetween(graph, state.current, spot.id);
-        if (!edge) continue;
-        if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && (!edge.accessible || !spot.mobility.wheelchair_accessible)) continue;
-        const arrive = state.time + edge.walk_minutes;
+        const path = findPath(graph, state.current, spot.id, scene.mobility);
+        if (!path) continue;
+        if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && !spot.mobility.wheelchair_accessible) continue;
+        const arrive = state.time + path.walkMinutes;
         if (!openAt(spot, arrive)) continue;
         const preference = allowPerformancePreferences ? requestedPerformance(scene, graph, spot.id) : undefined;
         let stepStart = arrive;
@@ -157,7 +153,8 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
         nextVisited.add(spot.id);
         const mustBonus = scene.mustVisitSpotIds.includes(spot.id) ? 1000 : 0;
         const performanceBonus = performanceId ? 500 : 0;
-        const score = state.score + mustBonus + performanceBonus + spotInterestScore(spot, scene.interests) - edge.walk_minutes;
+        const coverageBonus = 100;
+        const score = state.score + coverageBonus + mustBonus + performanceBonus + spotInterestScore(spot, scene.interests) - path.walkMinutes;
         expanded.push({
           current: spot.id,
           time: end,
@@ -166,15 +163,16 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
             arrive: clock(arrive),
             start: clock(stepStart),
             end: clock(end),
-            walkMinutes: edge.walk_minutes,
+            walkMinutes: path.walkMinutes,
             visitMinutes,
             ...(performanceDurationMinutes !== undefined ? { performanceDurationMinutes } : {}),
+            pathSpotIds: path.spotIds,
             reasonCode: scene.mustVisitSpotIds.includes(spot.id) ? 'must_visit' : 'interest_match',
             ...(performanceId ? { performanceId, performanceStartTime } : {}),
           }],
           visited: nextVisited,
           score,
-          walking: state.walking + edge.walk_minutes,
+          walking: state.walking + path.walkMinutes,
           visiting: state.visiting + visitMinutes,
           waiting: state.waiting + (stepStart - arrive),
         });
