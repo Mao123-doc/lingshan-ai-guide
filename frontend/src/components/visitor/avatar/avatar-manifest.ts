@@ -59,7 +59,9 @@ export const LINGXIAOCHAN_MANIFEST: AvatarModelManifest = {
 };
 
 export function assertValidAvatarManifest(manifest: AvatarModelManifest): void {
-  if (!manifest.modelUrl.startsWith('/models/lingxiaochan/')) {
+  const modelDirectory = '/models/lingxiaochan/';
+  const normalizedModelPath = new URL(manifest.modelUrl, 'https://avatar.local').pathname;
+  if (!manifest.modelUrl.startsWith(modelDirectory) || !normalizedModelPath.startsWith(modelDirectory)) {
     throw new Error(`modelUrl: path must be inside /models/lingxiaochan/: ${manifest.modelUrl}`);
   }
 
