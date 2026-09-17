@@ -27,6 +27,50 @@ interface LLMConfig {
   baseURL: string;
 }
 
+export type ModelIdentityStatus = 'match' | 'mismatch' | 'unknown';
+
+export type ModelIdentity = {
+  status: ModelIdentityStatus;
+  requestedModel: string;
+  providerModel?: string;
+};
+
+export function extractProviderModel(data: unknown): string | undefined {
+  if (!data || typeof data !== 'object') return undefined;
+  const model = (data as { model?: unknown }).model;
+  return typeof model === 'string' && model.trim() ? model.trim() : undefined;
+}
+
+export function assessModelIdentity(
+  requestedModel: string,
+  providerModel: string | undefined,
+): ModelIdentity {
+  if (!providerModel) {
+    return { status: 'unknown', requestedModel, providerModel };
+  }
+  return {
+    status: providerModel === requestedModel ? 'match' : 'mismatch',
+    requestedModel,
+    providerModel,
+  };
+}
+
+export type LLMCallResult = {
+  content: string;
+  modelIdentity: ModelIdentity;
+};
+
+export function buildLLMCallResult(
+  content: string,
+  requestedModel: string,
+  data: unknown,
+): LLMCallResult {
+  return {
+    content,
+    modelIdentity: assessModelIdentity(requestedModel, extractProviderModel(data)),
+  };
+}
+
 // ============================================================
 // Configuration
 // ============================================================
@@ -47,7 +91,7 @@ function getFallbackConfig(): LLMConfig | null {
   return {
     apiKey,
     model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
-    baseURL: 'https://api.deepseek.com/v1',
+    baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1',
   };
 }
 
@@ -182,12 +226,12 @@ ${datasetSummary.substring(0, 8000)}`;
 // Non-streaming LLM Call
 // ============================================================
 
-export async function callLLM(
+export async function callLLMWithMetadata(
   messages: ChatMessage[],
   options?: { temperature?: number; max_tokens?: number }
-): Promise<string> {
+): Promise<LLMCallResult> {
   const config = getLLMConfig();
-  if (!config) return '';
+  if (!config) return buildLLMCallResult('', 'local-fallback', undefined);
 
   try {
     const controller = new AbortController();
@@ -215,11 +259,15 @@ export async function callLLM(
         console.error('LLM API error:', JSON.stringify(data.error).slice(0, 200));
         const fb = getFallbackConfig();
         if (fb && config.baseURL !== fb.baseURL) {
-          return callWithConfig(fb, messages, options);
+          return callWithConfigWithMetadata(fb, messages, options);
         }
-        return '';
+        return buildLLMCallResult('', config.model, data);
       }
-      return data?.choices?.[0]?.message?.content || '';
+      return buildLLMCallResult(
+        data?.choices?.[0]?.message?.content || '',
+        config.model,
+        data,
+      );
     } catch (e) {
       clearTimeout(timeout);
       throw e;
@@ -230,15 +278,22 @@ export async function callLLM(
     } else {
       console.error('LLM call failed:', error?.message || error);
     }
-    return '';
+    return buildLLMCallResult('', config.model, undefined);
   }
 }
 
-async function callWithConfig(
-  config: LLMConfig,
+export async function callLLM(
   messages: ChatMessage[],
   options?: { temperature?: number; max_tokens?: number }
 ): Promise<string> {
+  return (await callLLMWithMetadata(messages, options)).content;
+}
+
+async function callWithConfigWithMetadata(
+  config: LLMConfig,
+  messages: ChatMessage[],
+  options?: { temperature?: number; max_tokens?: number }
+): Promise<LLMCallResult> {
   try {
     const response = await fetch(`${config.baseURL}/chat/completions`, {
       method: 'POST',
@@ -254,9 +309,13 @@ async function callWithConfig(
       }),
     });
     const data = await response.json() as any;
-    return data?.choices?.[0]?.message?.content || '';
+    return buildLLMCallResult(
+      data?.choices?.[0]?.message?.content || '',
+      config.model,
+      data,
+    );
   } catch {
-    return '';
+    return buildLLMCallResult('', config.model, undefined);
   }
 }
 
@@ -435,6 +494,8 @@ export function buildTourGuideMessages(
 - 必须基于下方【知识库信息】和【检索到的相关片段】作答，确保事实准确
 - 如果检索片段和知识库中都没有相关信息，必须诚实回复："我暂时无法准确回答这个问题，建议您咨询景区游客中心工作人员。"
 - 绝对禁止编造任何景区数据、历史事实、价格、时间等信息
+- 检索片段可能来自不同来源并且存在冲突；涉及数字、日期、尺寸、重量时，不得把冲突数值拼接成一个答案。优先采用标注为 knowledge_guide.txt 的景区指南事实；若指南没有覆盖该事实，才使用其他来源；仍无法判断时明确说明信息存在差异，不要猜测。
+- 回答中的关键事实必须能在带有 id/source 标注的检索片段中找到；不要因为片段主题相近就把不同景点或不同属性混为一谈
 - 回答简洁精炼（100-300字），便于游客理解
 - 语气亲切温暖，犹如一位热情的导游
 - 可以适当使用emoji增加亲和力

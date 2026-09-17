@@ -2,7 +2,7 @@
 Accuracy Test Runner — evaluates 50 standard questions against RAG pipeline.
 Checks answer quality via keyword overlap and semantic similarity.
 """
-import json, re, sys, os, time, uuid
+import json, re, sys, os, time, uuid, unicodedata
 from pathlib import Path
 
 _embedder = None
@@ -134,6 +134,17 @@ def semantic_score(answer: str, question: str):
 def _contains_value(answer: str, value: object) -> bool:
     value_lower = str(value).lower()
     answer_lower = answer.lower()
+    if len(value_lower) == 1 and "\u3400" <= value_lower <= "\u9fff":
+        for match in re.finditer(re.escape(value_lower), answer_lower):
+            left = answer_lower[match.start() - 1] if match.start() else ""
+            right = answer_lower[match.end()] if match.end() < len(answer_lower) else ""
+            left_boundary = not left or not ("\u3400" <= left <= "\u9fff")
+            right_boundary = not right or not ("\u3400" <= right <= "\u9fff")
+            left_punctuation = bool(left) and unicodedata.category(left).startswith("P")
+            right_punctuation = bool(right) and unicodedata.category(right).startswith("P")
+            if (left_boundary and right_boundary) or left_punctuation or right_punctuation:
+                return True
+        return False
     if not any(char.isdigit() for char in value_lower):
         return value_lower in answer_lower
 

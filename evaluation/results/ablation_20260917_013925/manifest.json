@@ -1,0 +1,131 @@
+{
+  "schema_version": 2,
+  "kind": "rag-evaluation-run",
+  "run_id": "ablation_20260917_013925",
+  "git_sha": "0522c3869bf5dd23a35769e0e7f225737a239141",
+  "generated_at": "2026-09-16T17:39:26.059952+00:00",
+  "dataset": {
+    "path": "backend/python/tools/test_questions.json",
+    "sha256": "bd1a5f3df465408cf8795a2a497aa989dc14c2f049c4253d867ecd785a8312ac",
+    "count": 50
+  },
+  "knowledge": [
+    {
+      "path": "data/raw/knowledge_guide.txt",
+      "sha256": "f5e51a9d6390aa3ac9d6cecb5936416b4c1299692f265254f40981239dbd703f"
+    },
+    {
+      "path": "data/raw/knowledge_dataset.txt",
+      "sha256": "a63301e735f5d5d9ef22fc55ee392fe59de8117d735e822b60c8be08b34b5a94"
+    }
+  ],
+  "profiles": [
+    "vector_only",
+    "structured_only",
+    "keyword_only",
+    "full_retrieval",
+    "vector_rerank",
+    "full_without_rerank",
+    "full_without_rewrite"
+  ],
+  "profile_configs": {
+    "vector_only": {
+      "enableQueryRewrite": true,
+      "enableVectorRetrieval": true,
+      "enableStructuredRetrieval": false,
+      "enableKeywordRetrieval": false,
+      "enableRerank": false,
+      "enableHistory": false,
+      "includeFullKnowledge": false,
+      "retrievalTopK": 8,
+      "contextTopK": 5
+    },
+    "structured_only": {
+      "enableQueryRewrite": true,
+      "enableVectorRetrieval": false,
+      "enableStructuredRetrieval": true,
+      "enableKeywordRetrieval": false,
+      "enableRerank": false,
+      "enableHistory": false,
+      "includeFullKnowledge": false,
+      "retrievalTopK": 8,
+      "contextTopK": 5
+    },
+    "keyword_only": {
+      "enableQueryRewrite": true,
+      "enableVectorRetrieval": false,
+      "enableStructuredRetrieval": false,
+      "enableKeywordRetrieval": true,
+      "enableRerank": false,
+      "enableHistory": false,
+      "includeFullKnowledge": false,
+      "retrievalTopK": 8,
+      "contextTopK": 5
+    },
+    "full_retrieval": {
+      "enableQueryRewrite": true,
+      "enableVectorRetrieval": true,
+      "enableStructuredRetrieval": true,
+      "enableKeywordRetrieval": true,
+      "enableRerank": true,
+      "enableHistory": false,
+      "includeFullKnowledge": false,
+      "retrievalTopK": 8,
+      "contextTopK": 5
+    },
+    "vector_rerank": {
+      "enableQueryRewrite": true,
+      "enableVectorRetrieval": true,
+      "enableStructuredRetrieval": false,
+      "enableKeywordRetrieval": false,
+      "enableRerank": true,
+      "enableHistory": false,
+      "includeFullKnowledge": false,
+      "retrievalTopK": 8,
+      "contextTopK": 5
+    },
+    "full_without_rerank": {
+      "enableQueryRewrite": true,
+      "enableVectorRetrieval": true,
+      "enableStructuredRetrieval": true,
+      "enableKeywordRetrieval": true,
+      "enableRerank": false,
+      "enableHistory": false,
+      "includeFullKnowledge": false,
+      "retrievalTopK": 8,
+      "contextTopK": 5
+    },
+    "full_without_rewrite": {
+      "enableQueryRewrite": false,
+      "enableVectorRetrieval": true,
+      "enableStructuredRetrieval": true,
+      "enableKeywordRetrieval": true,
+      "enableRerank": true,
+      "enableHistory": false,
+      "includeFullKnowledge": false,
+      "retrievalTopK": 8,
+      "contextTopK": 5
+    }
+  },
+  "runtime": {
+    "status": "ok",
+    "llm": "deepseek-chat (DeepSeek)",
+    "vector_search": true,
+    "knowledge_chunks": 57,
+    "knowledge_indexed": true,
+    "structured_spots": 22,
+    "structured_fields": 176
+  },
+  "evidence_policy": {
+    "fallback_is_not_full_rag": true,
+    "trace_must_be_consistent": true,
+    "history_isolated_per_question": true
+  },
+  "observed_model_identities": [
+    {
+      "status": "mismatch",
+      "requestedModel": "deepseek-chat",
+      "providerModel": "deepseek-flash"
+    }
+  ]
+}

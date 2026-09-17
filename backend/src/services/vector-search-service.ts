@@ -24,13 +24,15 @@ interface HealthResponse {
   model: string;
 }
 
-const VECTOR_SERVICE_URL = 'http://127.0.0.1:8002';
+function getVectorServiceUrl(): string {
+  return process.env.VECTOR_SERVICE_URL || 'http://127.0.0.1:8002';
+}
 let available = false;
 let checked = false;
 
 export async function checkVectorHealth(): Promise<boolean> {
   try {
-    const res = await fetch(`${VECTOR_SERVICE_URL}/health`, {
+    const res = await fetch(`${getVectorServiceUrl()}/health`, {
       signal: AbortSignal.timeout(3000),
     });
     const data = await res.json() as HealthResponse;
@@ -77,7 +79,7 @@ export async function searchVectorsWithStatus(
 ): Promise<VectorSearchOutcome> {
   if (!available) return { results: [], status: 'failed', reason: 'service_unavailable' };
   try {
-    const res = await fetch(`${VECTOR_SERVICE_URL}/search`, {
+    const res = await fetch(`${getVectorServiceUrl()}/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, top_k: topK }),
@@ -94,7 +96,7 @@ export async function searchVectorsWithStatus(
 
 export async function rebuildVectorIndex(): Promise<{ status: string; chunks: number }> {
   try {
-    const res = await fetch(`${VECTOR_SERVICE_URL}/rebuild`, {
+    const res = await fetch(`${getVectorServiceUrl()}/rebuild`, {
       signal: AbortSignal.timeout(120000),
     });
     return await res.json() as { status: string; chunks: number };

@@ -21,12 +21,25 @@ interface DocItem {
   status: string;
 }
 
+interface RetrievalResult {
+  spot: string;
+  field: string;
+  score: number;
+  text: string;
+}
+
+interface TestResult {
+  retrieved_chunks?: number;
+  results?: RetrievalResult[];
+  error?: string;
+}
+
 export default function KnowledgeBasePage() {
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [documents, setDocuments] = useState<DocItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [testLoading, setTestLoading] = useState(false);
 
   const loadDocuments = async () => {
@@ -45,7 +58,7 @@ export default function KnowledgeBasePage() {
   };
 
   useEffect(() => {
-    loadDocuments();
+    queueMicrotask(() => { void loadDocuments(); });
   }, []);
 
   const handleUpload = async (file: File) => {
@@ -142,7 +155,7 @@ export default function KnowledgeBasePage() {
                     ) },
                   { title: '上传日期', dataIndex: 'date', key: 'date', width: 120 },
                   { title: '操作', key: 'action', width: 80,
-                    render: (_: any, record: DocItem) => (
+                    render: (_value: unknown, record: DocItem) => (
                       <Popconfirm title="确定删除此文档？" onConfirm={() => handleDelete(record.id)}>
                         <Button type="text" danger icon={<DeleteOutlined />} />
                       </Popconfirm>
@@ -171,7 +184,7 @@ export default function KnowledgeBasePage() {
                       const res = await fetch(`/api/v1/admin/knowledge/test-qa?query=${encodeURIComponent(v)}`, {
                         headers: { Authorization: `Bearer ${token}` },
                       });
-                      const data = await res.json();
+                      const data = await res.json() as TestResult;
                       setTestResult(data);
                     } catch {
                       setTestResult({ error: '测试请求失败' });
@@ -185,9 +198,9 @@ export default function KnowledgeBasePage() {
                     <Space direction="vertical" style={{ width: '100%' }}>
                       <div>
                         <Typography.Text strong>命中结果：</Typography.Text>
-                        <Tag color={testResult.retrieved_chunks > 0 ? 'green' : 'red'}>{testResult.retrieved_chunks} 条</Tag>
+                        <Tag color={(testResult.retrieved_chunks ?? 0) > 0 ? 'green' : 'red'}>{testResult.retrieved_chunks ?? 0} 条</Tag>
                       </div>
-                      {testResult.results?.map((r: any, i: number) => (
+                      {testResult.results?.map((r, i) => (
                         <Card key={i} size="small" style={{ borderRadius: 6 }}>
                           <Space direction="vertical" size={4}>
                             <Space>

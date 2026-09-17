@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "gate": "scene",
+  "thresholds": {
+    "min_field_accuracy": 0.95,
+    "min_critical_field_accuracy": 0.98,
+    "max_trace_inconsistent_count": 0
+  },
+  "denominator": "scene cases with a deterministic gold contract and no API failure"
+}

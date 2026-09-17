@@ -14,6 +14,7 @@ import { broadcastQueryEvent } from '../../services/websocket-service';
 import { extractSceneState, SceneStateSchema } from '../../services/scene/scene-state';
 import { loadRouteGraph } from '../../services/route/route-contract';
 import { planRoute } from '../../services/route/route-planner';
+import { resolveDataPath } from '../../config/paths';
 import {
   saveConversation, saveFeedback, getConversationStats,
   getHotQuestions as getDbHotQuestions, classifyQuery,
@@ -410,6 +411,19 @@ visitorRouter.post('/recommend', (req: Request, res: Response) => {
 
 // ============ Scene-aware route planning ============
 
+const ROUTE_CLARIFICATION_PROMPTS: Record<string, string> = {
+  currentTime: '你现在大约几点开始游览？例如“现在上午10点”或“10:00”。',
+  currentLocation: '你现在位于景区哪里？例如“景区入口”或“灵山大佛附近”。',
+  remainingMinutes: '你还计划游览多长时间？例如“还有3小时”或“剩90分钟”。',
+};
+
+function buildRouteClarification(fields: string[]): string | undefined {
+  const messages = [...new Set(fields)]
+    .map(field => ROUTE_CLARIFICATION_PROMPTS[field])
+    .filter((message): message is string => Boolean(message));
+  return messages.length > 0 ? messages.join(' ') : undefined;
+}
+
 visitorRouter.post('/route/plan', (req: Request, res: Response) => {
   try {
     const { query, scene_state } = req.body || {};
@@ -432,6 +446,9 @@ visitorRouter.post('/route/plan', (req: Request, res: Response) => {
       : sceneState;
     const graph = loadRouteGraph();
     const route = planRoute(planningSceneState, graph, 12);
+    const clarification = route.outcome === 'needs_clarification'
+      ? buildRouteClarification(planningSceneState.missingCriticalFields)
+      : undefined;
     const evidence = route.steps.map(step => {
       const spot = graph.spots.find(item => item.id === step.spotId);
       return {
@@ -447,7 +464,9 @@ visitorRouter.post('/route/plan', (req: Request, res: Response) => {
       route,
       feasibility: route.feasible,
       outcome: route.outcome,
+      ...(clarification ? { clarification } : {}),
       explanation: {
+        ...(clarification ? { clarification } : {}),
         satisfied_constraints: route.satisfiedConstraints || [],
         rejected_requests: route.rejectedRequests || [],
         violations: route.violations || [],
@@ -753,7 +772,7 @@ function extractSpots(text: string): string[] {
 // ============ Digital Human public config (no auth) ============
 
 visitorRouter.get('/dh-config', (_req: Request, res: Response) => {
-  const configPath = path.resolve(__dirname, '../../../../data/dh_config.json');
+  const configPath = resolveDataPath('dh_config.json');
   let stylePreset = 'zen_red_gold';
   let voiceId = 'zh-CN-XiaoxiaoNeural';
   try {

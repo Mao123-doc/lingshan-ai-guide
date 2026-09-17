@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Typography, Card, Row, Col, Tag, Button } from 'antd';
 import {
   MessageOutlined, CompassOutlined, SoundOutlined,
@@ -11,6 +11,30 @@ import { openBaiduNavigation, type LatLng } from '../../utils/navigation';
 import { getCapabilityRoute } from './home-capabilities';
 
 const { Title, Paragraph, Text } = Typography;
+
+interface NearbySpot {
+  name: string;
+  lat: number;
+  lng: number;
+  desc: string;
+  icon: string;
+  distance: number;
+}
+
+interface Facility {
+  uid?: string;
+  name: string;
+  lat?: number;
+  lng?: number;
+  distance: number;
+}
+
+const HERO_PARTICLES = Array.from({ length: 20 }, (_, id) => ({
+  id,
+  left: `${Math.random() * 100}%`,
+  animationDelay: `${Math.random() * 3}s`,
+  animationDuration: `${3 + Math.random() * 4}s`,
+}));
 
 const SPOT_CARDS = [
   { name: '灵山大佛', desc: '88米世界最高青铜立佛', icon: < img src="/lingshan_dafo.jpg" style={{width:"48px",height:"48px",objectFit:"cover"}} />, color: '#c41d7f' },
@@ -32,16 +56,14 @@ const HOT_QUESTIONS = [
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [heroVisible, setHeroVisible] = useState(false);
+  const heroVisible = true;
   const [locating, setLocating] = useState(false);
-  const [nearbySpots, setNearbySpots] = useState<any[] | null>(null);
+  const [nearbySpots, setNearbySpots] = useState<NearbySpot[] | null>(null);
   const [geoError, setGeoError] = useState('');
   const [activeCategory, setActiveCategory] = useState('spots');
-  const [facilities, setFacilities] = useState<any[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
   const [facilitiesLoading, setFacilitiesLoading] = useState(false);
   const lastFixRef = useRef<LatLng | null>(null);
-
-  useEffect(() => { setHeroVisible(true); }, []);
 
   const scrollToId = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -49,7 +71,7 @@ export default function HomePage() {
 
   // WGS84 坐标（与浏览器 GPS 同一坐标系）。灵山大佛/祥符禅寺/九龙灌浴/梵宫/五印坛城/拈花湾取自 OSM 实测，
   // 其余按景区中轴线与拈花湾路网布局推算，精度约 ±100m
-  const ALL_SPOTS_WITH_COORDS = [
+  const ALL_SPOTS_WITH_COORDS: Array<Omit<NearbySpot, 'distance'>> = [
     { name: '灵山大佛', lat: 31.43205, lng: 120.09151, desc: '88米世界最高青铜立佛，登顶抱佛脚俯瞰太湖', icon: '🗿' },
     { name: '九龙灌浴', lat: 31.42662, lng: 120.09523, desc: '大型音乐群雕，花开见佛九龙吐水', icon: '🌊' },
     { name: '灵山梵宫', lat: 31.43065, lng: 120.09756, desc: '东方卢浮宫，佛教艺术殿堂', icon: '🏛️' },
@@ -160,12 +182,12 @@ export default function HomePage() {
       </nav>
       <section id="top" className="home-hero">
         <div className="hero-particles">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="hero-particle"
+          {HERO_PARTICLES.map((particle) => (
+            <div key={particle.id} className="hero-particle"
               style={{
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${3 + Math.random() * 4}s`,
+                left: particle.left,
+                animationDelay: particle.animationDelay,
+                animationDuration: particle.animationDuration,
               }}
             />
           ))}

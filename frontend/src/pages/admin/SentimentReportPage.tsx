@@ -30,7 +30,7 @@ function renderMarkdown(md: string): string {
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     // Unordered list items
     .replace(/^- (.+)$/gm, '<li style="margin:4px 0 4px 16px">$1</li>')
-    .replace(/^  - (.+)$/gm, '<li style="margin:4px 0 4px 32px">$1</li>')
+    .replace(/^ {2}- (.+)$/gm, '<li style="margin:4px 0 4px 32px">$1</li>')
     // Ordered list items
     .replace(/^\d+\. (.+)$/gm, '<li style="margin:4px 0 4px 16px">$1</li>')
     // Horizontal rules
@@ -52,22 +52,40 @@ function renderMarkdown(md: string): string {
   return '<p style="margin:10px 0">' + html + '</p>';
 }
 
+interface SentimentDistribution { positive: number; neutral: number; negative: number; }
+interface HotQuestion { question: string; count: number; }
+interface TopSpot { name: string; mention_count: number; }
+interface SentimentReport {
+  sentiment_distribution: SentimentDistribution;
+  total_queries: number;
+  avg_sentiment: number;
+  hot_questions: HotQuestion[];
+  top_spots: TopSpot[];
+  summary?: string;
+}
+
 export default function SentimentReportPage() {
   const navigate = useNavigate();
   const [period, setPeriod] = useState('week');
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<SentimentReport | null>(null);
 
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const loadReport = async (selectedPeriod: string) => {
     setError('');
     setData(null);
-    adminAPI.getSentimentReport(period)
-      .then(res => setData(res.data))
-      .catch(err => {
-        console.error(err);
-        setError(err?.response?.data?.error || err?.message || '加载失败，请刷新重试');
-      });
+    try {
+      const res = await adminAPI.getSentimentReport(selectedPeriod);
+      setData(res.data as SentimentReport);
+    } catch (err: unknown) {
+      console.error(err);
+      const error = err as { response?: { data?: { error?: string } }; message?: string };
+      setError(error.response?.data?.error || error.message || '加载失败，请刷新重试');
+    }
+  };
+
+  useEffect(() => {
+    queueMicrotask(() => { void loadReport(period); });
   }, [period]);
 
   const handleLogout = () => {
@@ -193,7 +211,7 @@ export default function SentimentReportPage() {
           {/* Hot Questions */}
           <Col xs={24} md={12}>
             <Card title="🔥 热门话题" style={{ borderRadius: 12 }}>
-              {data.hot_questions.map((q: any, i: number) => (
+              {data.hot_questions.map((q, i) => (
                 <div key={i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   padding: '10px 0', borderBottom: i < data.hot_questions.length - 1 ? '1px solid #f0f0f0' : 'none',
@@ -211,7 +229,7 @@ export default function SentimentReportPage() {
           {/* Attraction Mentions */}
           <Col xs={24} md={12}>
             <Card title="🏛️ 景点关注度" style={{ borderRadius: 12 }}>
-              {data.top_spots.map((spot: any, i: number) => (
+              {data.top_spots.map((spot, i) => (
                 <div key={i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   padding: '10px 0', borderBottom: i < data.top_spots.length - 1 ? '1px solid #f0f0f0' : 'none',

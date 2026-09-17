@@ -1,4 +1,6 @@
-# 灵山 AI 导览当前状态基线
+# 灵山 AI 导览历史状态基线（已被后续证据包取代）
+
+> 本文是 2026-09-16 的历史审计快照，不是当前实现的状态声明。后续已完成 Scene State、确定性路线规划、Hybrid/RRF 检索、Fact Contract 修复、Trace 状态修复和竞赛证据刷新；当前权威结果请以 `docs/competition/evaluation-report.md`、`docs/ablation_report.md`、`evaluation/results/baseline_20260917_020000/` 和 `evaluation/results/ablation_20260917_013925/` 为准。
 
 日期：2026-09-16  
 用途：场景创新赛道后续改造的事实基线。本文只记录当前 Git 工作区、实际代码、运行时探针和已有评测，不把设计目标当作已实现能力。

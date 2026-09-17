@@ -2,7 +2,9 @@
 """Run configuration-driven retrieval ablation experiments."""
 
 import argparse
+import hashlib
 import json
+import subprocess
 import sys
 import time
 import urllib.error
@@ -22,6 +24,7 @@ from test_accuracy import (  # noqa: E402
     get_ablation_profiles,
     load_questions,
 )
+from quality_gates import validate_formal_run  # noqa: E402
 
 
 PROFILE_FILES = {
@@ -43,6 +46,112 @@ PROFILE_LABELS = {
     "full_without_rerank": "Full - Rerank",
     "full_without_rewrite": "Full - Rewrite",
 }
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def resolve_commit_sha() -> str:
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return completed.stdout.strip() or "unknown"
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+
+
+def _evidence_path(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(PROJECT_ROOT.resolve()).as_posix()
+    except ValueError:
+        return path.name
+
+
+def build_run_manifest(
+    run_id: str,
+    profiles: list[str],
+    profile_configs: dict[str, dict],
+    questions: list[dict],
+    commit_sha: str,
+    health: dict,
+    dataset_path: Path,
+    knowledge_paths: list[Path],
+    observed_model_identities: list[dict] | None = None,
+) -> dict:
+    return {
+        "schema_version": 2,
+        "kind": "rag-evaluation-run",
+        "run_id": run_id,
+        "git_sha": commit_sha,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "dataset": {
+            "path": _evidence_path(dataset_path),
+            "sha256": sha256_file(dataset_path),
+            "count": len(questions),
+        },
+        "knowledge": [
+            {"path": _evidence_path(path), "sha256": sha256_file(path)}
+            for path in knowledge_paths
+        ],
+        "profiles": profiles,
+        "profile_configs": profile_configs,
+        "runtime": {
+            "status": health.get("status"),
+            "llm": health.get("llm"),
+            "vector_search": health.get("vector_search"),
+            "knowledge_chunks": health.get("knowledge_chunks"),
+            "knowledge_indexed": health.get("knowledge_indexed"),
+            "structured_spots": health.get("structured_spots"),
+            "structured_fields": health.get("structured_fields"),
+        },
+        "evidence_policy": {
+            "fallback_is_not_full_rag": True,
+            "trace_must_be_consistent": True,
+            "history_isolated_per_question": True,
+        },
+        "observed_model_identities": observed_model_identities or [],
+    }
+
+
+def collect_model_identities(results: dict[str, dict]) -> list[dict]:
+    identities: dict[tuple[str, str, str], dict] = {}
+    for result in results.values():
+        for record in result.get("records", []):
+            trace = record.get("trace") or {}
+            for stage_name in ("rewrite", "rerank", "generation"):
+                identity = (trace.get(stage_name) or {}).get("modelIdentity")
+                if not isinstance(identity, dict):
+                    continue
+                key = (
+                    str(identity.get("status", "unknown")),
+                    str(identity.get("requestedModel", "")),
+                    str(identity.get("providerModel", "")),
+                )
+                identities[key] = {
+                    "status": identity.get("status"),
+                    "requestedModel": identity.get("requestedModel"),
+                    "providerModel": identity.get("providerModel"),
+                }
+    return [identities[key] for key in sorted(identities)]
+
+
+def get_health(base_url: str, timeout: int = 10) -> dict:
+    request = urllib.request.Request(base_url.rstrip("/") + "/health")
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except Exception as error:
+        return {"status": "unreachable", "error": str(error)[:300]}
 
 
 def build_ablation_session_id(run_id: str, profile: str, question_id: int) -> str:
@@ -89,8 +198,10 @@ def build_question_result(
         "session_id": session_id,
         "answer": response.get("answer", ""),
         "api_success": api_success,
+        "fallback_used": bool(response.get("fallback_used", False)),
         "error": response.get("error") or evaluation.get("error"),
         "used_llm": response.get("used_llm"),
+        "reported_model": response.get("model"),
         "retrieved_chunks": response.get("retrieved_chunks"),
         "trace": response.get("evaluation_trace"),
         "evaluation": evaluation,
@@ -177,7 +288,7 @@ def build_ablation_report(results: dict[str, dict]) -> str:
         "",
         "- Dataset：`backend/python/tools/test_questions.json`，同一 50 题测试集",
         "- Evaluator：`backend/python/tools/test_accuracy.py`，Fact Contract 版本保持不变",
-        "- LLM：`deepseek-chat`",
+        "- LLM requested model：read from the runtime manifest; provider model identity is recorded per trace",
         "- Embedding：`BAAI/bge-large-zh-v1.5`",
         "- Prompt、temperature、retrievalTopK=8、contextTopK=5 保持不变",
         "- Evaluation 控制变量：`enableHistory=false`，`includeFullKnowledge=false`",
@@ -304,8 +415,16 @@ def run_profile(
         "question_count": len(questions),
         "records": records,
         "metrics": aggregate_records(records),
+        "quality_gate": validate_formal_run(records, expected_count=len(questions)),
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+def all_quality_gates_pass(results: dict[str, dict]) -> bool:
+    return bool(results) and all(
+        bool((result.get("quality_gate") or {}).get("eligible"))
+        for result in results.values()
+    )
 
 
 def write_json(path: Path, value: dict) -> None:
@@ -332,6 +451,22 @@ def run_experiments(
         return {name: {"profile": name, "config": all_profiles[name]} for name in profiles}
 
     questions = load_questions()
+    dataset_path = TOOLS_DIR / "test_questions.json"
+    knowledge_paths = [
+        PROJECT_ROOT / "data" / "raw" / "knowledge_guide.txt",
+        PROJECT_ROOT / "data" / "raw" / "knowledge_dataset.txt",
+    ]
+    manifest = build_run_manifest(
+        run_id=run_id,
+        profiles=profiles,
+        profile_configs={name: all_profiles[name] for name in profiles},
+        questions=questions,
+        commit_sha=resolve_commit_sha(),
+        health=get_health(base_url),
+        dataset_path=dataset_path,
+        knowledge_paths=knowledge_paths,
+    )
+    write_json(output_dir / "manifest.json", manifest)
     results = {}
     for profile in profiles:
         result = run_profile(
@@ -339,6 +474,9 @@ def run_experiments(
         )
         results[profile] = result
         write_json(output_dir / PROFILE_FILES[profile], result)
+
+    manifest["observed_model_identities"] = collect_model_identities(results)
+    write_json(output_dir / "manifest.json", manifest)
 
     component_profiles = {
         name: results[name]
@@ -394,6 +532,20 @@ def main() -> None:
         args.report_path.parent.mkdir(parents=True, exist_ok=True)
         args.report_path.write_text(build_ablation_report(results), encoding="utf-8")
         print(json.dumps({name: value["metrics"] for name, value in results.items()}, ensure_ascii=False, indent=2))
+        if not all_quality_gates_pass(results):
+            print(
+                json.dumps(
+                    {
+                        name: value.get("quality_gate")
+                        for name, value in results.items()
+                        if not (value.get("quality_gate") or {}).get("eligible")
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
 
 
 if __name__ == "__main__":

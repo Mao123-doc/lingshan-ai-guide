@@ -71,13 +71,89 @@ class EvaluationBaselineTests(unittest.TestCase):
     def test_history_route_with_required_spots_passes_fact_coverage(self):
         question = self._question(37)
         result = MODULE.evaluate_answer(
-            "历史文化路线：祥符禅寺→灵山大佛→灵山梵宫→无尽意斋。",
+            "历史文化路线：祥符禅寺→灵山大佛→灵山梵宫→五印坛城。",
             question,
         )
 
         self.assertEqual(result["fact_hits"], 4)
         self.assertEqual(result["min_fact_hits"], 4)
         self.assertTrue(result["passed"])
+
+    def test_history_route_from_knowledge_guide_passes_fact_coverage(self):
+        question = self._question(37)
+        result = MODULE.evaluate_answer(
+            "历史文化路线：祥符禅寺→灵山大佛→灵山梵宫→五印坛城→三圣殿。",
+            question,
+        )
+
+        self.assertTrue(result["passed"])
+
+    def test_family_route_from_knowledge_guide_passes_fact_coverage(self):
+        question = self._question(38)
+        result = MODULE.evaluate_answer(
+            "亲子路线：九龙灌浴→百子戏弥勒→灵山梵宫→五印坛城。",
+            question,
+        )
+
+        self.assertTrue(result["passed"])
+
+    def test_history_route_with_noncanonical_old_spot_does_not_replace_a_required_fact(self):
+        question = self._question(37)
+        result = MODULE.evaluate_answer(
+            "历史文化路线：祥符禅寺→灵山大佛→灵山梵宫→无尽意斋。",
+            question,
+        )
+
+        self.assertEqual(result["fact_hits"], 3)
+        self.assertFalse(result["passed"])
+
+    def test_family_route_with_noncanonical_other_area_spot_does_not_replace_a_required_fact(self):
+        question = self._question(38)
+        result = MODULE.evaluate_answer(
+            "亲子路线：九龙灌浴→百子戏弥勒→梵天花海。",
+            question,
+        )
+
+        self.assertEqual(result["fact_hits"], 2)
+        self.assertFalse(result["passed"])
+
+    def test_grounded_paraphrases_are_accepted_by_fact_contracts(self):
+        cases = [
+            (10, "五印坛城是典型的藏式碉楼建筑风格。", "style"),
+            (12, "祥符禅寺内有千年古银杏。", "ginkgo"),
+            (23, "佛教文化博览馆位于灵山大佛的座基内。", "location"),
+            (30, "灵山胜境是国家AAAAA级旅游景区。", "level"),
+            (50, "建议至少安排半天；想深度体验可以安排一整天。", "duration"),
+            (48, "梵宫星空穹顶高28米，用100公斤纯金绘制。", "material"),
+        ]
+
+        for question_id, answer, fact_id in cases:
+            with self.subTest(question_id=question_id):
+                result = MODULE.evaluate_answer(answer, self._question(question_id))
+                self.assertIn(fact_id, result["matched_fact_ids"])
+
+    def test_temple_relics_accept_knowledge_base_aliases(self):
+        result = MODULE.evaluate_answer(
+            "祥符禅寺内有六角古井、千年古银杏和江南第一钟。",
+            self._question(12),
+        )
+
+        self.assertEqual(result["fact_hits"], 3)
+        self.assertTrue(result["passed"])
+
+    def test_five_directions_accept_compact_direction_aliases(self):
+        result = MODULE.evaluate_answer(
+            "五方五佛对应东、南、西、北、中五个方位。",
+            self._question(34),
+        )
+
+        self.assertEqual(result["fact_hits"], 5)
+        self.assertTrue(result["passed"])
+
+    def test_single_character_alias_requires_a_standalone_token(self):
+        self.assertTrue(MODULE._contains_any("东、南、西、北、中五个方位", ["东"]))
+        self.assertFalse(MODULE._contains_any("东阳木雕与中国文化", ["东"]))
+        self.assertFalse(MODULE._contains_any("东阳木雕与中国文化", ["中"]))
 
     def test_numeric_fact_does_not_match_as_part_of_a_longer_number(self):
         self.assertFalse(MODULE._contains_any("高188米", ["88米"]))

@@ -11,6 +11,7 @@ import portraitZenRedGold from '../../assets/portrait-zen-red-gold.png';
 import portraitCeladon from '../../assets/portrait-celadon.png';
 import portraitTangSplendor from '../../assets/portrait-tang-splendor.png';
 import portraitInkWash from '../../assets/portrait-ink-wash.png';
+import { readAudioVolume } from './audio-context';
 import './DigitalHuman.css';
 
 const Live2DCanvas = lazy(() => import('./Live2DCanvas'));
@@ -21,49 +22,6 @@ const PORTRAIT_MAP: Record<string, string> = {
   tang_splendor: portraitTangSplendor,
   ink_wash: portraitInkWash,
 };
-
-// ---- Web Audio singleton ----------------------------------------------------
-let ac: AudioContext | null = null;
-let an: AnalyserNode | null = null;
-let src: MediaElementAudioSourceNode | null = null;
-const buf = new Uint8Array(128);
-
-/**
- * Step 2 (关键): 确保 AudioContext 完全就绪后才允许后续操作。
- * 在 resume() 完成前调用 decodeAudioData 或 start() 会导致开头被吞。
- */
-export async function ensureAudioContext(): Promise<{ ctx: AudioContext; analyser: AnalyserNode }> {
-  if (!ac) { ac = new AudioContext(); }
-  if (!an) {
-    an = new AnalyserNode(ac, { fftSize: 256, smoothingTimeConstant: 0.4 });
-    an.connect(ac.destination);
-  }
-  if (ac.state === 'suspended') {
-    console.log('[AudioCtx] resuming from suspended...');
-    await ac.resume();
-    console.log('[AudioCtx] state =', ac.state);
-  }
-  console.log('[AudioCtx] ready, state =', ac.state);
-  return { ctx: ac, analyser: an };
-}
-
-/** Legacy: HTML5 <audio> passthrough via createMediaElementSource */
-export async function connectAudio(audio: HTMLAudioElement) {
-  try {
-    const { ctx, analyser } = await ensureAudioContext();
-    if (src) { try { src.disconnect(); } catch { /* ok */ } }
-    src = ctx.createMediaElementSource(audio);
-    src.connect(analyser);
-  } catch { /* ok */ }
-}
-
-function readVolume(): number {
-  if (!an) return 0;
-  an.getByteTimeDomainData(buf as any);
-  let s = 0;
-  for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; s += v * v; }
-  return Math.sqrt(s / buf.length);
-}
 
 // ---- style preset → CSS variables -------------------------------------------
 const STYLE_VARS: Record<string, Record<string, string>> = {
@@ -106,7 +64,7 @@ const DigitalHuman = forwardRef<DigitalHumanHandle, Props>(
     useEffect(() => {
       const loop = () => {
         if (ringRef.current) {
-          const vol = isSpeaking ? readVolume() : 0;
+          const vol = isSpeaking ? readAudioVolume() : 0;
           const pulse = isSpeaking ? 0.3 + vol * 1.5 : 0;
           ringRef.current.style.opacity = String(pulse);
           ringRef.current.style.transform = `scale(${1 + pulse * 0.06})`;

@@ -73,12 +73,12 @@ function extractRemainingMinutes(query: string): number | undefined {
 function extractClock(query: string): string | undefined {
   const digital = query.match(/(?:现在|当前|时间是)\s*(?:是\s*)?([01]?\d|2[0-3])[:：]([0-5]\d)/);
   if (digital) return `${digital[1].padStart(2, '0')}:${digital[2]}`;
-  const chinese = query.match(/(?:现在|当前|时间是|现在是|当前是)\s*(上午|下午|早上|晚上)?\s*([一二两三四五六七八九十\d]{1,3})点/);
+  const chinese = query.match(/(?:现在|当前|时间是|现在是|当前是)\s*(上午|下午|早上|晚上|中午)?\s*([一二两三四五六七八九十\d]{1,3})点(半)?/);
   if (!chinese) return undefined;
   const hour = parseChineseInteger(chinese[2]);
   if (hour === undefined || hour > 23) return undefined;
   const adjusted = chinese[1] && ['下午', '晚上'].includes(chinese[1]) && hour < 12 ? hour + 12 : hour;
-  return `${String(adjusted).padStart(2, '0')}:00`;
+  return `${String(adjusted).padStart(2, '0')}:${chinese[3] ? '30' : '00'}`;
 }
 
 function detectLocation(query: string): string | undefined {

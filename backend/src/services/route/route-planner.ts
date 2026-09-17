@@ -1,6 +1,7 @@
 import type { SceneState } from '../scene/scene-state';
 import type { RouteGraph, RouteSpot } from './route-contract';
 import { validateRoute, type RouteOutcome, type RoutePlan, type RouteStep, type RouteViolation } from './route-validator';
+import { findPath } from './pathfinding';
 
 interface SearchState {
   current: string;
@@ -30,11 +31,6 @@ function openAt(spot: RouteSpot, time: number): boolean {
   });
 }
 
-function edgeBetween(graph: RouteGraph, from: string, to: string) {
-  return graph.edges.find(edge => edge.from === from && edge.to === to)
-    || graph.edges.find(edge => edge.from === to && edge.to === from);
-}
-
 function spotInterestScore(spot: RouteSpot, interests: string[]): number {
   const text = spot.name;
   let score = 0;
@@ -47,14 +43,14 @@ function spotInterestScore(spot: RouteSpot, interests: string[]): number {
   return score;
 }
 
-function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string): { id: string; time?: number } | undefined {
+function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string): { id: string; name: string; time?: number; durationMinutes: number } | undefined {
   const performance = graph.performances.find(item => item.location_id === spotId && scene.preferredPerformanceIds.includes(item.id));
   if (!performance) return undefined;
   const requested = scene.preferredPerformanceTimes?.[performance.id];
-  if (requested) return { id: performance.id, time: toMinutes(requested) };
+  if (requested) return { id: performance.id, name: performance.name, time: toMinutes(requested), durationMinutes: performance.duration_minutes };
   const current = scene.currentTime ? toMinutes(scene.currentTime) : 0;
   const next = performance.start_times.map(toMinutes).find(time => time >= current);
-  return { id: performance.id, time: next };
+  return { id: performance.id, name: performance.name, time: next, durationMinutes: performance.duration_minutes };
 }
 
 function makePlan(startTime: string, state: SearchState, rejectedRequests: Array<{ item: string; reasonCode: string }>, satisfiedConstraints: string[]): RoutePlan {
@@ -86,9 +82,8 @@ function performanceRejectionReason(id: string, scene: SceneState, graph: RouteG
   if (requested && !performance.start_times.includes(requested)) return 'performance_unavailable';
   if (requested && current !== undefined && toMinutes(requested) < current) return 'performance_already_started';
   if (requested && current !== undefined && scene.remainingMinutes !== undefined) {
-    const spot = graph.spots.find(item => item.id === performance.location_id);
     const deadline = current + scene.remainingMinutes;
-    if (toMinutes(requested) + (spot?.visit_minutes || 0) > deadline) return 'performance_outside_time_budget';
+    if (toMinutes(requested) + performance.duration_minutes > deadline) return 'performance_outside_time_budget';
   }
   return 'performance_unavailable';
 }
@@ -135,27 +130,33 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
     for (const state of beam) {
       for (const spot of candidates) {
         if (state.visited.has(spot.id)) continue;
-        const edge = edgeBetween(graph, state.current, spot.id);
-        if (!edge) continue;
-        if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && (!edge.accessible || !spot.mobility.wheelchair_accessible)) continue;
-        const arrive = state.time + edge.walk_minutes;
+        const path = findPath(graph, state.current, spot.id, scene.mobility);
+        if (!path) continue;
+        if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && !spot.mobility.wheelchair_accessible) continue;
+        const arrive = state.time + path.walkMinutes;
         if (!openAt(spot, arrive)) continue;
         const preference = allowPerformancePreferences ? requestedPerformance(scene, graph, spot.id) : undefined;
         let stepStart = arrive;
         let performanceId: string | undefined;
+        let performanceName: string | undefined;
         let performanceStartTime: string | undefined;
+        let performanceDurationMinutes: number | undefined;
         if (preference?.time !== undefined && preference.time >= arrive) {
           stepStart = preference.time;
           performanceId = preference.id;
+          performanceName = preference.name;
           performanceStartTime = clock(preference.time);
+          performanceDurationMinutes = preference.durationMinutes;
         }
-        const end = stepStart + spot.visit_minutes;
+        const visitMinutes = performanceDurationMinutes ?? spot.visit_minutes;
+        const end = stepStart + visitMinutes;
         if (!openAt(spot, end) || end > deadline) continue;
         const nextVisited = new Set(state.visited);
         nextVisited.add(spot.id);
         const mustBonus = scene.mustVisitSpotIds.includes(spot.id) ? 1000 : 0;
         const performanceBonus = performanceId ? 500 : 0;
-        const score = state.score + mustBonus + performanceBonus + spotInterestScore(spot, scene.interests) - edge.walk_minutes;
+        const coverageBonus = 100;
+        const score = state.score + coverageBonus + mustBonus + performanceBonus + spotInterestScore(spot, scene.interests) - path.walkMinutes;
         expanded.push({
           current: spot.id,
           time: end,
@@ -164,15 +165,18 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
             arrive: clock(arrive),
             start: clock(stepStart),
             end: clock(end),
-            walkMinutes: edge.walk_minutes,
-            visitMinutes: spot.visit_minutes,
+            walkMinutes: path.walkMinutes,
+            visitMinutes,
+            ...(performanceDurationMinutes !== undefined ? { performanceDurationMinutes } : {}),
+            pathSpotIds: path.spotIds,
             reasonCode: scene.mustVisitSpotIds.includes(spot.id) ? 'must_visit' : 'interest_match',
-            ...(performanceId ? { performanceId, performanceStartTime } : {}),
+            ...(stepStart > arrive ? { waitingMinutes: stepStart - arrive } : {}),
+            ...(performanceId ? { performanceId, performanceName, performanceStartTime } : {}),
           }],
           visited: nextVisited,
           score,
-          walking: state.walking + edge.walk_minutes,
-          visiting: state.visiting + spot.visit_minutes,
+          walking: state.walking + path.walkMinutes,
+          visiting: state.visiting + visitMinutes,
           waiting: state.waiting + (stepStart - arrive),
         });
       }
@@ -185,7 +189,11 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
 
   const mustSatisfied = (state: SearchState) => scene.mustVisitSpotIds.every(id => state.visited.has(id));
   const feasibleCandidates = allStates.filter(mustSatisfied);
-  const selected = [...(feasibleCandidates.length > 0 ? feasibleCandidates : allStates)].sort((left, right) =>
+  const candidateStates = feasibleCandidates.length > 0 ? feasibleCandidates : allStates;
+  const rankedStates = scene.mustVisitSpotIds.length === 0 && candidateStates.some(state => state.steps.length > 0)
+    ? candidateStates.filter(state => state.steps.length > 0)
+    : candidateStates;
+  const selected = [...rankedStates].sort((left, right) =>
     Number(mustSatisfied(right)) - Number(mustSatisfied(left)) || right.score - left.score || left.time - right.time,
   )[0] || initial;
   const rejectedRequests: Array<{ item: string; reasonCode: string }> = [];

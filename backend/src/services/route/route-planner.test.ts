@@ -23,16 +23,48 @@ assert.ok(basic.steps.length > 0);
 assert.equal(basic.violations.length, 0);
 assert.ok(basic.totalMinutes <= 180);
 
+const noDirectInterestMatch = planRoute(scene({ currentLocation: 'LS-011', interests: ['nature'] }), graph);
+assert.equal(noDirectInterestMatch.feasible, true);
+assert.ok(noDirectInterestMatch.steps.length > 0);
+
 const mustVisit = planRoute(scene({ mustVisitSpotIds: ['LS-006'] }), graph);
 assert.equal(mustVisit.feasible, true);
 assert.ok(mustVisit.steps.some(step => step.spotId === 'LS-006'));
 assert.ok(mustVisit.satisfiedConstraints?.includes('must_visit:LS-006'));
 
+const multiEdgeMustVisit = planRoute(scene({ mustVisitSpotIds: ['LS-003'] }), graph, 1);
+assert.equal(multiEdgeMustVisit.feasible, true);
+assert.deepEqual(multiEdgeMustVisit.steps[0]?.pathSpotIds, ['south_gate', 'LS-001', 'LS-002', 'LS-003']);
+assert.equal(multiEdgeMustVisit.steps[0]?.walkMinutes, 11);
+
+const usefulLimitedItinerary = planRoute(scene({ currentTime: '10:00', remainingMinutes: 180, mobility: 'limited', interests: [] }), graph, 12);
+assert.equal(usefulLimitedItinerary.feasible, true);
+assert.ok(usefulLimitedItinerary.steps.length >= 2);
+assert.ok(usefulLimitedItinerary.totalMinutes > 20);
+
 const preference = planRoute(scene({ currentTime: '13:00', preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
 assert.equal(preference.feasible, true);
 assert.equal(preference.outcome, 'feasible');
-assert.ok(preference.steps.some(step => step.performanceId === 'performance_lingshan_jixiangsong'));
+const performanceStep = preference.steps.find(step => step.performanceId === 'performance_lingshan_jixiangsong');
+assert.ok(performanceStep);
+assert.equal(performanceStep?.performanceStartTime, '14:00');
+assert.equal(performanceStep?.performanceName, '《灵山吉祥颂》');
+assert.equal(performanceStep?.performanceDurationMinutes, 20);
+assert.equal(performanceStep?.visitMinutes, 20);
+assert.equal(performanceStep?.end, '14:20');
 assert.equal(preference.violations.length, 0);
+
+const timedPerformance = planRoute(scene({
+  currentTime: '12:00',
+  remainingMinutes: 180,
+  mobility: 'limited',
+  interests: [],
+  preferredPerformanceIds: ['performance_lingshan_jixiangsong'],
+  preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' },
+}), graph, 12);
+const timedPerformanceStep = timedPerformance.steps.find(step => step.performanceId === 'performance_lingshan_jixiangsong');
+assert.equal(timedPerformanceStep?.arrive, '13:02');
+assert.equal(timedPerformanceStep?.waitingMinutes, 58);
 
 const unavailable = planRoute(scene({ currentTime: '14:10', preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
 assert.equal(unavailable.feasible, true);
