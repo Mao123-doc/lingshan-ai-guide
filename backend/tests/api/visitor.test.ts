@@ -51,6 +51,8 @@ test('visitor APIs validate route, feedback and nearby inputs', async () => {
     }));
     assert.equal(missingTime.status, 200);
     assert.equal(missingTime.body.outcome, 'needs_clarification');
+    assert.match(missingTime.body.explanation.clarification, /现在.*几点|开始游览/);
+    assert.equal(missingTime.body.explanation.clarification.includes('currentTime'), false);
 
     const recommendation = await server.request('/api/v1/visitor/recommend', jsonBody({
       interests: ['文化'], duration: 2, travelType: '带长辈', ageGroup: '老年', budget: '经济型',
