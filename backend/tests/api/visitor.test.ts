@@ -301,6 +301,64 @@ test('route plan rejects an invalid explicit scene_state override', async () => 
   }
 });
 
+test('route plan processes natural language utterance through structured extraction and deterministic planner', async () => {
+  extractSceneStateWithLLMMock = async () => ({
+    state: {
+      currentLocation: 'south_gate',
+      currentTime: '10:00',
+      remainingMinutes: 240,
+      partyType: 'couple',
+      mobility: 'normal',
+      interests: ['culture'],
+      mustVisitSpotIds: ['LS-011'],
+      preferredPerformanceIds: [],
+      visitedSpotIds: [],
+      missingCriticalFields: [],
+    },
+    source: 'llm',
+    confidence: {
+      currentLocation: 0.98,
+      currentTime: 0.95,
+      remainingMinutes: 0.95,
+      partyType: 0.92,
+      mustVisitSpotIds: 0.99,
+    },
+    missingFields: [],
+    conflicts: [],
+    trace: {
+      configured: true,
+      executed: true,
+      status: 'success',
+      model: 'qwen-plus',
+      latencyMs: 85,
+      fallbackUsed: false,
+    },
+  });
+
+  const server = await startTestServer();
+  try {
+    const response = await server.request('/api/v1/visitor/route/plan', jsonBody({
+      query: '我和对象一起从景区南门进园，上午10点开始，准备玩四个小时，必去灵山大佛。',
+    }));
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.scene_extraction.source, 'llm');
+    assert.equal(response.body.scene_extraction.trace.fallbackUsed, false);
+    assert.equal(response.body.scene_extraction.trace.status, 'success');
+    assert.equal(response.body.scene_extraction.trace.model, 'qwen-plus');
+    assert.equal(response.body.scene_state.partyType, 'couple');
+    assert.equal(response.body.scene_state.currentLocation, 'south_gate');
+    assert.equal(response.body.scene_state.currentTime, '10:00');
+    assert.equal(response.body.scene_state.remainingMinutes, 240);
+    assert.equal(response.body.outcome, 'feasible');
+    assert.equal(response.body.feasibility, true);
+    assert.ok(response.body.route.steps.length > 0);
+    assert.ok(response.body.route.steps.some((s: { spotId: string }) => s.spotId === 'LS-011'));
+  } finally {
+    await server.close();
+  }
+});
+
 test('visitor APIs reject empty QA, TTS and vision input', async () => {
   const server = await startTestServer();
   try {

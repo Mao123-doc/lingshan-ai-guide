@@ -372,6 +372,20 @@ async function runLLMAdapterTests(): Promise<void> {
   assert.equal(timeout.trace.reason, 'llm_call_failed');
   assert.equal(timeout.trace.executed, true);
   assert.ok(!JSON.stringify(timeout).includes('secret details'));
+
+  // Natural language utterance contract checks
+  const utteranceQuery = '我和对象一起从景区南门进园，准备玩四个小时。';
+  llmCall = async () => llmResult(JSON.stringify({
+    state: { partyType: 'couple', currentLocation: 'south_gate', remainingMinutes: 240 },
+    confidence: { partyType: 0.98, currentLocation: 0.95, remainingMinutes: 0.95 },
+  }));
+  const utteranceRes = await extractSceneStateWithLLM(utteranceQuery);
+  assert.equal(utteranceRes.trace.status, 'success');
+  assert.equal(utteranceRes.trace.fallbackUsed, false);
+  assert.equal(utteranceRes.state.partyType, 'couple');
+  assert.equal(utteranceRes.state.currentLocation, 'south_gate');
+  assert.equal(utteranceRes.state.remainingMinutes, 240);
+  assert.deepEqual(utteranceRes.state.missingCriticalFields, []);
 }
 
 void runLLMAdapterTests()
