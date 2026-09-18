@@ -291,11 +291,24 @@ async function runLLMAdapterTests(): Promise<void> {
       preferredPerformanceTimes: 0.99,
     },
   }));
-  const unknownNames = await extractSceneStateWithLLM('还有3小时');
-  assert.equal(unknownNames.state.currentLocation, undefined);
-  assert.deepEqual(unknownNames.state.mustVisitSpotIds, []);
-  assert.deepEqual(unknownNames.state.preferredPerformanceIds, []);
-  assert.equal(unknownNames.state.preferredPerformanceTimes, undefined);
+  const unknownNames = await extractSceneStateWithLLM(
+    '景区入口，还有3小时，想去灵山大佛，想看下午4点的吉祥颂',
+  );
+  assert.equal(unknownNames.state.currentLocation, 'south_gate');
+  assert.deepEqual(unknownNames.state.mustVisitSpotIds, ['LS-011']);
+  assert.deepEqual(unknownNames.state.preferredPerformanceIds, [
+    'performance_lingshan_jixiangsong',
+  ]);
+  assert.deepEqual(unknownNames.state.preferredPerformanceTimes, {
+    performance_lingshan_jixiangsong: '16:00',
+  });
+
+  llmCall = async () => llmResult(JSON.stringify({
+    state: { mustVisitSpotIds: [], mustVisitSpotNames: null },
+    confidence: { mustVisitSpotIds: 0.99 },
+  }));
+  const explicitEmpty = await extractSceneStateWithLLM('景区入口，还有3小时，想去灵山大佛');
+  assert.deepEqual(explicitEmpty.state.mustVisitSpotIds, []);
 
   llmCall = async () => llmResult('{not json');
   const invalidJson = await extractSceneStateWithLLM(query);

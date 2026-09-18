@@ -14,7 +14,9 @@ export { extractSceneState };
 
 export type SceneExtractionSource = 'llm' | 'rules' | 'fallback' | 'merged';
 export type SceneExtractionStatus = 'success' | 'fallback' | 'failed' | 'skipped';
-export type SceneExtractionState = SceneState & { mealRequested?: boolean };
+export type SceneExtractionState = Omit<SceneState, 'mealRequested'> & {
+  mealRequested?: boolean;
+};
 
 export interface SceneExtractionResult {
   state: SceneExtractionState;
@@ -413,7 +415,11 @@ function combineMappedIds(
   if (ids == null && names == null) return undefined;
   const knownIds = (ids ?? []).filter(isKnownId);
   const mappedNames = (names ?? []).map(mapName).filter((id): id is string => id !== undefined);
-  return [...new Set([...knownIds, ...mappedNames])];
+  const mappedIds = [...new Set([...knownIds, ...mappedNames])];
+  if (mappedIds.length > 0) return mappedIds;
+
+  const explicitlyEmpty = (ids ?? []).length === 0 && (names ?? []).length === 0;
+  return explicitlyEmpty ? [] : undefined;
 }
 
 function mapMustVisitSpotName(name: string): string | undefined {
@@ -442,7 +448,8 @@ function mapPerformanceTimes(
       return performanceId ? [performanceId, time] as const : undefined;
     })
     .filter((entry): entry is readonly [string, string] => entry !== undefined);
-  return mapped.length > 0 ? Object.fromEntries(mapped) : undefined;
+  if (mapped.length > 0) return Object.fromEntries(mapped);
+  return Object.keys(times).length === 0 ? {} : undefined;
 }
 
 function hasLowCriticalFieldConfidence(
