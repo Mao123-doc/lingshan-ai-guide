@@ -1,14 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Typography, Card, Row, Col, Tag, Button } from 'antd';
 import {
   MessageOutlined, CompassOutlined, SoundOutlined,
   SmileOutlined, EnvironmentOutlined, RobotOutlined,
   ThunderboltOutlined, StarFilled, SettingOutlined,
-  AimOutlined, LoadingOutlined,
+  AimOutlined, LoadingOutlined, RightOutlined,
 } from '@ant-design/icons';
 import { openBaiduNavigation, type LatLng } from '../../utils/navigation';
 import { getCapabilityRoute } from './home-capabilities';
+import './HomePage.css';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -29,20 +30,21 @@ interface Facility {
   distance: number;
 }
 
-const HERO_PARTICLES = Array.from({ length: 20 }, (_, id) => ({
+const HERO_PARTICLES = Array.from({ length: 24 }, (_, id) => ({
   id,
-  left: `${Math.random() * 100}%`,
-  animationDelay: `${Math.random() * 3}s`,
-  animationDuration: `${3 + Math.random() * 4}s`,
+  left: `${(id * 4.2 + 3) % 98}%`,
+  animationDelay: `${(id * 0.28) % 4}s`,
+  animationDuration: `${4 + (id % 5)}s`,
+  size: `${2 + (id % 3)}px`,
 }));
 
 const SPOT_CARDS = [
-  { name: '灵山大佛', desc: '88米世界最高青铜立佛', icon: < img src="/lingshan_dafo.jpg" style={{width:"48px",height:"48px",objectFit:"cover"}} />, color: '#c41d7f' },
-  { name: '九龙灌浴', desc: '花开见佛的震撼演出', icon: < img src="/jiulong_guanyu.jpg" style={{width:"48px",height:"48px",objectFit:"cover"}} />, color: '#1890ff' },
-  { name: '灵山梵宫', desc: '东方卢浮宫艺术殿堂', icon: < img src="/lingshan_fangong.jpg" style={{width:"48px",height:"48px",objectFit:"cover"}} />, color: '#d4a853' },
-  { name: '五印坛城', desc: '藏传佛教文化瑰宝', icon: < img src="/wuyin_tancheng.jpg" style={{width:"48px",height:"48px",objectFit:"cover"}} />, color: '#e91e63' },
-  { name: '祥符禅寺', desc: '千年古刹历史遗存', icon: < img src="/xiangfu_temple.jpg" style={{width:"48px",height:"48px",objectFit:"cover"}} />, color: '#722ed1' },
-  { name: '拈花湾', desc: '禅意小镇慢生活', icon: < img src="/nianhua_wan.jpg" style={{width:"48px",height:"48px",objectFit:"cover"}} />, color: '#eb2f96' },
+  { name: '灵山大佛', desc: '88米世界最高青铜立佛', icon: <img src="/lingshan_dafo.jpg" alt="灵山大佛" style={{ width: '56px', height: '56px', objectFit: 'cover' }} />, color: '#c41d7f' },
+  { name: '九龙灌浴', desc: '花开见佛的震撼演出', icon: <img src="/jiulong_guanyu.jpg" alt="九龙灌浴" style={{ width: '56px', height: '56px', objectFit: 'cover' }} />, color: '#1890ff' },
+  { name: '灵山梵宫', desc: '东方卢浮宫艺术殿堂', icon: <img src="/lingshan_fangong.jpg" alt="灵山梵宫" style={{ width: '56px', height: '56px', objectFit: 'cover' }} />, color: '#d4a853' },
+  { name: '五印坛城', desc: '藏传佛教文化瑰宝', icon: <img src="/wuyin_tancheng.jpg" alt="五印坛城" style={{ width: '56px', height: '56px', objectFit: 'cover' }} />, color: '#e91e63' },
+  { name: '祥符禅寺', desc: '千年古刹历史遗存', icon: <img src="/xiangfu_temple.jpg" alt="祥符禅寺" style={{ width: '56px', height: '56px', objectFit: 'cover' }} />, color: '#722ed1' },
+  { name: '拈花湾', desc: '禅意小镇慢生活', icon: <img src="/nianhua_wan.jpg" alt="拈花湾" style={{ width: '56px', height: '56px', objectFit: 'cover' }} />, color: '#eb2f96' },
 ];
 
 const HOT_QUESTIONS = [
@@ -57,6 +59,11 @@ const HOT_QUESTIONS = [
 export default function HomePage() {
   const navigate = useNavigate();
   const heroVisible = true;
+  const [scrollY, setScrollY] = useState(0);
+  const [activeSection, setActiveSection] = useState('top');
+  const [showDhBubble, setShowDhBubble] = useState(false);
+  const [dhBubbleText, setDhBubbleText] = useState('您好！我是灵山专属 AI 导游小灵，滑累了吗？随时点我为您指路解惑哦~');
+
   const [locating, setLocating] = useState(false);
   const [nearbySpots, setNearbySpots] = useState<NearbySpot[] | null>(null);
   const [geoError, setGeoError] = useState('');
@@ -68,6 +75,34 @@ export default function HomePage() {
   const scrollToId = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Scroll detection for sticky topbar & scroll-spy
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      setScrollY(y);
+
+      const sections = ['top', 'capabilities', 'spots', 'questions', 'nearby'];
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sections[i]);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 180) {
+            setActiveSection(sections[i]);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    const bubbleTimer = setTimeout(() => setShowDhBubble(true), 2400);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(bubbleTimer);
+    };
+  }, []);
 
   // WGS84 坐标（与浏览器 GPS 同一坐标系）。灵山大佛/祥符禅寺/九龙灌浴/梵宫/五印坛城/拈花湾取自 OSM 实测，
   // 其余按景区中轴线与拈花湾路网布局推算，精度约 ±100m
@@ -165,8 +200,57 @@ export default function HomePage() {
     { key: 'sightseeing', label: '观光车站', icon: '🚌' },
   ];
 
+  // Parallax calculations
+  const heroTranslateY = Math.min(160, scrollY * 0.28);
+  const heroOpacity = Math.max(0, 1 - scrollY / 460);
+  const heroScale = Math.max(0.94, 1 - scrollY / 1800);
+
   return (
     <div className="home-page">
+      {/* ==================== Sticky Frosted Glass Topbar ==================== */}
+      <header
+        className={`sticky-nav ${scrollY > 80 ? 'visible' : ''}`}
+        data-testid="sticky-nav"
+      >
+        <div className="sticky-nav__inner">
+          <div className="sticky-nav__brand" onClick={() => scrollToId('top')}>
+            <span className="sticky-nav__logo">🏯</span>
+            <div>
+              <div className="sticky-nav__title">灵山胜境</div>
+              <div className="sticky-nav__subtitle">AI 数字人导游</div>
+            </div>
+          </div>
+
+          <nav className="sticky-nav__links">
+            {[
+              { id: 'capabilities', label: '核心能力' },
+              { id: 'spots', label: '核心景点' },
+              { id: 'questions', label: '大家都在问' },
+              { id: 'nearby', label: '附近景点' },
+            ].map(item => (
+              <button
+                key={item.id}
+                className={`sticky-nav__link ${activeSection === item.id ? 'active' : ''}`}
+                onClick={() => scrollToId(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          <div className="sticky-nav__actions">
+            <button
+              className="sticky-nav__cta"
+              onClick={() => navigate('/qa')}
+              aria-label="即刻与数字人对话"
+            >
+              <MessageOutlined /> 与数字人对话
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ==================== Desktop Side Quick Dock ==================== */}
       <nav className="side-nav">
         {[
           { id: 'top', label: '顶部' },
@@ -175,17 +259,27 @@ export default function HomePage() {
           { id: 'questions', label: '大家都在问' },
           { id: 'nearby', label: '附近景点' },
         ].map(item => (
-          <button key={item.id} className="side-nav__item" onClick={() => scrollToId(item.id)}>
+          <button
+            key={item.id}
+            className={`side-nav__item ${activeSection === item.id ? 'active' : ''}`}
+            onClick={() => scrollToId(item.id)}
+          >
             {item.label}
           </button>
         ))}
       </nav>
+
+      {/* ==================== Hero Section with Zen Parallax ==================== */}
       <section id="top" className="home-hero">
         <div className="hero-particles">
           {HERO_PARTICLES.map((particle) => (
-            <div key={particle.id} className="hero-particle"
+            <div
+              key={particle.id}
+              className="hero-particle"
               style={{
                 left: particle.left,
+                width: particle.size,
+                height: particle.size,
                 animationDelay: particle.animationDelay,
                 animationDuration: particle.animationDuration,
               }}
@@ -193,10 +287,16 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div className={`hero-content ${heroVisible ? 'visible' : ''}`}>
+        <div
+          className={`hero-content ${heroVisible ? 'visible' : ''}`}
+          style={{
+            transform: `translateY(${heroTranslateY}px) scale(${heroScale})`,
+            opacity: heroOpacity,
+          }}
+        >
           <div className="hero-badge">
             <StarFilled style={{ color: '#FFD700', marginRight: 6 }} />
-            国家 5A 级旅游景区
+            国家 5A 级旅游景区 · 东方禅意智慧行
           </div>
           <div className="hero-icon">🏯</div>
           <Title level={1} className="hero-title">
@@ -227,23 +327,44 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="scroll-hint">
-          <div className="scroll-arrow" />
+        {/* Seamless Zen Wave Divider without conflicting gradient */}
+        <div className="hero-transition-wrapper">
+          <svg className="hero-wave-divider" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,0 C150,90 350,-40 500,50 C650,140 900,10 1200,40 L1200,120 L0,120 Z" fill="currentColor" />
+          </svg>
+          <div
+            className="scroll-hint"
+            onClick={() => scrollToId('capabilities')}
+            role="button"
+            tabIndex={0}
+            aria-label="向下滑动探索核心能力"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                scrollToId('capabilities');
+              }
+            }}
+          >
+            <span className="scroll-hint__text">向下探索</span>
+            <div className="scroll-arrow" />
+          </div>
         </div>
       </section>
 
+      {/* ==================== Section: Core Capabilities ==================== */}
       <section id="capabilities" className="home-section">
         <div className="section-header">
+          <div className="section-pill">AI MULTI-MODAL</div>
           <RobotOutlined className="section-icon" />
-          <Title level={3}>核心能力</Title>
+          <Title level={3} style={{ marginTop: 4, marginBottom: 4 }}>核心能力</Title>
           <Paragraph type="secondary">多模态 AI 数字人，让游览更智能</Paragraph>
         </div>
-        <Row gutter={[16, 16]}>
+        <Row gutter={[20, 20]}>
           {[
-            { icon: <MessageOutlined />, title: '智能问答', desc: '基于景区知识库的精准回答，覆盖历史、文化、实用信息等各类问题', color: '#c41d7f' },
-{ icon: <SoundOutlined />, title: '多模态交互', desc: '支持语音与文本输入，数字人以语音方式进行回答', color: '#1890ff' },
-            { icon: <CompassOutlined />, title: '个性化推荐', desc: '根据兴趣偏好智能推荐最佳游览路线和讲解重点', color: '#52c41a' },
-            { icon: <SmileOutlined />, title: '情感互动', desc: 'AI导游具有丰富的情感表达，提供亲切温暖的陪伴体验', color: '#fa8c16' },
+            { icon: <MessageOutlined />, title: '智能问答', desc: '基于景区知识库的精准回答，覆盖历史、文化、实用信息等各类问题', color: '#c41d7f', bg: 'rgba(196,29,127,0.1)' },
+            { icon: <SoundOutlined />, title: '多模态交互', desc: '支持语音与文本输入，数字人以语音方式进行回答', color: '#1890ff', bg: 'rgba(24,144,255,0.1)' },
+            { icon: <CompassOutlined />, title: '个性化推荐', desc: '根据兴趣偏好智能推荐最佳游览路线和讲解重点', color: '#2e7d5b', bg: 'rgba(46,125,91,0.1)' },
+            { icon: <SmileOutlined />, title: '情感互动', desc: 'AI导游具有丰富的情感表达，提供亲切温暖的陪伴体验', color: '#d4a853', bg: 'rgba(212,168,83,0.12)' },
           ].map((f, i) => (
             <Col xs={24} sm={12} md={6} key={i}>
               <Card
@@ -260,22 +381,32 @@ export default function HomePage() {
                   }
                 }}
               >
-                <div className="feature-icon" style={{ color: f.color }}>{f.icon}</div>
-                <Title level={5}>{f.title}</Title>
-                <Paragraph type="secondary">{f.desc}</Paragraph>
+                <div className="feature-icon-wrapper" style={{ color: f.color, background: f.bg }}>
+                  {f.icon}
+                </div>
+                <Title level={5} style={{ marginBottom: 8 }}>{f.title}</Title>
+                <Paragraph type="secondary" style={{ fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+                  {f.desc}
+                </Paragraph>
+                <div className="feature-card-action">
+                  <span>体验功能</span>
+                  <RightOutlined style={{ fontSize: 10 }} />
+                </div>
               </Card>
             </Col>
           ))}
         </Row>
       </section>
 
-      <section id="spots" className="home-section alt-bg">
+      {/* ==================== Section: Core Spots ==================== */}
+      <section id="spots" className="home-section">
         <div className="section-header">
+          <div className="section-pill">SCENIC HIGHLIGHTS</div>
           <EnvironmentOutlined className="section-icon" />
-          <Title level={3}>核心景点</Title>
+          <Title level={3} style={{ marginTop: 4, marginBottom: 4 }}>核心景点</Title>
           <Paragraph type="secondary">22 个精品景点，等您来探索</Paragraph>
         </div>
-        <Row gutter={[12, 12]}>
+        <Row gutter={[16, 16]}>
           {SPOT_CARDS.map((spot, i) => (
             <Col xs={12} sm={8} md={4} key={i}>
               <Card
@@ -283,7 +414,9 @@ export default function HomePage() {
                 hoverable
                 onClick={() => navigate(`/qa?q=${encodeURIComponent(spot.name)}`)}
               >
-                <div className="spot-emoji">{spot.icon}</div>
+                <div className="spot-image-wrap">
+                  {spot.icon}
+                </div>
                 <div className="spot-name">{spot.name}</div>
                 <div className="spot-desc">{spot.desc}</div>
               </Card>
@@ -292,10 +425,13 @@ export default function HomePage() {
         </Row>
       </section>
 
+      {/* ==================== Section: Popular Questions ==================== */}
       <section id="questions" className="home-section">
         <div className="section-header">
+          <div className="section-pill">FREQUENT INQUIRIES</div>
           <ThunderboltOutlined className="section-icon" />
-          <Title level={3}>大家都在问</Title>
+          <Title level={3} style={{ marginTop: 4, marginBottom: 4 }}>大家都在问</Title>
+          <Paragraph type="secondary">点击热门疑问，AI 导游即刻为您语音解答</Paragraph>
         </div>
         <div className="hot-questions-grid">
           {HOT_QUESTIONS.map((item, i) => (
@@ -304,17 +440,20 @@ export default function HomePage() {
               className="hot-q-tag"
               onClick={() => navigate(`/qa?q=${encodeURIComponent(item.q)}`)}
             >
-              {item.icon} {item.q}
+              <span>{item.icon}</span>
+              <span>{item.q}</span>
             </Tag>
           ))}
         </div>
       </section>
 
-      <section id="nearby" className="home-section alt-bg">
+      {/* ==================== Section: Nearby Spots & Facilities ==================== */}
+      <section id="nearby" className="home-section">
         <div className="section-header">
+          <div className="section-pill">SMART NAVIGATION</div>
           <AimOutlined className="section-icon" />
-          <Title level={3}>📍 附近景点</Title>
-          <Paragraph type="secondary">开启定位，发现您身边的灵山美景</Paragraph>
+          <Title level={3} style={{ marginTop: 4, marginBottom: 4 }}>📍 附近景点与设施</Title>
+          <Paragraph type="secondary">开启定位，发现您身边的灵山美景与便民设施</Paragraph>
         </div>
 
         {!nearbySpots && !geoError && (
@@ -328,6 +467,7 @@ export default function HomePage() {
                 height: 48, borderRadius: 24, paddingInline: 32,
                 background: 'linear-gradient(135deg, #c41d7f, #e91e63)',
                 border: 'none', color: '#fff', fontSize: 15,
+                boxShadow: '0 4px 16px rgba(196,29,127,0.3)',
               }}
             >
               {locating ? '正在定位...' : '查找附近景点'}
@@ -346,14 +486,17 @@ export default function HomePage() {
 
         {nearbySpots && (
           <div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
               {CATEGORIES.map(cat => (
-                <Tag key={cat.key}
+                <Tag
+                  key={cat.key}
                   style={{
-                    cursor: 'pointer', padding: '4px 16px', borderRadius: 20,
-                    fontSize: 14, border: activeCategory === cat.key ? '2px solid #c41d7f' : '1px solid #d9d9d9',
+                    cursor: 'pointer', padding: '6px 18px', borderRadius: 20,
+                    fontSize: 13, border: activeCategory === cat.key ? '1.5px solid #c41d7f' : '1px solid #d9d9d9',
                     background: activeCategory === cat.key ? '#fdf2f8' : '#fff',
-                    color: activeCategory === cat.key ? '#c41d7f' : '#333',
+                    color: activeCategory === cat.key ? '#c41d7f' : '#444',
+                    fontWeight: activeCategory === cat.key ? 600 : 400,
+                    transition: 'all 0.25s ease',
                   }}
                   onClick={() => { setActiveCategory(cat.key); if (cat.key !== 'spots') fetchFacilities(cat.key); }}
                 >
@@ -374,13 +517,14 @@ export default function HomePage() {
                       hoverable
                       size="small"
                       style={{
-                        borderRadius: 12, marginBottom: 8,
-                        border: i === 0 ? '2px solid #c41d7f' : '1px solid #f0f0f0',
+                        borderRadius: 14, marginBottom: 10,
+                        border: i === 0 ? '2px solid #c41d7f' : '1px solid #eee',
                         background: i === 0 ? 'linear-gradient(135deg, #fdf2f8, #fff9f5)' : '#fff',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 24 }}>{spot.icon}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ fontSize: 26 }}>{spot.icon}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <Text strong style={{ fontSize: 14 }}>{spot.name}</Text>
@@ -394,7 +538,7 @@ export default function HomePage() {
                           </Paragraph>
                         </div>
                         <a
-                          style={{ fontSize: 12, color: '#c41d7f', textDecoration: 'none', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                          style={{ fontSize: 12, color: '#c41d7f', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', cursor: 'pointer' }}
                           onClick={(e) => {
                             e.stopPropagation();
                             openBaiduNavigation(
@@ -423,16 +567,16 @@ export default function HomePage() {
                     ? `https://api.map.baidu.com/place/detail?uid=${f.uid}&output=html`
                     : `https://uri.amap.com/marker?position=${f.lng},${f.lat}&name=${encodeURIComponent(f.name)}`;
                   return (
-                    <Card key={i} hoverable size="small" style={{ borderRadius: 12, marginBottom: 8, border: '1px solid #f0f0f0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 18 }}>{CATEGORIES.find(c => c.key === activeCategory)?.icon}</span>
+                    <Card key={i} hoverable size="small" style={{ borderRadius: 14, marginBottom: 10, border: '1px solid #eee' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 20 }}>{CATEGORIES.find(c => c.key === activeCategory)?.icon}</span>
                         <div style={{ flex: 1 }}>
                           <Text strong style={{ fontSize: 14 }}>{f.name}</Text>
                           <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>{distText}</Text>
                         </div>
                         <Tag style={{ borderRadius: 10, fontSize: 11 }}>{distText}</Tag>
                         <a
-                           style={{ fontSize: 12, color: '#c41d7f', textDecoration: 'none', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                           style={{ fontSize: 12, color: '#c41d7f', fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', cursor: 'pointer' }}
                            onClick={(e) => {
                              e.stopPropagation();
                              if (f.lat && f.lng) {
@@ -455,7 +599,7 @@ export default function HomePage() {
                 })}
               </div>
             )}
-            <div style={{ textAlign: 'center', marginTop: 8 }}>
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
               <Button type="text" icon={<AimOutlined />} onClick={handleLocate} loading={locating} size="small">
                 重新定位
               </Button>
@@ -464,172 +608,45 @@ export default function HomePage() {
         )}
       </section>
 
+      {/* ==================== Floating Digital Human Companion ==================== */}
+      <aside className="dh-floating-widget" data-testid="dh-floating-widget">
+        <div className={`dh-bubble ${showDhBubble ? 'visible' : ''}`} role="status">
+          <div className="dh-bubble__title">
+            <span className="dh-bubble__pulse" />
+            <span>AI 导游小灵</span>
+          </div>
+          <p style={{ margin: 0, lineHeight: 1.5 }}>{dhBubbleText}</p>
+          <div className="dh-bubble__arrow" />
+        </div>
+
+        <button
+          className="dh-trigger-btn"
+          aria-label="召唤 AI 数字人导游"
+          onClick={() => navigate('/qa')}
+          onMouseEnter={() => {
+            setDhBubbleText('点击即可向我提问，灵山导游 7×24 小时为您守候！');
+            setShowDhBubble(true);
+          }}
+        >
+          <div className="dh-trigger-avatar">🧘‍♀️</div>
+          <div className="dh-trigger-text">
+            <div className="dh-trigger-status">
+              <span>AI 导游</span>
+              <span className="dh-trigger-tag">在线</span>
+            </div>
+            <div className="dh-trigger-sub">点击开始对话</div>
+          </div>
+        </button>
+      </aside>
+
+      {/* ==================== Footer ==================== */}
       <footer className="home-footer">
         <div className="footer-brand">🏯 灵山胜境 AI 数字人导游</div>
         <div className="footer-links">
           <span onClick={() => window.open('/admin/login', '_blank')}><SettingOutlined /> 管理后台</span>
         </div>
-        <div className="footer-copy">© 2024 Ling Shan Sacred Land · AI Tour Guide</div>
+        <div className="footer-copy">© 2024-2026 Ling Shan Sacred Land · AI Tour Guide</div>
       </footer>
-
-      <style>{`
-        .home-page { min-height: 100vh; background: #faf8f5; }
-
-        .side-nav {
-          position: fixed;
-          left: 20px;
-          top: 50%;
-          transform: translateY(-50%);
-          z-index: 1000;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          padding: 12px 8px;
-          background: rgba(0,0,0,0.6);
-          border-radius: 24px;
-          backdrop-filter: blur(6px);
-        }
-        .side-nav__item {
-          border: none;
-          background: transparent;
-          color: #fff;
-          font-size: 13px;
-          padding: 10px 16px;
-          border-radius: 16px;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: all 0.25s;
-        }
-        .side-nav__item:hover {
-          background: rgba(196,29,127,0.8);
-          color: #fff;
-        }
-
-        .home-hero {
-          position: relative;
-          min-height: 100vh;
-          background-color: #1a0510;
-          display: flex; align-items: center; justify-content: center;
-          background: url(/background.jpg) center/contain no-repeat;
-          overflow: hidden;
-        }
-        .hero-particles { position: absolute; inset: 0; }
-        .hero-particle {
-          position: absolute; bottom: -20px;
-          width: 2px; height: 2px;
-          background: rgba(255,215,0,0.6);
-          border-radius: 50%;
-          animation: heroFloat linear infinite;
-        }
-        @keyframes heroFloat {
-          0% { transform: translateY(0) scale(1); opacity: 0; }
-          20% { opacity: 1; }
-          80% { opacity: 1; }
-          100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
-        }
-
-        .hero-content {
-          text-align: center; padding: 40px 20px; position: relative; z-index: 1;
-          opacity: 0; transform: translateY(20px);
-          transition: all 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
-        }
-        .hero-content.visible { opacity: 1; transform: translateY(0); }
-
-        .hero-badge {
-          display: inline-block;
-          padding: 4px 16px; border-radius: 20px;
-          background: rgba(255,255,255,0.1); color: #FFD700;
-          font-size: 12px; font-weight: 500; margin-bottom: 16px;
-          border: 1px solid rgba(255,215,0,0.2); backdrop-filter: blur(4px);
-        }
-        .hero-icon { font-size: 64px; margin-bottom: 8px; animation: iconBounce 2s ease-in-out infinite; }
-        @keyframes iconBounce {
-          0%,100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
-        }
-        .hero-title {
-          color: #fff !important; font-size: 40px !important; font-weight: 800 !important;
-          margin-bottom: 0 !important; letter-spacing: 4px;
-        }
-        .hero-subtitle {
-          color: rgba(255,255,255,0.85) !important; font-size: 20px !important;
-          font-weight: 400 !important; margin-top: 4px !important; margin-bottom: 16px !important;
-        }
-        .hero-desc {
-          color: rgba(255,255,255,0.6) !important; font-size: 14px !important;
-          line-height: 2 !important; margin-bottom: 28px !important;
-        }
-        .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-        .hero-btn {
-          height: 46px !important; border-radius: 23px !important; padding: 0 28px !important;
-          font-size: 15px !important; font-weight: 600 !important; border: none !important;
-        }
-        .hero-btn.primary {
-          background: linear-gradient(135deg, #c41d7f, #e91e63) !important;
-          color: #fff !important; box-shadow: 0 4px 20px rgba(196,29,127,0.5) !important;
-        }
-        .hero-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(196,29,127,0.6) !important; }
-        .hero-btn.secondary {
-          background: rgba(255,255,255,0.12) !important; color: #fff !important;
-          border: 1px solid rgba(255,255,255,0.25) !important; backdrop-filter: blur(8px);
-        }
-        .hero-btn.secondary:hover { background: rgba(255,255,255,0.2) !important; }
-
-        .scroll-hint { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); }
-        .scroll-arrow {
-          width: 20px; height: 20px; border-right: 2px solid rgba(255,255,255,0.4);
-          border-bottom: 2px solid rgba(255,255,255,0.4);
-          transform: rotate(45deg);
-          animation: scrollBounce 1.5s ease-in-out infinite;
-        }
-        @keyframes scrollBounce {
-          0%,100% { opacity: 0.3; transform: rotate(45deg) translate(0,0); }
-          50% { opacity: 1; transform: rotate(45deg) translate(6px,6px); }
-        }
-
-        .home-section { max-width: 1000px; margin: 0 auto; padding: 48px 20px; }
-        .alt-bg { background: linear-gradient(135deg, #fef5fb 0%, #fff8f0 100%); border-radius: 32px; margin-top: -16px; }
-        .section-header { text-align: center; margin-bottom: 28px; }
-        .section-icon { font-size: 32px; color: #c41d7f; margin-bottom: 8px; }
-
-        .feature-card { border-radius: 16px !important; text-align: center; height: 100%;
-          border: none !important; box-shadow: 0 2px 16px rgba(0,0,0,0.04) !important;
-          transition: transform 0.3s, box-shadow 0.3s !important;
-        }
-        .feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.08) !important; }
-        .feature-icon { font-size: 36px; margin-bottom: 12px; }
-
-        .spot-card { border-radius: 16px !important; text-align: center; border: none !important;
-          box-shadow: 0 2px 12px rgba(0,0,0,0.04) !important; cursor: pointer !important;
-          transition: transform 0.3s, box-shadow 0.3s !important;
-        }
-        .spot-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 28px rgba(0,0,0,0.08) !important; }
-        .spot-emoji { font-size: 36px; margin-bottom: 8px; }
-        .spot-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #333; }
-        .spot-desc { font-size: 11px; color: #999; }
-
-        .hot-questions-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-        .hot-q-tag {
-          cursor: pointer !important; font-size: 14px !important; padding: 8px 20px !important;
-          border-radius: 22px !important; background: #fff !important;
-          border: 1px solid rgba(196,29,127,0.15) !important; color: #333 !important;
-          transition: all 0.25s !important;
-        }
-        .hot-q-tag:hover { background: #c41d7f !important; color: #fff !important; border-color: #c41d7f !important; transform: translateY(-2px); }
-
-        .home-footer { text-align: center; padding: 32px 20px; color: #999; font-size: 12px; }
-        .footer-brand { font-size: 15px; font-weight: 600; color: #666; margin-bottom: 6px; }
-        .footer-links { margin-bottom: 6px; }
-        .footer-links span { cursor: pointer; color: #c41d7f; }
-        .footer-links span:hover { text-decoration: underline; }
-
-        @media (max-width: 768px) {
-          .side-nav { display: none; }
-          .hero-title { font-size: 28px !important; }
-          .hero-subtitle { font-size: 16px !important; }
-          .hero-icon { font-size: 48px; }
-        }
-      `}</style>
     </div>
   );
 }

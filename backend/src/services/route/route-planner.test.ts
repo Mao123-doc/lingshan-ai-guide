@@ -42,6 +42,15 @@ assert.equal(usefulLimitedItinerary.feasible, true);
 assert.ok(usefulLimitedItinerary.steps.length >= 2);
 assert.ok(usefulLimitedItinerary.totalMinutes > 20);
 
+const lunchRequest = planRoute(scene({ mealRequested: true }), graph, 12);
+assert.equal(lunchRequest.feasible, true);
+assert.equal(lunchRequest.outcome, 'feasible_with_rejected_preferences');
+assert.ok(lunchRequest.rejectedRequests?.some(request => request.item === 'meal' && request.reasonCode === 'meal_data_unavailable'));
+
+const coupleRoute = planRoute(scene({ partyType: 'couple', remainingMinutes: 420, interests: [] }), graph, 6);
+assert.equal(coupleRoute.feasible, true);
+assert.ok(coupleRoute.steps.some(step => ['NH-001', 'NH-002', 'NH-003', 'NH-004', 'NH-005'].includes(step.spotId)));
+
 const preference = planRoute(scene({ currentTime: '13:00', preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
 assert.equal(preference.feasible, true);
 assert.equal(preference.outcome, 'feasible');
@@ -77,6 +86,46 @@ const outsideBudget = planRoute(scene({ currentTime: '10:00', remainingMinutes: 
 assert.notEqual(outsideBudget.outcome, 'feasible');
 assert.ok(outsideBudget.steps.length > 0 || outsideBudget.outcome === 'infeasible');
 assert.ok(outsideBudget.rejectedRequests?.some(request => request.reasonCode === 'performance_outside_time_budget'));
+
+const explicitPerformancePriority = planRoute(scene({
+  currentTime: '11:00',
+  remainingMinutes: 180,
+  preferredPerformanceIds: ['performance_lingshan_jixiangsong'],
+  preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' },
+}), graph, 12);
+assert.equal(explicitPerformancePriority.feasible, true);
+assert.equal(explicitPerformancePriority.outcome, 'feasible');
+const anchoredPerformanceStep = explicitPerformancePriority.steps.find(
+  step => step.performanceId === 'performance_lingshan_jixiangsong',
+);
+assert.ok(anchoredPerformanceStep?.arrive !== undefined);
+assert.ok(anchoredPerformanceStep.arrive < '14:00');
+assert.equal(anchoredPerformanceStep?.performanceStartTime, '14:00');
+assert.equal(anchoredPerformanceStep?.end, '14:20');
+assert.equal(explicitPerformancePriority.steps.at(-1)?.performanceId, 'performance_lingshan_jixiangsong');
+assert.equal(explicitPerformancePriority.violations.length, 0);
+
+const limitedPerformanceRoute = planRoute(scene({
+  currentTime: '11:00',
+  remainingMinutes: 180,
+  mobility: 'limited',
+  interests: [],
+  preferredPerformanceIds: ['performance_lingshan_jixiangsong'],
+  preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' },
+}), graph, 12);
+assert.equal(limitedPerformanceRoute.feasible, true);
+assert.ok(limitedPerformanceRoute.steps.length <= 5);
+assert.equal(limitedPerformanceRoute.steps.at(-1)?.performanceId, 'performance_lingshan_jixiangsong');
+
+const performanceAtBudgetBoundary = planRoute(scene({
+  currentTime: '12:00',
+  remainingMinutes: 120,
+  preferredPerformanceIds: ['performance_lingshan_jixiangsong'],
+  preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' },
+}), graph, 12);
+assert.equal(performanceAtBudgetBoundary.feasible, true);
+assert.equal(performanceAtBudgetBoundary.outcome, 'feasible');
+assert.equal(performanceAtBudgetBoundary.steps.at(-1)?.performanceId, 'performance_lingshan_jixiangsong');
 
 const noAlternative = planRoute(scene({ currentTime: '10:00', remainingMinutes: 1, preferredPerformanceIds: ['performance_lingshan_jixiangsong'], preferredPerformanceTimes: { performance_lingshan_jixiangsong: '14:00' } }), graph, 12);
 assert.equal(noAlternative.outcome, 'infeasible');

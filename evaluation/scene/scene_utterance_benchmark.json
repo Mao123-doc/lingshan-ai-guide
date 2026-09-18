@@ -1,0 +1,61 @@
+[
+  {"id":"ub001","category":"party_type","query":"我和对象一起从景区南门进园，准备玩四个小时。","expected":{"currentLocation":"south_gate","remainingMinutes":240,"partyType":"couple","missingCriticalFields":[]}},
+  {"id":"ub002","category":"party_type","query":"带妈妈和爸爸来玩，在景区入口，总共还有两个小时。","expected":{"currentLocation":"south_gate","remainingMinutes":120,"partyType":"with_elderly","missingCriticalFields":[]}},
+  {"id":"ub003","category":"party_type","query":"带两个小朋友从南门入园，能玩4个小时。","expected":{"currentLocation":"south_gate","remainingMinutes":240,"partyType":"with_children","missingCriticalFields":[]}},
+  {"id":"ub004","category":"party_type","query":"和几个大学同学在景区入口，打算游览180分钟。","expected":{"currentLocation":"south_gate","remainingMinutes":180,"partyType":"friends","missingCriticalFields":[]}},
+  {"id":"ub005","category":"party_type","query":"我和爱人从南门出发，还剩下90分钟。","expected":{"currentLocation":"south_gate","remainingMinutes":90,"partyType":"couple","missingCriticalFields":[]}},
+
+  {"id":"ub006","category":"location","query":"我们现在在大佛脚下，还有两个小时。","expected":{"currentLocation":"LS-011","remainingMinutes":120,"missingCriticalFields":[]}},
+  {"id":"ub007","category":"location","query":"刚刚到了灵山梵宫，还剩一个半小时。","expected":{"currentLocation":"LS-013","remainingMinutes":90,"missingCriticalFields":[]}},
+  {"id":"ub008","category":"location","query":"目前在祥符禅寺，游览时间还有60分钟。","expected":{"currentLocation":"LS-010","remainingMinutes":60,"missingCriticalFields":[]}},
+  {"id":"ub009","category":"location","query":"人已经在九龙灌浴旁边，大概还有120分钟。","expected":{"currentLocation":"LS-006","remainingMinutes":120,"missingCriticalFields":[]}},
+  {"id":"ub010","category":"location","query":"现在位于五印坛城，还有45分钟。","expected":{"currentLocation":"LS-014","remainingMinutes":45,"missingCriticalFields":[]}},
+
+  {"id":"ub011","category":"explicit_time","query":"现在时间是10:30，我们在南门入口，还剩两个小时。","expected":{"currentTime":"10:30","currentLocation":"south_gate","remainingMinutes":120,"missingCriticalFields":[]}},
+  {"id":"ub012","category":"explicit_time","query":"当前是上午9点，从景区入口开始，还有3小时。","expected":{"currentTime":"09:00","currentLocation":"south_gate","remainingMinutes":180,"missingCriticalFields":[]}},
+  {"id":"ub013","category":"explicit_time","query":"现在是下午1点，南门进园，还有120分钟。","expected":{"currentTime":"13:00","currentLocation":"south_gate","remainingMinutes":120,"missingCriticalFields":[]}},
+  {"id":"ub014","category":"explicit_time","query":"当前时间是14:20，人在景区入口，剩下150分钟。","expected":{"currentTime":"14:20","currentLocation":"south_gate","remainingMinutes":150,"missingCriticalFields":[]}},
+  {"id":"ub015","category":"explicit_time","query":"现在是下午3点半，在南门，还剩一个小时。","expected":{"currentTime":"15:30","currentLocation":"south_gate","remainingMinutes":60,"missingCriticalFields":[]}},
+
+  {"id":"ub016","category":"time_range","query":"我们打算从上午10点玩到下午2点，在景区入口出发。","expected":{"currentTime":"10:00","remainingMinutes":240,"currentLocation":"south_gate","missingCriticalFields":[]}},
+  {"id":"ub017","category":"time_range","query":"时间安排是从09:00到12:00，南门进园。","expected":{"currentTime":"09:00","remainingMinutes":180,"currentLocation":"south_gate","missingCriticalFields":[]}},
+  {"id":"ub018","category":"time_range","query":"预计从下午1点游览到下午4点，在南门。","expected":{"currentTime":"13:00","remainingMinutes":180,"currentLocation":"south_gate","missingCriticalFields":[]}},
+  {"id":"ub019","category":"time_range","query":"我们从上午10点半到下午1点半在灵山胜境，南门进园。","expected":{"currentTime":"10:30","remainingMinutes":180,"currentLocation":"south_gate","missingCriticalFields":[]}},
+  {"id":"ub020","category":"time_range","query":"时间是从14:00到17:00，目前在景区入口。","expected":{"currentTime":"14:00","remainingMinutes":180,"currentLocation":"south_gate","missingCriticalFields":[]}},
+
+  {"id":"ub021","category":"remaining_duration","query":"在景区入口，只有一个小时游览时间。","expected":{"currentLocation":"south_gate","remainingMinutes":60,"missingCriticalFields":[]}},
+  {"id":"ub022","category":"remaining_duration","query":"从南门进园，剩下整整四个小时。","expected":{"currentLocation":"south_gate","remainingMinutes":240,"missingCriticalFields":[]}},
+  {"id":"ub023","category":"remaining_duration","query":"我们只有90分钟，在景区入口。","expected":{"currentLocation":"south_gate","remainingMinutes":90,"missingCriticalFields":[]}},
+  {"id":"ub024","category":"remaining_duration","query":"还有150分钟，人在南门。","expected":{"currentLocation":"south_gate","remainingMinutes":150,"missingCriticalFields":[]}},
+  {"id":"ub025","category":"remaining_duration","query":"在景区入口，只剩45分钟了。","expected":{"currentLocation":"south_gate","remainingMinutes":45,"missingCriticalFields":[]}},
+
+  {"id":"ub026","category":"indirect_performance_time","query":"在景区入口，只有三小时，想看下午两点的吉祥颂。","expected":{"currentLocation":"south_gate","currentTime":"11:00","remainingMinutes":180,"preferredPerformanceIds":["performance_lingshan_jixiangsong"],"preferredPerformanceTimes":{"performance_lingshan_jixiangsong":"14:00"},"missingCriticalFields":[]}},
+  {"id":"ub027","category":"indirect_performance_time","query":"人在南门，还剩两个小时，想看下午4点的吉祥颂。","expected":{"currentLocation":"south_gate","currentTime":"14:00","remainingMinutes":120,"preferredPerformanceIds":["performance_lingshan_jixiangsong"],"preferredPerformanceTimes":{"performance_lingshan_jixiangsong":"16:00"},"missingCriticalFields":[]}},
+  {"id":"ub028","category":"indirect_performance_time","query":"从景区入口出发，剩下一个半小时，想看11:30的吉祥颂。","expected":{"currentLocation":"south_gate","currentTime":"10:00","remainingMinutes":90,"preferredPerformanceIds":["performance_lingshan_jixiangsong"],"preferredPerformanceTimes":{"performance_lingshan_jixiangsong":"11:30"},"missingCriticalFields":[]}},
+  {"id":"ub029","category":"indirect_performance_time","query":"在南门还有两小时，必须看13:00的九龙灌浴表演。","expected":{"currentLocation":"south_gate","currentTime":"11:00","remainingMinutes":120,"preferredPerformanceIds":["performance_jiulong_guanyu"],"preferredPerformanceTimes":{"performance_jiulong_guanyu":"13:00"},"missingCriticalFields":[]}},
+  {"id":"ub030","category":"indirect_performance_time","query":"从南门进园只有60分钟，想赶上上午10点的吉祥颂。","expected":{"currentLocation":"south_gate","currentTime":"09:00","remainingMinutes":60,"preferredPerformanceIds":["performance_lingshan_jixiangsong"],"preferredPerformanceTimes":{"performance_lingshan_jixiangsong":"10:00"},"missingCriticalFields":[]}},
+
+  {"id":"ub031","category":"meal_request","query":"在景区入口还有3小时，中午想找地方吃个饭。","expected":{"currentLocation":"south_gate","remainingMinutes":180,"mealRequested":true,"missingCriticalFields":[]}},
+  {"id":"ub032","category":"meal_request","query":"从南门进园玩4小时，途中需要安排午餐。","expected":{"currentLocation":"south_gate","remainingMinutes":240,"mealRequested":true,"missingCriticalFields":[]}},
+  {"id":"ub033","category":"meal_request","query":"人在景区入口剩下两个小时，想吃素斋晚餐。","expected":{"currentLocation":"south_gate","remainingMinutes":120,"mealRequested":true,"missingCriticalFields":[]}},
+  {"id":"ub034","category":"meal_request","query":"我们在南门还有3小时，游览过程要找餐馆用餐。","expected":{"currentLocation":"south_gate","remainingMinutes":180,"mealRequested":true,"missingCriticalFields":[]}},
+  {"id":"ub035","category":"meal_request","query":"从景区入口出发游览180分钟，中午要吃饭。","expected":{"currentLocation":"south_gate","remainingMinutes":180,"mealRequested":true,"missingCriticalFields":[]}},
+
+  {"id":"ub036","category":"mobility_limitation","query":"家里老人坐轮椅，从南门进园，还有两小时。","expected":{"mobility":"wheelchair","currentLocation":"south_gate","remainingMinutes":120,"partyType":"with_elderly","missingCriticalFields":[]}},
+  {"id":"ub037","category":"mobility_limitation","query":"妈妈腿脚不方便，在景区入口，只有90分钟。","expected":{"mobility":"limited","currentLocation":"south_gate","remainingMinutes":90,"partyType":"with_elderly","missingCriticalFields":[]}},
+  {"id":"ub038","category":"mobility_limitation","query":"长辈行动不便走不动，从南门出发，还有3小时。","expected":{"mobility":"limited","currentLocation":"south_gate","remainingMinutes":180,"partyType":"with_elderly","missingCriticalFields":[]}},
+  {"id":"ub039","category":"mobility_limitation","query":"全程推轮椅游览，在景区入口，游览时间还有150分钟。","expected":{"mobility":"wheelchair","currentLocation":"south_gate","remainingMinutes":150,"missingCriticalFields":[]}},
+  {"id":"ub040","category":"mobility_limitation","query":"同行老人不能久走，在南门，还有两个小时。","expected":{"mobility":"limited","currentLocation":"south_gate","remainingMinutes":120,"partyType":"with_elderly","missingCriticalFields":[]}},
+
+  {"id":"ub041","category":"must_visit_intent","query":"在景区入口还有两小时，一定要去灵山大佛。","expected":{"currentLocation":"south_gate","remainingMinutes":120,"mustVisitSpotIds":["LS-011"],"missingCriticalFields":[]}},
+  {"id":"ub042","category":"must_visit_intent","query":"从南门出发有3个小时，必须去灵山梵宫和五印坛城。","expected":{"currentLocation":"south_gate","remainingMinutes":180,"mustVisitSpotIds":["LS-013","LS-014"],"missingCriticalFields":[]}},
+  {"id":"ub043","category":"must_visit_intent","query":"在南门还有一个半小时，一定要看九龙灌浴。","expected":{"currentLocation":"south_gate","remainingMinutes":90,"mustVisitSpotIds":["LS-006"],"missingCriticalFields":[]}},
+  {"id":"ub044","category":"must_visit_intent","query":"人在景区入口还有两小时，必须参观祥符禅寺。","expected":{"currentLocation":"south_gate","remainingMinutes":120,"mustVisitSpotIds":["LS-010"],"missingCriticalFields":[]}},
+  {"id":"ub045","category":"must_visit_intent","query":"从南门进园有4小时，必去灵山大佛和灵山梵宫。","expected":{"currentLocation":"south_gate","remainingMinutes":240,"mustVisitSpotIds":["LS-011","LS-013"],"missingCriticalFields":[]}},
+
+  {"id":"ub046","category":"missing_explicit","query":"推荐一条经典的佛教文化游览路线。","expected":{"missingCriticalFields":["currentLocation","remainingMinutes"]}},
+  {"id":"ub047","category":"missing_explicit","query":"我想看下午两点的吉祥颂表演。","expected":{"preferredPerformanceIds":["performance_lingshan_jixiangsong"],"preferredPerformanceTimes":{"performance_lingshan_jixiangsong":"14:00"},"missingCriticalFields":["currentLocation","remainingMinutes","currentTime"]}},
+  {"id":"ub048","category":"missing_explicit","query":"我现在刚到景区入口。","expected":{"currentLocation":"south_gate","missingCriticalFields":["remainingMinutes"]}},
+  {"id":"ub049","category":"missing_explicit","query":"我们还有三个小时游览时间。","expected":{"remainingMinutes":180,"missingCriticalFields":["currentLocation"]}},
+  {"id":"ub050","category":"missing_explicit","query":"想带老人看灵山大佛，但不知道时间怎么安排。","expected":{"partyType":"with_elderly","mustVisitSpotIds":["LS-011"],"missingCriticalFields":["currentLocation","remainingMinutes"]}}
+]

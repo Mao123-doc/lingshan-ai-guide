@@ -127,4 +127,105 @@ describe('RecommendPage critical states', () => {
       expect.stringContaining('现在上午10点'),
     ));
   });
+
+  it('renders a natural question instead of raw field names when current time is missing', async () => {
+    vi.mocked(visitorAPI.planRoute).mockResolvedValue({
+      data: {
+        outcome: 'needs_clarification',
+        route: { steps: [], totalMinutes: 0, walkingMinutes: 0, visitingMinutes: 0 },
+        scene_state: { missingCriticalFields: ['currentTime'] },
+        scene_extraction: {
+          source: 'rules',
+          confidence: {},
+          missingFields: ['currentTime'],
+          conflicts: [],
+          trace: { configured: true, executed: true, status: 'success', fallbackUsed: false },
+        },
+      },
+    } as never);
+
+    render(<MemoryRouter><RecommendPage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: '帮我规划路线' }));
+
+    await waitFor(() => expect(screen.getByText('还需要一点信息')).toBeInTheDocument());
+    expect(screen.getByText(/还需要知道您现在大约几点开始游览/)).toBeInTheDocument();
+    expect(screen.queryByText('currentTime')).not.toBeInTheDocument();
+    expect(screen.queryByText(/missingCriticalFields/i)).not.toBeInTheDocument();
+  });
+
+  it('renders visitor language and conceals internal trace terms when fallback is used', async () => {
+    vi.mocked(visitorAPI.planRoute).mockResolvedValue({
+      data: {
+        outcome: 'feasible',
+        feasibility: true,
+        route: {
+          steps: [{ spotId: 'LS-011', start: '10:00', end: '11:00', arrive: '10:10', walkMinutes: 10, visitMinutes: 50 }],
+          totalMinutes: 60,
+          walkingMinutes: 10,
+          visitingMinutes: 50,
+        },
+        scene_state: { missingCriticalFields: [] },
+        evidence: [{ name: '灵山大佛', confidence: 'high' }],
+        scene_extraction: {
+          source: 'fallback',
+          confidence: {},
+          missingFields: [],
+          conflicts: [],
+          trace: {
+            configured: true,
+            executed: true,
+            status: 'fallback',
+            fallbackUsed: true,
+            reason: 'llm_unavailable',
+            model: 'qwen-plus-internal',
+            latencyMs: 120,
+          },
+        },
+      },
+    } as never);
+
+    render(<MemoryRouter><RecommendPage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: '帮我规划路线' }));
+
+    await waitFor(() => expect(screen.getByText('我先按您提供的信息安排路线。')).toBeInTheDocument());
+    expect(screen.getByText(/灵山大佛/)).toBeInTheDocument();
+    expect(screen.queryByText(/fallback/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/configured/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/executed/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/llm_unavailable/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/qwen-plus-internal/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/trace/i)).not.toBeInTheDocument();
+  });
+
+  it('preserves route rejection explanation when a preferred performance cannot be scheduled', async () => {
+    vi.mocked(visitorAPI.planRoute).mockResolvedValue({
+      data: {
+        outcome: 'feasible_with_rejected_preferences',
+        route: {
+          steps: [{ spotId: 'LS-011', start: '10:00', end: '11:00', arrive: '10:10', walkMinutes: 10, visitMinutes: 50 }],
+          totalMinutes: 60,
+          walkingMinutes: 10,
+          visitingMinutes: 50,
+          rejectedRequests: [{ item: 'performance_lingshan_jixiangsong', reasonCode: 'performance_outside_time_budget' }],
+        },
+        scene_state: { missingCriticalFields: [] },
+        evidence: [{ name: '灵山大佛', confidence: 'high' }],
+        scene_extraction: {
+          source: 'llm',
+          confidence: { partyType: 0.95 },
+          missingFields: [],
+          conflicts: [],
+          trace: { configured: true, executed: true, status: 'success', fallbackUsed: false },
+        },
+      },
+    } as never);
+
+    render(<MemoryRouter><RecommendPage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: '帮我规划路线' }));
+
+    await waitFor(() => expect(screen.getByText('已为你安排替代方案')).toBeInTheDocument());
+    expect(screen.getByText('有一项安排暂时无法加入路线')).toBeInTheDocument();
+    expect(screen.getByText(/在剩余时间内赶不上这场演出/)).toBeInTheDocument();
+    expect(screen.getByText(/你想看的演出/)).toBeInTheDocument();
+  });
 });

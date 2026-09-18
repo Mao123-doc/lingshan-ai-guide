@@ -36,6 +36,88 @@ api.interceptors.response.use(
 
 export default api;
 
+// API types
+export type RouteOutcome =
+  | 'feasible'
+  | 'feasible_with_rejected_preferences'
+  | 'needs_clarification'
+  | 'infeasible';
+
+export type SceneExtractionSource = 'llm' | 'rules' | 'fallback' | 'merged';
+export type SceneExtractionStatus = 'success' | 'fallback' | 'failed' | 'skipped';
+
+export interface SceneExtractionTrace {
+  configured: boolean;
+  executed: boolean;
+  status: SceneExtractionStatus;
+  model?: string;
+  latencyMs?: number;
+  fallbackUsed: boolean;
+  reason?: string;
+}
+
+export interface SceneExtractionMetadata {
+  source: SceneExtractionSource;
+  confidence: Record<string, number>;
+  missingFields: string[];
+  conflicts: string[];
+  trace: SceneExtractionTrace;
+}
+
+export interface RouteStep {
+  start: string;
+  end: string;
+  spotId: string;
+  arrive: string;
+  walkMinutes: number;
+  visitMinutes: number;
+  waitingMinutes?: number;
+  performanceId?: string;
+  performanceName?: string;
+  performanceStartTime?: string;
+}
+
+export interface RejectedRequest {
+  item: string;
+  reasonCode: string;
+}
+
+export interface RouteEvidence {
+  spot_id?: string;
+  name?: string;
+  source?: string;
+  confidence?: string;
+}
+
+export interface RoutePlanResponse {
+  query?: string;
+  outcome?: RouteOutcome;
+  feasibility?: boolean;
+  clarification?: string;
+  scene_state?: {
+    missingCriticalFields?: string[];
+    [key: string]: unknown;
+  };
+  route?: {
+    steps?: RouteStep[];
+    totalMinutes?: number;
+    walkingMinutes?: number;
+    visitingMinutes?: number;
+    waitingMinutes?: number;
+    rejectedRequests?: RejectedRequest[];
+    satisfiedConstraints?: string[];
+    violations?: string[];
+  };
+  explanation?: {
+    clarification?: string;
+    satisfied_constraints?: string[];
+    rejected_requests?: RejectedRequest[];
+    violations?: string[];
+  };
+  evidence?: RouteEvidence[];
+  scene_extraction?: SceneExtractionMetadata;
+}
+
 // API methods
 export const visitorAPI = {
   initSession: () => api.post('/visitor/session/init'),
@@ -46,7 +128,7 @@ export const visitorAPI = {
   recommend: (payload: JsonObject) =>
     api.post('/visitor/recommend', payload),
   planRoute: (query: string, sceneState?: JsonObject) =>
-    api.post('/visitor/route/plan', { query, scene_state: sceneState }),
+    api.post<RoutePlanResponse>('/visitor/route/plan', { query, scene_state: sceneState }),
   submitFeedback: (sessionId: string, rating: number, comment: string) =>
     api.post('/visitor/feedback', { session_id: sessionId, rating, comment }),
   getHotQuestions: () => api.get('/visitor/hot-questions'),

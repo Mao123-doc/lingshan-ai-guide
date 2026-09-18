@@ -180,7 +180,10 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
 
   const planEnd = plan.steps.length > 0 ? toMinutes(plan.steps[plan.steps.length - 1].end) : start;
   const totalByClock = start !== undefined && planEnd !== undefined ? planEnd - start : undefined;
-  if (scene.remainingMinutes !== undefined && totalByClock !== undefined && totalByClock > scene.remainingMinutes) {
+  const performanceAnchor = plan.steps.find(step => step.performanceId && scene.preferredPerformanceIds.includes(step.performanceId));
+  const budgetEnd = performanceAnchor ? toMinutes(performanceAnchor.performanceStartTime || performanceAnchor.start) : planEnd;
+  const budgetByClock = start !== undefined && budgetEnd !== undefined ? budgetEnd - start : undefined;
+  if (scene.remainingMinutes !== undefined && budgetByClock !== undefined && budgetByClock > scene.remainingMinutes) {
     violations.push({ code: 'time_budget_exceeded', message: '路线超过游客剩余时间' });
   }
   if (plan.totalMinutes !== (totalByClock ?? plan.totalMinutes)) violations.push({ code: 'total_time_mismatch', message: '总时长与时间轴不一致' });
