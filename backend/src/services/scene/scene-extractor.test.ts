@@ -37,7 +37,7 @@ for (const [query, expected] of cases) {
   const actual = extractSceneState(query);
   for (const [field, expectedValue] of Object.entries(expected)) {
     assert.deepEqual(
-      actual[field as keyof ExpectedSceneFields],
+      (actual as Record<string, unknown>)[field],
       expectedValue,
       `${query}: expected ${field}=${JSON.stringify(expectedValue)}`,
     );
@@ -89,6 +89,16 @@ const conflict = mergeSceneStates(
 );
 assert.equal(conflict.state.currentTime, '10:00');
 assert.deepEqual(conflict.conflicts, ['currentTime']);
+assert.deepEqual(conflict.state.missingCriticalFields, ['currentTime']);
+assert.ok(conflict.missingFields.includes('currentTime'));
+
+const nonCriticalConflict = mergeSceneStates(
+  { ...baseRuleState, mobility: 'limited' },
+  { mobility: 'normal' },
+  { confidence: { mobility: 0.9 }, trace },
+);
+assert.equal(nonCriticalConflict.state.mobility, 'normal');
+assert.deepEqual(nonCriticalConflict.conflicts, ['mobility']);
 
 const computed = mergeSceneStates(
   { ...baseRuleState, currentTime: undefined },
@@ -114,6 +124,26 @@ const ambiguousComputed = mergeSceneStates(
 );
 assert.equal(ambiguousComputed.state.currentTime, undefined);
 assert.ok(ambiguousComputed.missingFields.includes('currentTime'));
+
+const staleMissingCriticalFields = mergeSceneStates(
+  {
+    ...baseRuleState,
+    currentLocation: undefined,
+    currentTime: undefined,
+    preferredPerformanceIds: ['performance_lingshan_jixiangsong'],
+    missingCriticalFields: [],
+  },
+  { missingCriticalFields: [] },
+  { confidence: {}, trace },
+);
+assert.deepEqual(staleMissingCriticalFields.state.missingCriticalFields, [
+  'currentLocation',
+  'currentTime',
+]);
+assert.ok(staleMissingCriticalFields.missingFields.includes('currentLocation'));
+assert.ok(staleMissingCriticalFields.missingFields.includes('currentTime'));
+assert.ok(!staleMissingCriticalFields.conflicts.includes('missingCriticalFields'));
+assert.equal(staleMissingCriticalFields.source, 'rules');
 
 const mergedSchemaResult = SceneStateSchema.safeParse(completedFromRules.state);
 assert.equal(mergedSchemaResult.success, true);

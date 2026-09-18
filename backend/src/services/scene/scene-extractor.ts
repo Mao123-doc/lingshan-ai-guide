@@ -38,22 +38,8 @@ export interface SceneMergeMetadata {
   unambiguousComputedFields?: string[];
 }
 
-const SCENE_FIELDS = [
-  'currentLocation',
-  'currentTime',
-  'remainingMinutes',
-  'partyType',
-  'mobility',
-  'mealRequested',
-  'interests',
-  'mustVisitSpotIds',
-  'preferredPerformanceIds',
-  'preferredPerformanceTimes',
-  'visitedSpotIds',
-  'budget',
-  'pace',
-  'missingCriticalFields',
-] as const satisfies ReadonlyArray<keyof SceneState>;
+const SCENE_FIELDS = (Object.keys(SceneStateSchema.shape) as Array<keyof SceneState>)
+  .filter(field => field !== 'missingCriticalFields');
 
 const CRITICAL_FIELDS = new Set<keyof SceneState>([
   'currentLocation',
@@ -106,10 +92,12 @@ export function mergeSceneStates(
     const hasRuleValue = ruleValue !== undefined;
     const hasLlmValue = llmValue !== undefined && llmValue !== null;
 
-    if (hasLlmValue && hasRuleValue && !isDeepStrictEqual(llmValue, ruleValue) && CRITICAL_FIELDS.has(field)) {
+    if (hasLlmValue && hasRuleValue && !isDeepStrictEqual(llmValue, ruleValue)) {
       conflicts.push(field);
-      assignField(merged, field, ruleValue);
-      continue;
+      if (CRITICAL_FIELDS.has(field)) {
+        assignField(merged, field, ruleValue);
+        continue;
+      }
     }
 
     if (hasLlmValue) {
@@ -130,12 +118,18 @@ export function mergeSceneStates(
     }
   }
 
+  const missingCriticalFields = recomputeMissingCriticalFields(merged, conflicts);
+  merged.missingCriticalFields = missingCriticalFields;
+
   const validation = validateSceneState(merged);
   if (!validation.success) {
     throw new Error(`invalid merged scene state: ${validation.errors.join('; ')}`);
   }
 
-  const missingFields = SCENE_FIELDS.filter(field => validation.state[field] === undefined);
+  const missingFields = SCENE_FIELDS.filter(field =>
+    validation.state[field] === undefined
+    || (CRITICAL_FIELDS.has(field) && conflicts.includes(field)),
+  );
   const source = metadata.source
     ?? (acceptedLlmField || acceptedComputedField ? 'merged' : 'rules');
 
@@ -147,6 +141,22 @@ export function mergeSceneStates(
     conflicts,
     trace: { ...metadata.trace },
   };
+}
+
+function recomputeMissingCriticalFields(
+  state: Partial<SceneState>,
+  conflicts: string[],
+): string[] {
+  const missing = new Set<string>();
+  if (state.currentLocation === undefined) missing.add('currentLocation');
+  if (state.remainingMinutes === undefined) missing.add('remainingMinutes');
+  if ((state.preferredPerformanceIds?.length ?? 0) > 0 && state.currentTime === undefined) {
+    missing.add('currentTime');
+  }
+  for (const field of conflicts) {
+    if (CRITICAL_FIELDS.has(field as keyof SceneState)) missing.add(field);
+  }
+  return [...missing];
 }
 
 function assignField(
