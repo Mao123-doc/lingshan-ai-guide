@@ -14,9 +14,10 @@ export { extractSceneState };
 
 export type SceneExtractionSource = 'llm' | 'rules' | 'fallback' | 'merged';
 export type SceneExtractionStatus = 'success' | 'fallback' | 'failed' | 'skipped';
+export type SceneExtractionState = SceneState & { mealRequested?: boolean };
 
 export interface SceneExtractionResult {
-  state: SceneState;
+  state: SceneExtractionState;
   source: SceneExtractionSource;
   confidence: Record<string, number>;
   missingFields: string[];
@@ -33,21 +34,30 @@ export interface SceneExtractionResult {
 }
 
 export type SceneStateValidationResult =
-  | { success: true; state: SceneState }
+  | { success: true; state: SceneExtractionState }
   | { success: false; errors: string[] };
 
 export interface SceneMergeMetadata {
   confidence: Record<string, number>;
   trace: SceneExtractionResult['trace'];
   source?: SceneExtractionSource;
-  computedState?: Partial<SceneState>;
+  computedState?: Partial<SceneExtractionState>;
   unambiguousComputedFields?: string[];
 }
 
-const SCENE_FIELDS = (Object.keys(SceneStateSchema.shape) as Array<keyof SceneState>)
-  .filter(field => field !== 'missingCriticalFields');
+const SceneExtractionStateSchema = SceneStateSchema.extend({
+  mealRequested: z.boolean().optional(),
+});
 
-const CRITICAL_FIELDS = new Set<keyof SceneState>([
+type SceneField = keyof SceneExtractionState;
+
+const SCENE_FIELDS = ([...new Set([
+  ...Object.keys(SceneStateSchema.shape),
+  'mealRequested',
+])] as SceneField[]).filter(field => field !== 'missingCriticalFields');
+const EXTRACTABLE_SCENE_FIELDS = SCENE_FIELDS;
+
+const CRITICAL_FIELDS = new Set<SceneField>([
   'currentLocation',
   'currentTime',
   'remainingMinutes',
@@ -61,6 +71,17 @@ const FORBIDDEN_LLM_FIELDS = [
   'feasible',
   'outcome',
 ] as const;
+
+const KNOWN_SPOT_IDS = new Set([
+  'LS-001', 'LS-003', 'LS-004', 'LS-005', 'LS-006', 'LS-008', 'LS-009',
+  'LS-010', 'LS-011', 'LS-012', 'LS-013', 'LS-014', 'LS-015', 'LS-016',
+  'NH-002', 'NH-006',
+]);
+const KNOWN_LOCATION_IDS = new Set(['south_gate', ...KNOWN_SPOT_IDS]);
+const KNOWN_PERFORMANCE_IDS = new Set([
+  'performance_lingshan_jixiangsong',
+  'performance_jiulong_guanyu',
+]);
 
 const CRITICAL_FIELD_CONFIDENCE_THRESHOLD = 0.75;
 
@@ -101,7 +122,7 @@ const LLMSceneExtractionSchema = z.object({
 type LLMSceneState = z.infer<typeof LLMSceneStateSchema>;
 
 export function validateSceneState(state: unknown): SceneStateValidationResult {
-  const parsed = SceneStateSchema.safeParse(state);
+  const parsed = SceneExtractionStateSchema.safeParse(state);
   if (parsed.success) return { success: true, state: parsed.data };
 
   return {
@@ -124,7 +145,7 @@ export function mergeSceneStates(
     }
   }
 
-  const merged: Partial<SceneState> = {};
+  const merged: Partial<SceneExtractionState> = {};
   const conflicts: string[] = [];
   const unambiguousComputedFields = new Set(metadata.unambiguousComputedFields ?? []);
   let acceptedLlmField = false;
@@ -170,7 +191,7 @@ export function mergeSceneStates(
     throw new Error(`invalid merged scene state: ${validation.errors.join('; ')}`);
   }
 
-  const missingFields = SCENE_FIELDS.filter(field =>
+  const missingFields = EXTRACTABLE_SCENE_FIELDS.filter(field =>
     validation.state[field] === undefined
     || (CRITICAL_FIELDS.has(field) && conflicts.includes(field)),
   );
@@ -333,7 +354,12 @@ function normalizeLLMSceneState(state: LLMSceneState): Record<string, unknown> {
   copyKnownValue(
     normalized,
     'mustVisitSpotIds',
-    combineMappedIds(state.mustVisitSpotIds, state.mustVisitSpotNames, mapMustVisitSpotName),
+    combineMappedIds(
+      state.mustVisitSpotIds,
+      state.mustVisitSpotNames,
+      mapMustVisitSpotName,
+      id => KNOWN_SPOT_IDS.has(id),
+    ),
   );
   copyKnownValue(
     normalized,
@@ -342,6 +368,7 @@ function normalizeLLMSceneState(state: LLMSceneState): Record<string, unknown> {
       state.preferredPerformanceIds,
       state.preferredPerformanceNames,
       mapPerformanceName,
+      id => KNOWN_PERFORMANCE_IDS.has(id),
     ),
   );
   copyKnownValue(
@@ -352,7 +379,12 @@ function normalizeLLMSceneState(state: LLMSceneState): Record<string, unknown> {
   copyKnownValue(
     normalized,
     'visitedSpotIds',
-    combineMappedIds(state.visitedSpotIds, state.visitedSpotNames, mapVisitedSpotName),
+    combineMappedIds(
+      state.visitedSpotIds,
+      state.visitedSpotNames,
+      mapVisitedSpotName,
+      id => KNOWN_SPOT_IDS.has(id),
+    ),
   );
   return normalized;
 }
@@ -367,41 +399,50 @@ function copyKnownValue(
 
 function mapLocation(location: string | null | undefined): string | undefined {
   if (!location) return undefined;
-  if (location === 'south_gate' || /^[A-Z]{2}-\d{3}$/.test(location)) return location;
-  return extractSceneState(`现在在${location}`).currentLocation ?? location;
+  if (KNOWN_LOCATION_IDS.has(location)) return location;
+  const mapped = extractSceneState(`现在在${location}`).currentLocation;
+  return mapped && KNOWN_LOCATION_IDS.has(mapped) ? mapped : undefined;
 }
 
 function combineMappedIds(
   ids: string[] | null | undefined,
   names: string[] | null | undefined,
   mapName: (name: string) => string | undefined,
+  isKnownId: (id: string) => boolean,
 ): string[] | undefined {
   if (ids == null && names == null) return undefined;
+  const knownIds = (ids ?? []).filter(isKnownId);
   const mappedNames = (names ?? []).map(mapName).filter((id): id is string => id !== undefined);
-  return [...new Set([...(ids ?? []), ...mappedNames])];
+  return [...new Set([...knownIds, ...mappedNames])];
 }
 
 function mapMustVisitSpotName(name: string): string | undefined {
-  return extractSceneState(`必须去${name}`).mustVisitSpotIds[0];
+  const mapped = extractSceneState(`必须去${name}`).mustVisitSpotIds[0];
+  return mapped && KNOWN_SPOT_IDS.has(mapped) ? mapped : undefined;
 }
 
 function mapVisitedSpotName(name: string): string | undefined {
-  return extractSceneState(`已经去过${name}`).visitedSpotIds[0];
+  const mapped = extractSceneState(`已经去过${name}`).visitedSpotIds[0];
+  return mapped && KNOWN_SPOT_IDS.has(mapped) ? mapped : undefined;
 }
 
 function mapPerformanceName(name: string): string | undefined {
-  if (name.startsWith('performance_')) return name;
-  return extractSceneState(`想看${name}表演`).preferredPerformanceIds[0];
+  if (KNOWN_PERFORMANCE_IDS.has(name)) return name;
+  const mapped = extractSceneState(`想看${name}表演`).preferredPerformanceIds[0];
+  return mapped && KNOWN_PERFORMANCE_IDS.has(mapped) ? mapped : undefined;
 }
 
 function mapPerformanceTimes(
   times: Record<string, string> | null | undefined,
 ): Record<string, string> | undefined {
   if (times == null) return undefined;
-  return Object.fromEntries(Object.entries(times).map(([nameOrId, time]) => [
-    mapPerformanceName(nameOrId) ?? nameOrId,
-    time,
-  ]));
+  const mapped = Object.entries(times)
+    .map(([nameOrId, time]) => {
+      const performanceId = mapPerformanceName(nameOrId);
+      return performanceId ? [performanceId, time] as const : undefined;
+    })
+    .filter((entry): entry is readonly [string, string] => entry !== undefined);
+  return mapped.length > 0 ? Object.fromEntries(mapped) : undefined;
 }
 
 function hasLowCriticalFieldConfidence(
@@ -436,7 +477,7 @@ function determineSuccessfulSource(
 }
 
 function recomputeMissingCriticalFields(
-  state: Partial<SceneState>,
+  state: Partial<SceneExtractionState>,
   conflicts: string[],
 ): string[] {
   const missing = new Set<string>();
@@ -446,15 +487,15 @@ function recomputeMissingCriticalFields(
     missing.add('currentTime');
   }
   for (const field of conflicts) {
-    if (CRITICAL_FIELDS.has(field as keyof SceneState)) missing.add(field);
+    if (CRITICAL_FIELDS.has(field as SceneField)) missing.add(field);
   }
   return [...missing];
 }
 
 function assignField(
-  target: Partial<SceneState>,
-  field: keyof SceneState,
+  target: Partial<SceneExtractionState>,
+  field: SceneField,
   value: unknown,
 ): void {
-  (target as Record<keyof SceneState, unknown>)[field] = value;
+  (target as Record<SceneField, unknown>)[field] = value;
 }

@@ -270,6 +270,33 @@ async function runLLMAdapterTests(): Promise<void> {
   });
   assert.deepEqual(mappedNames.state.visitedSpotIds, ['LS-014']);
 
+  llmCall = async () => llmResult(JSON.stringify({
+    state: { mealRequested: true },
+    confidence: { mealRequested: 0.99 },
+  }));
+  const modelOnlyMeal = await extractSceneStateWithLLM('还有3小时');
+  assert.equal(modelOnlyMeal.state.mealRequested, true);
+
+  llmCall = async () => llmResult(JSON.stringify({
+    state: {
+      currentLocation: '不存在的地点',
+      mustVisitSpotIds: ['UNKNOWN-SPOT-ID'],
+      mustVisitSpotNames: ['不存在的景点'],
+      preferredPerformanceIds: ['performance_unknown'],
+      preferredPerformanceNames: ['不存在的演出'],
+      preferredPerformanceTimes: { 不存在的演出: '12:00' },
+    },
+    confidence: {
+      currentLocation: 0.99,
+      preferredPerformanceTimes: 0.99,
+    },
+  }));
+  const unknownNames = await extractSceneStateWithLLM('还有3小时');
+  assert.equal(unknownNames.state.currentLocation, undefined);
+  assert.deepEqual(unknownNames.state.mustVisitSpotIds, []);
+  assert.deepEqual(unknownNames.state.preferredPerformanceIds, []);
+  assert.equal(unknownNames.state.preferredPerformanceTimes, undefined);
+
   llmCall = async () => llmResult('{not json');
   const invalidJson = await extractSceneStateWithLLM(query);
   assert.equal(invalidJson.source, 'fallback');
