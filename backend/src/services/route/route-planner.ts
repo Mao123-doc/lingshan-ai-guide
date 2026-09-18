@@ -43,6 +43,11 @@ function spotInterestScore(spot: RouteSpot, interests: string[]): number {
   return score;
 }
 
+function spotPartyScore(spot: RouteSpot, partyType: string | undefined): number {
+  if (partyType !== 'couple') return 0;
+  return /拈花广场|梵天花海|香月花街|拈花堂|五灯湖/.test(spot.name) ? 40 : 0;
+}
+
 function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string): { id: string; name: string; time?: number; durationMinutes: number } | undefined {
   const performance = graph.performances.find(item => item.location_id === spotId && scene.preferredPerformanceIds.includes(item.id));
   if (!performance) return undefined;
@@ -124,8 +129,11 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
   let beam = [initial];
   const allStates: SearchState[] = [initial];
   const candidates = graph.spots.filter(spot => spot.id !== scene.currentLocation);
+  const routeMaxStops = scene.mobility === 'limited' || scene.mobility === 'wheelchair'
+    ? Math.min(maxStops, 5)
+    : maxStops;
 
-  for (let depth = 0; depth < maxStops; depth += 1) {
+  for (let depth = 0; depth < routeMaxStops; depth += 1) {
     const expanded: SearchState[] = [];
     for (const state of beam) {
       for (const spot of candidates) {
@@ -150,13 +158,17 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
         }
         const visitMinutes = performanceDurationMinutes ?? spot.visit_minutes;
         const end = stepStart + visitMinutes;
-        if (!openAt(spot, end) || end > deadline) continue;
+        const withinBudget = performanceId ? stepStart <= deadline : end <= deadline;
+        if (!openAt(spot, end) || !withinBudget) continue;
         const nextVisited = new Set(state.visited);
         nextVisited.add(spot.id);
         const mustBonus = scene.mustVisitSpotIds.includes(spot.id) ? 1000 : 0;
         const performanceBonus = performanceId ? 500 : 0;
         const coverageBonus = 100;
-        const score = state.score + coverageBonus + mustBonus + performanceBonus + spotInterestScore(spot, scene.interests) - path.walkMinutes;
+        const score = state.score + coverageBonus + mustBonus + performanceBonus
+          + spotInterestScore(spot, scene.interests)
+          + spotPartyScore(spot, scene.partyType)
+          - path.walkMinutes;
         expanded.push({
           current: spot.id,
           time: end,
@@ -188,8 +200,16 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
   }
 
   const mustSatisfied = (state: SearchState) => scene.mustVisitSpotIds.every(id => state.visited.has(id));
-  const feasibleCandidates = allStates.filter(mustSatisfied);
-  const candidateStates = feasibleCandidates.length > 0 ? feasibleCandidates : allStates;
+  const performanceSatisfied = (state: SearchState) => scene.preferredPerformanceIds.every(
+    id => state.steps.some(step => step.performanceId === id),
+  );
+  const mustVisitCandidates = allStates.filter(mustSatisfied);
+  const performanceCandidates = mustVisitCandidates.filter(performanceSatisfied);
+  const candidateStates = performanceCandidates.length > 0
+    ? performanceCandidates
+    : mustVisitCandidates.length > 0
+      ? mustVisitCandidates
+      : allStates;
   const rankedStates = scene.mustVisitSpotIds.length === 0 && candidateStates.some(state => state.steps.length > 0)
     ? candidateStates.filter(state => state.steps.length > 0)
     : candidateStates;
@@ -200,13 +220,18 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
   for (const id of scene.mustVisitSpotIds) if (!selected.visited.has(id)) rejectedRequests.push({ item: id, reasonCode: 'must_visit_unreachable' });
   const rejectedPerformanceIds = scene.preferredPerformanceIds.filter(id => !selected.steps.some(step => step.performanceId === id));
   for (const id of rejectedPerformanceIds) rejectedRequests.push({ item: id, reasonCode: performanceRejectionReason(id, scene, graph) });
+  if (scene.mealRequested && !graph.facilities.some(facility => /餐厅|餐馆|用餐|餐饮|饭/.test(facility.name))) {
+    rejectedRequests.push({ item: 'meal', reasonCode: 'meal_data_unavailable' });
+  }
   const satisfiedConstraints = scene.mustVisitSpotIds.filter(id => selected.visited.has(id)).map(id => `must_visit:${id}`);
   const plan = makePlan(startTime, selected, rejectedRequests, satisfiedConstraints);
   const validation = validateRoute(plan, scene, graph);
   const hardViolations = validation.violations.filter(violation => violation.code !== 'missing_preferred_performance');
   const hardRequestRejected = rejectedRequests.some(request => request.reasonCode === 'must_visit_unreachable');
+  const hardPerformanceRejected = rejectedRequests.some(request => request.reasonCode === 'performance_outside_time_budget');
+  const rejectedNonHardPreference = rejectedRequests.some(request => request.reasonCode === 'meal_data_unavailable');
 
-  if (allowPerformancePreferences && rejectedPerformanceIds.length > 0 && !hardRequestRejected && hardViolations.length === 0) {
+  if (allowPerformancePreferences && rejectedPerformanceIds.length > 0 && !hardRequestRejected && !hardPerformanceRejected && hardViolations.length === 0) {
     const alternative = planRouteInternal({
       ...scene,
       preferredPerformanceIds: [],
@@ -225,9 +250,9 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
   if (noSteps && rejectedPerformanceIds.length > 0 && !rejectedRequests.some(request => request.reasonCode === 'no_alternative_route')) {
     rejectedRequests.push({ item: 'route', reasonCode: 'no_alternative_route' });
   }
-  const outcome: RouteOutcome = hardViolations.length > 0 || hardRequestRejected || noSteps
+  const outcome: RouteOutcome = hardViolations.length > 0 || hardRequestRejected || hardPerformanceRejected || noSteps
     ? 'infeasible'
-    : rejectedPerformanceIds.length > 0
+    : rejectedPerformanceIds.length > 0 || rejectedNonHardPreference
       ? 'feasible_with_rejected_preferences'
       : 'feasible';
   return {

@@ -35,6 +35,7 @@ export const SceneStateSchema = z.object({
   remainingMinutes: z.number().int().positive().optional(),
   partyType: z.string().min(1).optional(),
   mobility: z.enum(['normal', 'limited', 'wheelchair', 'unknown']),
+  mealRequested: z.boolean().optional(),
   interests: z.array(z.string()),
   mustVisitSpotIds: z.array(z.string()),
   preferredPerformanceIds: z.array(z.string()),
@@ -81,6 +82,42 @@ function extractClock(query: string): string | undefined {
   return `${String(adjusted).padStart(2, '0')}:${chinese[3] ? '30' : '00'}`;
 }
 
+function clockToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function minutesToClock(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return String(hours).padStart(2, '0') + ':' + String(remainder).padStart(2, '0');
+}
+
+function inferCurrentTimeFromPerformance(
+  performanceTimes: Record<string, string> | undefined,
+  remainingMinutes: number | undefined,
+  query: string,
+): string | undefined {
+  if (!performanceTimes || remainingMinutes === undefined) return undefined;
+  if (!/(只有|还有|还剩|剩下|剩余)/.test(query)) return undefined;
+  const performanceTime = Object.values(performanceTimes)[0];
+  if (!performanceTime) return undefined;
+  const inferredMinutes = clockToMinutes(performanceTime) - remainingMinutes;
+  return inferredMinutes >= 0 ? minutesToClock(inferredMinutes) : undefined;
+}
+
+function extractTimeRange(query: string): { start: string; durationMinutes: number } | undefined {
+  const rangeClause = query.match(/从[^。！？!?；;]+到[^。！？!?；;]+/)?.[0];
+  if (!rangeClause) return undefined;
+  const timeMatches = [...rangeClause.matchAll(TIME_TOKEN_PATTERN)];
+  if (timeMatches.length < 2) return undefined;
+  const start = parseTimeToken(timeMatches[0]);
+  const end = parseTimeToken(timeMatches[1]);
+  if (!start || !end) return undefined;
+  const durationMinutes = clockToMinutes(end) - clockToMinutes(start);
+  return durationMinutes > 0 ? { start, durationMinutes } : undefined;
+}
+
 function detectLocation(query: string): string | undefined {
   if (/(景区)?入口|南门/.test(query)) return 'south_gate';
   const locationPhrase = query.match(/(?:现在|目前|当前)?在([^，。,.]+)/)?.[1] || '';
@@ -98,9 +135,13 @@ function detectLocation(query: string): string | undefined {
 function detectPartyType(query: string): string | undefined {
   if (/妈妈|母亲|老人|长辈|父母|爸爸|爷爷|奶奶/.test(query)) return 'with_elderly';
   if (/孩子|儿童|小朋友|宝宝/.test(query)) return 'with_children';
-  if (/情侣|爱人/.test(query)) return 'couple';
+  if (/情侣|爱人|女朋友|男朋友|对象|伴侣|夫妻/.test(query)) return 'couple';
   if (/朋友|同学/.test(query)) return 'friends';
   return undefined;
+}
+
+function detectMealIntent(query: string): boolean {
+  return /吃饭|午饭|午餐|晚饭|晚餐|用餐|餐厅|餐馆/.test(query);
 }
 
 function detectMobility(query: string): SceneState['mobility'] {
@@ -174,9 +215,12 @@ function detectPerformance(query: string): { ids: string[]; times?: Record<strin
 
 export function extractSceneState(query: string): SceneState {
   const currentLocation = detectLocation(query);
-  const currentTime = extractClock(query);
-  const remainingMinutes = extractRemainingMinutes(query);
+  const timeRange = extractTimeRange(query);
+  const remainingMinutes = extractRemainingMinutes(query) ?? timeRange?.durationMinutes;
   const performance = detectPerformance(query);
+  const currentTime = extractClock(query)
+    ?? timeRange?.start
+    ?? inferCurrentTimeFromPerformance(performance.times, remainingMinutes, query);
   const missingCriticalFields: string[] = [];
   if (!currentLocation) missingCriticalFields.push('currentLocation');
   if (remainingMinutes === undefined) missingCriticalFields.push('remainingMinutes');
@@ -188,6 +232,7 @@ export function extractSceneState(query: string): SceneState {
     ...(remainingMinutes !== undefined ? { remainingMinutes } : {}),
     ...(detectPartyType(query) ? { partyType: detectPartyType(query) } : {}),
     mobility: detectMobility(query),
+    ...(detectMealIntent(query) ? { mealRequested: true } : {}),
     interests: detectInterests(query),
     mustVisitSpotIds: detectMustVisitSpotIds(query),
     preferredPerformanceIds: performance.ids,
