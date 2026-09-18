@@ -137,7 +137,7 @@ export function validateSceneState(state: unknown): SceneStateValidationResult {
 }
 
 export function mergeSceneStates(
-  ruleState: SceneState,
+  ruleState: SceneExtractionState,
   llmState: Record<string, unknown>,
   metadata: SceneMergeMetadata,
 ): SceneExtractionResult {
@@ -211,7 +211,7 @@ export function mergeSceneStates(
 }
 
 export async function extractSceneStateWithLLM(query: string): Promise<SceneExtractionResult> {
-  const ruleState = extractSceneState(query);
+  const ruleState = extractSceneState(query) as SceneExtractionState;
 
   if (!isLLMAvailable()) {
     return buildFallbackResult(ruleState, {
@@ -306,7 +306,7 @@ export async function extractSceneStateWithLLM(query: string): Promise<SceneExtr
 }
 
 function buildFallbackResult(
-  ruleState: SceneState,
+  ruleState: SceneExtractionState,
   details: {
     configured: boolean;
     executed: boolean;
@@ -470,7 +470,7 @@ function hasLowCriticalFieldConfidence(
 }
 
 function determineSuccessfulSource(
-  ruleState: SceneState,
+  ruleState: SceneExtractionState,
   llmState: Record<string, unknown>,
 ): SceneExtractionSource {
   const ruleContributed = SCENE_FIELDS.some(field =>
