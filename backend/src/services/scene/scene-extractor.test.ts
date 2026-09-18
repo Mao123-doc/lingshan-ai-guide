@@ -1,10 +1,35 @@
 import assert from 'node:assert/strict';
-import {
+import { SceneState, SceneStateSchema } from './scene-state';
+
+const llmServicePath = require.resolve('../llm-service');
+const originalLLMService = require(llmServicePath) as typeof import('../llm-service');
+const llmModuleCache = require.cache[llmServicePath];
+if (!llmModuleCache) throw new Error('LLM service module was not cached');
+
+type LLMCall = typeof originalLLMService.callLLMWithMetadata;
+type MockLLMResult = Awaited<ReturnType<LLMCall>>;
+
+let llmAvailable = true;
+let llmCall: LLMCall = async () => {
+  throw new Error('LLM mock response was not configured');
+};
+const llmCalls: Array<Parameters<LLMCall>> = [];
+
+llmModuleCache.exports = {
+  ...originalLLMService,
+  isLLMAvailable: () => llmAvailable,
+  callLLMWithMetadata: async (...args: Parameters<LLMCall>) => {
+    llmCalls.push(args);
+    return llmCall(...args);
+  },
+};
+
+const {
   extractSceneState,
+  extractSceneStateWithLLM,
   mergeSceneStates,
   validateSceneState,
-} from './scene-extractor';
-import { SceneState, SceneStateSchema } from './scene-state';
+} = require('./scene-extractor') as typeof import('./scene-extractor');
 
 type ExpectedSceneFields = {
   partyType?: string;
@@ -161,4 +186,161 @@ for (const routeField of ['steps', 'walkingMinutes', 'totalMinutes', 'feasible',
   );
 }
 
-console.log('Scene extractor contract tests passed');
+function llmResult(content: string, model = 'test-model'): MockLLMResult {
+  return {
+    content,
+    modelIdentity: {
+      status: 'match',
+      requestedModel: model,
+      providerModel: model,
+    },
+  };
+}
+
+async function runLLMAdapterTests(): Promise<void> {
+  const query = '我和对象现在10点在景区入口，还有3小时，步行正常，喜欢佛教文化';
+
+  llmAvailable = true;
+  llmCalls.length = 0;
+  llmCall = async () => llmResult(JSON.stringify({
+    state: {
+      currentLocation: 'south_gate',
+      currentTime: '10:00',
+      remainingMinutes: 180,
+      partyType: 'couple',
+      mobility: 'normal',
+      mealRequested: null,
+      interests: ['culture'],
+      mustVisitSpotNames: [],
+      mustVisitSpotIds: [],
+      preferredPerformanceNames: [],
+      preferredPerformanceIds: [],
+      preferredPerformanceTimes: null,
+      visitedSpotNames: [],
+      visitedSpotIds: [],
+    },
+    confidence: {
+      currentLocation: 0.99,
+      currentTime: 0.98,
+      remainingMinutes: 0.99,
+      partyType: 0.95,
+      mobility: 0.96,
+      interests: 0.9,
+    },
+  }));
+  const valid = await extractSceneStateWithLLM(query);
+  assert.equal(valid.source, 'llm');
+  assert.equal(valid.state.currentLocation, 'south_gate');
+  assert.equal(valid.state.remainingMinutes, 180);
+  assert.equal(valid.trace.status, 'success');
+  assert.equal(valid.trace.executed, true);
+  assert.equal(valid.trace.fallbackUsed, false);
+  assert.deepEqual(llmCalls[0][1], { temperature: 0, max_tokens: 500 });
+  const systemPrompt = llmCalls[0][0][0].content;
+  assert.match(systemPrompt, /JSON only/i);
+  assert.match(systemPrompt, /null/i);
+  assert.match(systemPrompt, /0 and 1/i);
+  assert.match(systemPrompt, /do not guess/i);
+  assert.match(systemPrompt, /route fields/i);
+
+  llmCall = async () => llmResult(JSON.stringify({
+    state: {
+      currentLocation: '灵山梵宫',
+      remainingMinutes: 180,
+      mustVisitSpotNames: ['灵山大佛'],
+      preferredPerformanceNames: ['吉祥颂'],
+      preferredPerformanceTimes: { 吉祥颂: '14:00' },
+      visitedSpotNames: ['五印坛城'],
+    },
+    confidence: {
+      currentLocation: 0.99,
+      remainingMinutes: 0.99,
+      preferredPerformanceTimes: 0.98,
+    },
+  }));
+  const mappedNames = await extractSceneStateWithLLM('还有3小时');
+  assert.equal(mappedNames.source, 'merged');
+  assert.equal(mappedNames.state.currentLocation, 'LS-013');
+  assert.deepEqual(mappedNames.state.mustVisitSpotIds, ['LS-011']);
+  assert.deepEqual(mappedNames.state.preferredPerformanceIds, [
+    'performance_lingshan_jixiangsong',
+  ]);
+  assert.deepEqual(mappedNames.state.preferredPerformanceTimes, {
+    performance_lingshan_jixiangsong: '14:00',
+  });
+  assert.deepEqual(mappedNames.state.visitedSpotIds, ['LS-014']);
+
+  llmCall = async () => llmResult('{not json');
+  const invalidJson = await extractSceneStateWithLLM(query);
+  assert.equal(invalidJson.source, 'fallback');
+  assert.equal(invalidJson.trace.reason, 'invalid_json');
+  assert.equal(invalidJson.trace.fallbackUsed, true);
+  assert.deepEqual(invalidJson.state, extractSceneState(query));
+
+  llmCall = async () => llmResult(JSON.stringify({
+    state: { currentTime: '25:00' },
+    confidence: { currentTime: 0.99 },
+  }));
+  const schemaError = await extractSceneStateWithLLM(query);
+  assert.equal(schemaError.source, 'fallback');
+  assert.equal(schemaError.trace.reason, 'schema_error');
+  assert.deepEqual(schemaError.state, extractSceneState(query));
+
+  llmCall = async () => llmResult('   ');
+  const empty = await extractSceneStateWithLLM(query);
+  assert.equal(empty.source, 'fallback');
+  assert.equal(empty.trace.reason, 'empty_response');
+  assert.equal(empty.trace.executed, true);
+
+  llmAvailable = false;
+  llmCalls.length = 0;
+  llmCall = async () => llmResult('unexpected');
+  const unavailable = await extractSceneStateWithLLM(query);
+  assert.equal(unavailable.source, 'fallback');
+  assert.equal(unavailable.trace.reason, 'llm_unavailable');
+  assert.equal(unavailable.trace.configured, false);
+  assert.equal(unavailable.trace.executed, false);
+  assert.equal(llmCalls.length, 0);
+
+  llmAvailable = true;
+  llmCall = async () => llmResult(JSON.stringify({
+    state: {
+      currentLocation: 'south_gate',
+      steps: [{ spotId: 'LS-011' }],
+    },
+    confidence: { currentLocation: 0.99 },
+  }));
+  const forbiddenRouteField = await extractSceneStateWithLLM(query);
+  assert.equal(forbiddenRouteField.source, 'fallback');
+  assert.equal(forbiddenRouteField.trace.reason, 'forbidden_route_field');
+  assert.equal(forbiddenRouteField.trace.status, 'fallback');
+
+  llmCall = async () => llmResult(JSON.stringify({
+    state: { currentLocation: 'south_gate' },
+    confidence: { currentLocation: 0.74 },
+  }));
+  const lowConfidence = await extractSceneStateWithLLM(query);
+  assert.equal(lowConfidence.source, 'fallback');
+  assert.equal(lowConfidence.trace.reason, 'low_critical_field_confidence');
+  assert.deepEqual(lowConfidence.state, extractSceneState(query));
+
+  llmCall = async () => {
+    throw new Error('provider timeout containing secret details');
+  };
+  const timeout = await extractSceneStateWithLLM(query);
+  assert.equal(timeout.source, 'fallback');
+  assert.equal(timeout.trace.reason, 'llm_call_failed');
+  assert.equal(timeout.trace.executed, true);
+  assert.ok(!JSON.stringify(timeout).includes('secret details'));
+}
+
+void runLLMAdapterTests()
+  .then(() => {
+    llmModuleCache.exports = originalLLMService;
+    console.log('Scene extractor contract tests passed');
+  })
+  .catch(error => {
+    llmModuleCache.exports = originalLLMService;
+    console.error(error);
+    process.exitCode = 1;
+  });
