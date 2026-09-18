@@ -327,9 +327,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Seamless Zen Mist & Wave Divider */}
+        {/* Seamless Zen Wave Divider without conflicting gradient */}
         <div className="hero-transition-wrapper">
-          <div className="hero-mist-mask" />
           <svg className="hero-wave-divider" viewBox="0 0 1200 120" preserveAspectRatio="none">
             <path d="M0,0 C150,90 350,-40 500,50 C650,140 900,10 1200,40 L1200,120 L0,120 Z" fill="currentColor" />
           </svg>
@@ -400,7 +399,7 @@ export default function HomePage() {
       </section>
 
       {/* ==================== Section: Core Spots ==================== */}
-      <section id="spots" className="home-section alt-bg">
+      <section id="spots" className="home-section">
         <div className="section-header">
           <div className="section-pill">SCENIC HIGHLIGHTS</div>
           <EnvironmentOutlined className="section-icon" />
@@ -449,7 +448,7 @@ export default function HomePage() {
       </section>
 
       {/* ==================== Section: Nearby Spots & Facilities ==================== */}
-      <section id="nearby" className="home-section alt-bg">
+      <section id="nearby" className="home-section">
         <div className="section-header">
           <div className="section-pill">SMART NAVIGATION</div>
           <AimOutlined className="section-icon" />
