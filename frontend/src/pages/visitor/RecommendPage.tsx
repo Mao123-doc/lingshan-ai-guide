@@ -5,9 +5,16 @@ import {
   HistoryOutlined, EnvironmentOutlined, HomeOutlined,
   HeartOutlined, BuildOutlined, StarOutlined, ClockCircleOutlined,
 } from '@ant-design/icons';
-import { visitorAPI } from '../../services/api';
+import { visitorAPI, type RoutePlanResponse } from '../../services/api';
 import { openBaiduNavigation } from '../../utils/navigation';
-import { getRouteOutcomeLabel, getRouteRejectionMessage, getRouteRequestLabel, type RouteOutcome } from './route-outcome';
+import {
+  getRouteOutcomeLabel,
+  getRouteRejectionMessage,
+  getRouteRequestLabel,
+  getClarificationPrompt,
+  getSceneExtractionNote,
+  type RouteOutcome,
+} from './route-outcome';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -84,50 +91,6 @@ interface RecommendationResult {
   route: RecommendationStep[];
 }
 
-interface SceneStep {
-  start: string;
-  end: string;
-  spotId: string;
-  arrive: string;
-  walkMinutes: number;
-  visitMinutes: number;
-  waitingMinutes?: number;
-  performanceId?: string;
-  performanceName?: string;
-  performanceStartTime?: string;
-}
-
-interface RejectedRequest {
-  item: string;
-  reasonCode: string;
-}
-
-interface SceneRouteResult {
-  outcome?: RouteOutcome;
-  feasibility?: boolean;
-  scene_state?: { missingCriticalFields?: string[] };
-  route?: {
-    steps?: SceneStep[];
-    totalMinutes?: number;
-    walkingMinutes?: number;
-    visitingMinutes?: number;
-    waitingMinutes?: number;
-    rejectedRequests?: RejectedRequest[];
-  };
-  evidence?: Array<{ name: string; confidence: string }>;
-}
-
-const CLARIFICATION_PROMPTS: Record<string, string> = {
-  currentTime: '请告诉我现在几点，例如“现在上午10点”或“10:00”，这样才能判断能否赶上目标演出。',
-  current_time: '请告诉我现在几点，例如“现在上午10点”或“10:00”，这样才能判断能否赶上目标演出。',
-  currentLocation: '请告诉我现在位于景区哪里，例如“景区入口”或“灵山大佛附近”。',
-  remainingMinutes: '请告诉我还剩多少游览时间，例如“还有3小时”或“剩90分钟”。',
-};
-
-function getClarificationPrompt(field: string): string {
-  return CLARIFICATION_PROMPTS[field] || `请补充路线信息：${field}。`;
-}
-
 export default function RecommendPage() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<string[]>([]);
@@ -138,7 +101,7 @@ export default function RecommendPage() {
   const [loading, setLoading] = useState(false);
   const [route, setRoute] = useState<RecommendationResult | null>(null);
   const [sceneQuery, setSceneQuery] = useState('我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？');
-  const [sceneRoute, setSceneRoute] = useState<SceneRouteResult | null>(null);
+  const [sceneRoute, setSceneRoute] = useState<RoutePlanResponse | null>(null);
   const [sceneLoading, setSceneLoading] = useState(false);
   const [clarificationInput, setClarificationInput] = useState('');
 
@@ -195,8 +158,23 @@ export default function RecommendPage() {
   const routeOutcomeLabel = getRouteOutcomeLabel(routeOutcome, routeStepCount);
   const routeIsExecutable = routeOutcome === 'feasible' && routeStepCount > 0;
   const routeHasAdjustedPreferences = routeOutcome === 'feasible_with_rejected_preferences' && routeStepCount > 0;
-  const missingCriticalFields = sceneRoute?.scene_state?.missingCriticalFields ?? [];
-  const rejectedRequests = sceneRoute?.route?.rejectedRequests ?? [];
+  const missingCriticalFields = Array.from(
+    new Set([
+      ...(sceneRoute?.scene_state?.missingCriticalFields ?? []),
+      ...(sceneRoute?.scene_extraction?.missingFields ?? []),
+    ])
+  );
+  const clarificationText =
+    sceneRoute?.clarification ||
+    sceneRoute?.explanation?.clarification ||
+    (missingCriticalFields.length > 0
+      ? missingCriticalFields.map(getClarificationPrompt).join(' ')
+      : undefined);
+  const fallbackNote = getSceneExtractionNote(sceneRoute?.scene_extraction);
+  const rejectedRequests =
+    sceneRoute?.route?.rejectedRequests ??
+    sceneRoute?.explanation?.rejected_requests ??
+    [];
   const sceneSteps = sceneRoute?.route?.steps ?? [];
   const evidence = sceneRoute?.evidence ?? [];
 
@@ -252,12 +230,19 @@ export default function RecommendPage() {
                 <Tag>等待 {sceneRoute.route?.waitingMinutes} 分钟</Tag>
               )}
             </Space>
-            {missingCriticalFields.length > 0 && (
+            {fallbackNote && (
+              <Alert
+                style={{ marginTop: 14 }}
+                type="info"
+                message={fallbackNote}
+              />
+            )}
+            {clarificationText && (
               <Space direction="vertical" style={{ width: '100%', marginTop: 14 }} size={10}>
                 <Alert
                   type="warning"
                   message="还需要补充一点信息"
-                  description={missingCriticalFields.map(getClarificationPrompt).join(' ')}
+                  description={clarificationText}
                 />
                 <Space.Compact block>
                   <Input
