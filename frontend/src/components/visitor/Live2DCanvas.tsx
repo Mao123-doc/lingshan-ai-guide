@@ -29,6 +29,11 @@ const EMOTION_EXP: Record<string, number> = {
   idle: 0,
 };
 
+function hasCubism2Runtime(): boolean {
+  return typeof window !== 'undefined'
+    && Boolean((window as Window & { Live2D?: unknown }).Live2D);
+}
+
 // ---- types -----------------------------------------------------------------
 interface Props {
   width: number;
@@ -38,6 +43,31 @@ interface Props {
   visemeId?: number;
   onLoaded?: () => void;
   onError?: () => void;
+}
+
+interface CoreModelLike {
+  getParameterCount: () => number;
+  getParameterId: (index: number) => string;
+  setParameterValueById: (index: number, value: number, weight: number) => void;
+}
+
+interface Live2DModelLike {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  scale: { set: (value: number) => void };
+  anchor: { set: (x: number, y: number) => void };
+  internalModel?: { coreModel?: CoreModelLike; destroy?: () => void };
+  expression?: (index: number) => unknown;
+  motion?: (group: string, index: number) => Promise<unknown>;
+}
+
+interface PixiAppLike {
+  view: unknown;
+  stage: { addChild: (child: unknown) => void };
+  ticker: { add: (callback: () => void) => void };
+  destroy: (...args: unknown[]) => void;
 }
 
 // ---- component -------------------------------------------------------------
@@ -51,14 +81,21 @@ export default function Live2DCanvas({
   onError,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const appRef = useRef<any>(null);
-  const modelRef = useRef<any>(null);
+  const appRef = useRef<PixiAppLike | null>(null);
+  const modelRef = useRef<Live2DModelLike | null>(null);
   const mouthIdxRef = useRef<number>(-1);
   const loadedRef = useRef(false);
   const targetMouth = useRef(0);
   const currentMouth = useRef(0);
   const lastExpRef = useRef<number>(-1);
-  const idleTimerRef = useRef<any>(null);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onLoadedRef = useRef(onLoaded);
+  const onErrorRef = useRef(onError);
+
+  useEffect(() => {
+    onLoadedRef.current = onLoaded;
+    onErrorRef.current = onError;
+  }, [onError, onLoaded]);
 
   // ---- viseme → smooth mouth target ----------------------------------------
   useEffect(() => {
@@ -80,6 +117,14 @@ export default function Live2DCanvas({
     let cancelled = false;
 
     (async () => {
+      // The current hibiki asset is Cubism 2. Avoid importing the plugin when
+      // its required global runtime is absent; the parent then renders the
+      // existing static portrait fallback without an uncaught page error.
+      if (!hasCubism2Runtime()) {
+        if (!cancelled) onErrorRef.current?.();
+        return;
+      }
+
       // Dynamic imports to avoid bundling issues if Live2D isn't available
       const [PIXI, { Live2DModel }] = await Promise.all([
         import('pixi.js'),
@@ -101,15 +146,15 @@ export default function Live2DCanvas({
       const container = containerRef.current;
       if (!container || cancelled) { app.destroy(true); return; }
       container.appendChild(app.view as HTMLCanvasElement);
-      appRef.current = app;
+      appRef.current = app as unknown as PixiAppLike;
 
       // ---- Load Live2D model ------------------------------------------------
       try {
-        // pixi-live2d-display types are incomplete — use `any` for PIXI operations
-        const model: any = await Live2DModel.from('/models/hibiki/hibiki.model.json', {
+        // pixi-live2d-display types are incomplete — use the local adapter types above.
+        const model = await Live2DModel.from('/models/hibiki/hibiki.model.json', {
           autoUpdate: true,
           autoHitTest: false,
-        });
+        }) as unknown as Live2DModelLike;
         if (cancelled) { app.destroy(true); return; }
 
         // Scale & position — fit nicely in the container
@@ -121,12 +166,12 @@ export default function Live2DCanvas({
         model.y = height * 0.65;
         model.anchor.set(0.5, 0.5);
 
-        app.stage.addChild(model as any);
+        app.stage.addChild(model as unknown as Parameters<typeof app.stage.addChild>[0]);
         modelRef.current = model;
 
         // ---- Locate mouth-open parameter -----------------------------------
         try {
-          const cm: any = model.internalModel?.coreModel;
+          const cm = model.internalModel?.coreModel;
           if (cm && typeof cm.getParameterCount === 'function') {
             const count = cm.getParameterCount();
             for (let i = 0; i < count; i++) {
@@ -156,7 +201,7 @@ export default function Live2DCanvas({
           const mi = mouthIdxRef.current;
           if (mi >= 0) {
             try {
-              const cm: any = m.internalModel?.coreModel;
+              const cm = m.internalModel?.coreModel;
               if (cm?.setParameterValueById) {
                 cm.setParameterValueById(mi, next, 0.8);
               }
@@ -165,7 +210,7 @@ export default function Live2DCanvas({
         });
 
         loadedRef.current = true;
-        onLoaded?.();
+        onLoadedRef.current?.();
 
         // ---- Start idle motion cycle ---------------------------------------
         const playIdle = () => {
@@ -173,7 +218,7 @@ export default function Live2DCanvas({
           try {
             const idleCount = 4; // hibiki has 4 idle motions
             const idx = Math.floor(Math.random() * idleCount);
-            const motionPromise = (modelRef.current as any).motion?.('idle', idx);
+            const motionPromise = modelRef.current.motion?.('idle', idx);
             const handleDone = () => {
               if (!cancelled && loadedRef.current) {
                 idleTimerRef.current = setTimeout(playIdle, 2000 + Math.random() * 3000);
@@ -200,7 +245,7 @@ export default function Live2DCanvas({
         console.warn('[Live2D] Model load failed, falling back to static:', err);
         if (!cancelled) {
           app.destroy(true);
-          onError?.();
+          onErrorRef.current?.();
         }
       }
     })();

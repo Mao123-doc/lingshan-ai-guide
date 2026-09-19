@@ -1,0 +1,35 @@
+{
+  "benchmark": "scene_state_v1",
+  "git_sha": "0522c3869bf5dd23a35769e0e7f225737a239141",
+  "fixture": {
+    "path": "evaluation/scene/scene_gold_v1.json",
+    "sha256": "A0E32C99AF40D1B16508D19C0825BCDF6D04983E7F10BCF8260D3630AA097A25",
+    "case_count": 40
+  },
+  "implementation": {
+    "path": "backend/src/services/scene/scene-state.ts",
+    "sha256": "7C32240E1BFFECDEF9A3F6232ADDA3515FF35BF212517CEB523228142E2823D9"
+  },
+  "metrics": {
+    "field_accuracy": 1.0,
+    "critical_missing_field_accuracy": 1.0,
+    "cases_passed": 40,
+    "cases_total": 40
+  },
+  "coverage": [
+    "elderly",
+    "children",
+    "wheelchair",
+    "limited_mobility",
+    "time_constraints",
+    "performance_preferences",
+    "must_visit_spots",
+    "visited_spots",
+    "missing_critical_fields",
+    "multi_constraint_inputs"
+  ],
+  "limitations": [
+    "This benchmark evaluates deterministic extraction only; it is not a user study.",
+    "Route feasibility is not evaluated in Phase 3."
+  ]
+}

@@ -4,14 +4,18 @@
  */
 import fs from 'fs';
 import path from 'path';
+import { getDataRoot } from '../config/paths';
 
-const DATA_DIR = path.resolve(__dirname, '../../../data');
-const CONVERSATIONS_FILE = path.join(DATA_DIR, 'conversations.json');
-const FEEDBACK_FILE = path.join(DATA_DIR, 'feedback.json');
-const DAILY_STATS_FILE = path.join(DATA_DIR, 'daily_stats.json');
-
-// Ensure data directory exists
-try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
+function getStoreFiles() {
+  const dataDir = getDataRoot();
+  try { fs.mkdirSync(dataDir, { recursive: true }); } catch {}
+  return {
+    dataDir,
+    conversations: path.join(dataDir, 'conversations.json'),
+    feedback: path.join(dataDir, 'feedback.json'),
+    dailyStats: path.join(dataDir, 'daily_stats.json'),
+  };
+}
 
 // ============================================================
 // Types
@@ -132,7 +136,8 @@ function isGarbled(text: string): boolean {
 
 export function saveConversation(record: ConversationRecord): void {
   console.log(`[Store] saveConversation called: id=${record.id}, query="${(record.query || '').slice(0, 40)}", session=${record.session_id?.slice(0, 8)}`);
-  console.log(`[Store] DATA_DIR=${DATA_DIR}, CONVERSATIONS_FILE=${CONVERSATIONS_FILE}`);
+  const files = getStoreFiles();
+  console.log(`[Store] DATA_DIR=${files.dataDir}, CONVERSATIONS_FILE=${files.conversations}`);
   if (isGarbled(record.query) || isGarbled(record.answer)) {
     console.log('[Store] Skipping garbled conversation:', record.query.slice(0, 30));
     return;
@@ -143,7 +148,7 @@ export function saveConversation(record: ConversationRecord): void {
     console.log(`[Store] Auto-classified as: ${record.category}`);
   }
   enqueueUpdate<ConversationRecord[]>(
-    CONVERSATIONS_FILE,
+    files.conversations,
     (conversations) => {
       conversations.push(record);
       console.log(`[Store] Appended to conversations.json, total=${conversations.length}`);
@@ -160,7 +165,7 @@ export function saveConversation(record: ConversationRecord): void {
 }
 
 export function getConversations(limit: number = 100): ConversationRecord[] {
-  const conversations = readJSON<ConversationRecord[]>(CONVERSATIONS_FILE, []);
+  const conversations = readJSON<ConversationRecord[]>(getStoreFiles().conversations, []);
   return conversations.slice(-limit).reverse();
 }
 
@@ -178,7 +183,7 @@ export function getFilteredConversations(filter: ConversationFilter): {
   items: ConversationRecord[];
   total: number;
 } {
-  let conversations = readJSON<ConversationRecord[]>(CONVERSATIONS_FILE, []);
+  let conversations = readJSON<ConversationRecord[]>(getStoreFiles().conversations, []);
 
   if (filter.startDate) {
     conversations = conversations.filter(c => c.timestamp >= filter.startDate!);
@@ -218,7 +223,7 @@ export function getConversationStats(): {
   month: number;
   total: number;
 } {
-  const conversations = readJSON<ConversationRecord[]>(CONVERSATIONS_FILE, []);
+  const conversations = readJSON<ConversationRecord[]>(getStoreFiles().conversations, []);
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const weekStart = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
@@ -238,7 +243,7 @@ export function getConversationStats(): {
 
 export function saveFeedback(record: FeedbackRecord): void {
   enqueueUpdate<FeedbackRecord[]>(
-    FEEDBACK_FILE,
+    getStoreFiles().feedback,
     (feedbacks) => {
       feedbacks.push(record);
       return feedbacks;
@@ -250,7 +255,7 @@ export function saveFeedback(record: FeedbackRecord): void {
 /** Update conversation feedback flag when user rates. */
 export function updateConversationFeedback(sessionId: string, feedback: 'helpful' | 'unhelpful'): void {
   enqueueUpdate<ConversationRecord[]>(
-    CONVERSATIONS_FILE,
+    getStoreFiles().conversations,
     (conversations) => {
       // Find the latest conversation for this session and set feedback
       for (let i = conversations.length - 1; i >= 0; i--) {
@@ -270,7 +275,7 @@ export function getFeedbackStats(): {
   total: number;
   distribution: Record<number, number>;
 } {
-  const feedbacks = readJSON<FeedbackRecord[]>(FEEDBACK_FILE, []);
+  const feedbacks = readJSON<FeedbackRecord[]>(getStoreFiles().feedback, []);
   const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   let sum = 0;
   for (const f of feedbacks) {
@@ -289,7 +294,7 @@ export function getFeedbackStats(): {
 // ============================================================
 
 export function getTopUnsatisfied(limit: number = 10): Array<{ query: string; count: number }> {
-  const conversations = readJSON<ConversationRecord[]>(CONVERSATIONS_FILE, []);
+  const conversations = readJSON<ConversationRecord[]>(getStoreFiles().conversations, []);
   const unhelpful = conversations.filter(c => c.feedback === 'unhelpful');
   const queryMap: Record<string, number> = {};
   for (const c of unhelpful) {
@@ -312,7 +317,7 @@ export function getVisitorLocationStats(): Array<{
   count: number;
   city?: string;
 }> {
-  const conversations = readJSON<ConversationRecord[]>(CONVERSATIONS_FILE, []);
+  const conversations = readJSON<ConversationRecord[]>(getStoreFiles().conversations, []);
   const locationMap: Record<string, { lat: number; lng: number; count: number }> = {};
 
   for (const c of conversations) {
@@ -336,7 +341,7 @@ export function getVisitorLocationStats(): Array<{
 // ============================================================
 
 export function getCategoryDistribution(): Record<string, number> {
-  const conversations = readJSON<ConversationRecord[]>(CONVERSATIONS_FILE, []);
+  const conversations = readJSON<ConversationRecord[]>(getStoreFiles().conversations, []);
   const dist: Record<string, number> = { ticket: 0, route: 0, history: 0, facility: 0, other: 0 };
   for (const c of conversations) {
     const cat = c.category || 'other';
@@ -353,7 +358,7 @@ function updateDailyStats(record: ConversationRecord): void {
   const today = new Date().toISOString().split('T')[0];
 
   enqueueUpdate<Record<string, DailyStats>>(
-    DAILY_STATS_FILE,
+    getStoreFiles().dailyStats,
     (stats) => {
       if (!stats[today]) {
         stats[today] = {
@@ -410,7 +415,7 @@ function updateDailyStats(record: ConversationRecord): void {
 }
 
 export function getDailyStats(days: number = 7): DailyStats[] {
-  const stats = readJSON<Record<string, DailyStats>>(DAILY_STATS_FILE, {});
+  const stats = readJSON<Record<string, DailyStats>>(getStoreFiles().dailyStats, {});
   const cutoff = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString().split('T')[0];
   return Object.values(stats)
     .filter(s => s.date >= cutoff)
@@ -419,7 +424,7 @@ export function getDailyStats(days: number = 7): DailyStats[] {
 
 export function getHotQuestions(days: number = 7): Array<{ question: string; count: number }> {
   // Aggregate hot questions directly from conversations within calendar window
-  const conversations = readJSON<ConversationRecord[]>(CONVERSATIONS_FILE, []);
+  const conversations = readJSON<ConversationRecord[]>(getStoreFiles().conversations, []);
   const cutoff = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
   const recent = conversations.filter(c => c.timestamp >= cutoff);
 
@@ -436,7 +441,7 @@ export function getHotQuestions(days: number = 7): Array<{ question: string; cou
 
 export function getEmotionDistribution(days: number = 7): Record<string, number> {
   // Aggregate emotions directly from conversations within calendar window
-  const conversations = readJSON<ConversationRecord[]>(CONVERSATIONS_FILE, []);
+  const conversations = readJSON<ConversationRecord[]>(getStoreFiles().conversations, []);
   const cutoff = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
   const recent = conversations.filter(c => c.timestamp >= cutoff);
 
@@ -448,7 +453,7 @@ export function getEmotionDistribution(days: number = 7): Record<string, number>
 }
 
 export function getHourlyDistribution(days: number = 7): Array<{ hour: number; count: number }> {
-  const conversations = readJSON<ConversationRecord[]>(CONVERSATIONS_FILE, []);
+  const conversations = readJSON<ConversationRecord[]>(getStoreFiles().conversations, []);
   const weekAgo = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
 
   const hours: Record<number, number> = {};
@@ -468,7 +473,7 @@ export function getHourlyDistribution(days: number = 7): Array<{ hour: number; c
 }
 
 export function getSatisfactionTrend(days: number = 7): Array<{ date: string; score: number | null }> {
-  const feedbacks = readJSON<FeedbackRecord[]>(FEEDBACK_FILE, []);
+  const feedbacks = readJSON<FeedbackRecord[]>(getStoreFiles().feedback, []);
   const trend: Array<{ date: string; score: number | null }> = [];
 
   for (let i = days - 1; i >= 0; i--) {

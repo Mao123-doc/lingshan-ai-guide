@@ -11,6 +11,14 @@ import { textToSpeech } from '../../services/tts-service';
 import { isLLMAvailable, getActiveModelName, callLLM, callMultimodalLLM, isMultimodalAvailable } from '../../services/llm-service';
 import { analyzeEmotion } from '../../services/emotion-service';
 import { broadcastQueryEvent } from '../../services/websocket-service';
+import { extractSceneState, SceneStateSchema } from '../../services/scene/scene-state';
+import {
+  extractSceneStateWithLLM,
+  type SceneExtractionResult,
+} from '../../services/scene/scene-extractor';
+import { loadRouteGraph } from '../../services/route/route-contract';
+import { planRoute } from '../../services/route/route-planner';
+import { resolveDataPath } from '../../config/paths';
 import {
   saveConversation, saveFeedback, getConversationStats,
   getHotQuestions as getDbHotQuestions, classifyQuery,
@@ -405,6 +413,169 @@ visitorRouter.post('/recommend', (req: Request, res: Response) => {
   });
 });
 
+// ============ Scene-aware route planning ============
+
+const ROUTE_CLARIFICATION_PROMPTS: Record<string, string> = {
+  currentTime: '你现在大约几点开始游览？例如“现在上午10点”或“10:00”。',
+  currentLocation: '你现在位于景区哪里？例如“景区入口”或“灵山大佛附近”。',
+  remainingMinutes: '你还计划游览多长时间？例如“还有3小时”或“剩90分钟”。',
+};
+
+function buildRouteClarification(fields: string[]): string | undefined {
+  const messages = [...new Set(fields)]
+    .map(field => ROUTE_CLARIFICATION_PROMPTS[field])
+    .filter((message): message is string => Boolean(message));
+  return messages.length > 0 ? messages.join(' ') : undefined;
+}
+
+const SAFE_SCENE_EXTRACTION_FIELDS = new Set([
+  ...Object.keys(SceneStateSchema.shape),
+  'mustVisitSpotNames',
+  'preferredPerformanceNames',
+  'visitedSpotNames',
+]);
+const SAFE_SCENE_EXTRACTION_REASONS = new Set([
+  'llm_unavailable',
+  'llm_call_failed',
+  'empty_response',
+  'invalid_json',
+  'forbidden_route_field',
+  'schema_error',
+  'low_critical_field_confidence',
+  'invalid_scene_state',
+]);
+const SAFE_SCENE_EXTRACTION_SOURCES = new Set(['llm', 'rules', 'fallback', 'merged']);
+const SAFE_SCENE_EXTRACTION_STATUSES = new Set(['success', 'fallback', 'failed', 'skipped']);
+
+function sanitizeSceneExtraction(extraction: SceneExtractionResult) {
+  const confidence = Object.fromEntries(
+    Object.entries(extraction.confidence).filter(([field, value]) =>
+      SAFE_SCENE_EXTRACTION_FIELDS.has(field)
+      && Number.isFinite(value)
+      && value >= 0
+      && value <= 1,
+    ),
+  );
+  const safeFields = (fields: string[]) => fields.filter(field => SAFE_SCENE_EXTRACTION_FIELDS.has(field));
+  const trace = {
+    configured: extraction.trace.configured === true,
+    executed: extraction.trace.executed === true,
+    status: SAFE_SCENE_EXTRACTION_STATUSES.has(extraction.trace.status)
+      ? extraction.trace.status
+      : 'failed',
+    ...(typeof extraction.trace.model === 'string'
+      && extraction.trace.model.length <= 100
+      && /^[a-zA-Z0-9._:/-]+$/.test(extraction.trace.model)
+      ? { model: extraction.trace.model }
+      : {}),
+    ...(typeof extraction.trace.latencyMs === 'number'
+      && Number.isFinite(extraction.trace.latencyMs)
+      && extraction.trace.latencyMs >= 0
+      ? { latencyMs: extraction.trace.latencyMs }
+      : {}),
+    fallbackUsed: extraction.trace.fallbackUsed === true,
+    ...(typeof extraction.trace.reason === 'string'
+      && SAFE_SCENE_EXTRACTION_REASONS.has(extraction.trace.reason)
+      ? { reason: extraction.trace.reason }
+      : {}),
+  };
+
+  return {
+    source: SAFE_SCENE_EXTRACTION_SOURCES.has(extraction.source) ? extraction.source : 'fallback',
+    confidence,
+    missingFields: safeFields(extraction.missingFields),
+    conflicts: safeFields(extraction.conflicts),
+    trace,
+  };
+}
+
+visitorRouter.post('/route/plan', async (req: Request, res: Response) => {
+  try {
+    const { query, scene_state } = req.body || {};
+    if (typeof query !== 'string' || !query.trim()) {
+      return res.status(400).json({ error: '请输入路线需求' });
+    }
+
+    let explicitSceneState: Partial<ReturnType<typeof extractSceneState>> | undefined;
+    if (scene_state !== undefined) {
+      const partial = SceneStateSchema.partial().strict().safeParse(scene_state);
+      if (!partial.success) {
+        return res.status(400).json({ error: 'scene_state 不符合数据契约', details: partial.error.flatten() });
+      }
+      explicitSceneState = partial.data;
+    }
+
+    let extraction = await extractSceneStateWithLLM(query);
+    const validatedExtraction = SceneStateSchema.safeParse(extraction.state);
+    if (!validatedExtraction.success) {
+      const fallbackState = extractSceneState(query);
+      extraction = {
+        state: fallbackState,
+        source: 'fallback',
+        confidence: {},
+        missingFields: [...fallbackState.missingCriticalFields],
+        conflicts: [],
+        trace: {
+          configured: extraction.trace.configured === true,
+          executed: extraction.trace.executed === true,
+          status: 'fallback',
+          fallbackUsed: true,
+          reason: 'invalid_scene_state',
+        },
+      };
+    }
+
+    const mergedSceneState = SceneStateSchema.safeParse({
+      ...extraction.state,
+      ...explicitSceneState,
+    });
+    if (!mergedSceneState.success) {
+      return res.status(400).json({
+        error: 'scene_state 不符合数据契约',
+        details: mergedSceneState.error.flatten(),
+      });
+    }
+    const sceneState = mergedSceneState.data;
+
+    const planningSceneState = !sceneState.currentTime
+      ? { ...sceneState, missingCriticalFields: [...new Set([...sceneState.missingCriticalFields, 'currentTime'])] }
+      : sceneState;
+    const graph = loadRouteGraph();
+    const route = planRoute(planningSceneState, graph, 12);
+    const clarification = route.outcome === 'needs_clarification'
+      ? buildRouteClarification(planningSceneState.missingCriticalFields)
+      : undefined;
+    const evidence = route.steps.map(step => {
+      const spot = graph.spots.find(item => item.id === step.spotId);
+      return {
+        spot_id: step.spotId,
+        name: spot?.name,
+        source: spot?.source,
+        confidence: spot?.confidence,
+      };
+    });
+    return res.json({
+      query,
+      scene_state: planningSceneState,
+      route,
+      feasibility: route.feasible,
+      outcome: route.outcome,
+      ...(clarification ? { clarification } : {}),
+      explanation: {
+        ...(clarification ? { clarification } : {}),
+        satisfied_constraints: route.satisfiedConstraints || [],
+        rejected_requests: route.rejectedRequests || [],
+        violations: route.violations || [],
+      },
+      evidence,
+      scene_extraction: sanitizeSceneExtraction(extraction),
+    });
+  } catch (error: unknown) {
+    console.error('Route planning error:', error);
+    return res.status(400).json({ error: '路线需求无法解析', detail: 'invalid_request' });
+  }
+});
+
 // ============ Feedback ============
 
 visitorRouter.post('/feedback', (req: Request, res: Response) => {
@@ -698,7 +869,7 @@ function extractSpots(text: string): string[] {
 // ============ Digital Human public config (no auth) ============
 
 visitorRouter.get('/dh-config', (_req: Request, res: Response) => {
-  const configPath = path.resolve(__dirname, '../../../../data/dh_config.json');
+  const configPath = resolveDataPath('dh_config.json');
   let stylePreset = 'zen_red_gold';
   let voiceId = 'zh-CN-XiaoxiaoNeural';
   try {

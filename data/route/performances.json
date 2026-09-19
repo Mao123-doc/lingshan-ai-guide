@@ -1,0 +1,4 @@
+[
+  {"id":"performance_lingshan_jixiangsong","name":"《灵山吉祥颂》","location_id":"LS-013","start_times":["10:35","11:30","14:00","16:00"],"duration_minutes":20,"source":"data/raw/knowledge_dataset.txt","valid_date":"daily, subject to official notice"},
+  {"id":"performance_jiulong_guanyu","name":"九龙灌浴","location_id":"LS-006","start_times":["10:00","11:30","13:30","15:00"],"duration_minutes":15,"source":"data/raw/knowledge_dataset.txt","valid_date":"weekday schedule; weekends subject to official notice"}
+]

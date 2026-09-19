@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Row, Col, Card, Statistic, Table, Tag, Button, Badge, Tabs, Select, Input, Space } from 'antd';
 import {
@@ -11,24 +11,52 @@ import {
 import ReactECharts from 'echarts-for-react';
 import { adminAPI } from '../../services/api';
 
+interface TrendPoint { date: string; score: number; }
+interface HourlyPoint { hour: number; count: number; }
+interface HotQuestion { question: string; count: number; }
+interface Conversation { id: string; timestamp: string; session_id: string; category: string; query: string; answer: string; response_time_ms: number; feedback?: string; }
+interface ConversationFilters {
+  [key: string]: string | number | boolean | undefined;
+  category?: string;
+  keyword?: string;
+}
+interface LocationPoint { lat: number; lng: number; count: number; }
+interface DashboardData {
+  today_queries?: number;
+  week_queries?: number;
+  monthly_queries?: number;
+  avg_satisfaction?: number;
+  total_knowledge_chunks?: number;
+  total_spots?: number;
+  sentiment_distribution?: { positive?: number; neutral?: number; negative?: number };
+  satisfaction_trend?: TrendPoint[];
+  hourly_distribution?: HourlyPoint[];
+  top_hot_questions?: HotQuestion[];
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
   const [liveConnected, setLiveConnected] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const wsRef = useRef<WebSocket | null>(null);
   const liveCountRef = useRef(0);
 
   // Conversation detail state
-  const [convList, setConvList] = useState<any[]>([]);
+  const [convList, setConvList] = useState<Conversation[]>([]);
   const [convTotal, setConvTotal] = useState(0);
   const [convPage, setConvPage] = useState(1);
-  const [convFilters, setConvFilters] = useState<any>({});
+  const [convFilters, setConvFilters] = useState<ConversationFilters>({});
+  const convFiltersRef = useRef<ConversationFilters>({});
   const [convLoading, setConvLoading] = useState(false);
 
+  useEffect(() => {
+    convFiltersRef.current = convFilters;
+  }, [convFilters]);
+
   // Location / category state
-  const [locations, setLocations] = useState<any[]>([]);
-  const [categoryDist, setCategoryDist] = useState<any>({});
+  const [locations, setLocations] = useState<LocationPoint[]>([]);
+  const [categoryDist, setCategoryDist] = useState<Record<string, number>>({});
 
   // WebSocket subscription for real-time updates
   useEffect(() => {
@@ -42,17 +70,19 @@ export default function DashboardPage() {
 
     ws.onmessage = (event) => {
       try {
-        const msg = JSON.parse(event.data);
+        const msg = JSON.parse(event.data) as { type?: string };
         if (msg.type === 'connected') {
           setLiveConnected(true);
         } else if (msg.type === 'new_query') {
           liveCountRef.current += 1;
-          setData((prev: any) => prev ? {
+          setData((prev) => prev ? {
             ...prev,
             today_queries: (prev.today_queries || 0) + 1,
           } : prev);
         }
-      } catch {}
+      } catch {
+        // Ignore malformed WebSocket messages.
+      }
     };
 
     ws.onclose = () => setLiveConnected(false);
@@ -71,38 +101,48 @@ export default function DashboardPage() {
     fetchConversations(1, currentFilters);
   };
 
-  const fetchConversations = async (page = 1, filters = convFilters) => {
+  const fetchConversations = useCallback(async (page = 1, filters: ConversationFilters = {}) => {
     setConvLoading(true);
     try {
       const res = await adminAPI.getConversations({ page, pageSize: 20, ...filters });
       setConvList(res.data.items || []);
       setConvTotal(res.data.total || 0);
       setConvPage(page);
-    } catch {}
+    } catch {
+      // Keep the previous conversation list when the request fails.
+    }
     setConvLoading(false);
-  };
+  }, []);
 
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     try {
       const res = await adminAPI.getVisitorLocations();
       setLocations(res.data || []);
-    } catch {}
-  };
+    } catch {
+      // Location analytics are optional when the endpoint is unavailable.
+    }
+  }, []);
 
-  const fetchCategoryDist = async () => {
+  const fetchCategoryDist = useCallback(async () => {
     try {
       const res = await adminAPI.getCategoryDistribution();
       setCategoryDist(res.data || {});
-    } catch {}
-  };
+    } catch {
+      // Category analytics are optional when the endpoint is unavailable.
+    }
+  }, []);
 
   useEffect(() => {
-    if (activeTab === 'detail') fetchConversations(1);
-    if (activeTab === 'satisfaction') {
-      fetchLocations();
-      fetchCategoryDist();
+    if (activeTab === 'detail') {
+      queueMicrotask(() => { void fetchConversations(1, convFiltersRef.current); });
     }
-  }, [activeTab]);
+    if (activeTab === 'satisfaction') {
+      queueMicrotask(() => {
+        void fetchLocations();
+        void fetchCategoryDist();
+      });
+    }
+  }, [activeTab, fetchCategoryDist, fetchConversations, fetchLocations]);
 
   const handleExportCSV = () => {
     adminAPI.exportConversations(convFilters);
@@ -136,11 +176,11 @@ export default function DashboardPage() {
     grid: { top: 10, bottom: 20, left: 30, right: 10 },
     xAxis: {
       type: 'category',
-      data: (data.satisfaction_trend || []).map((d: any) => d.date),
+      data: (data.satisfaction_trend || []).map((d) => d.date),
     },
     yAxis: { type: 'value', min: 0, max: 5 },
     series: [{
-      data: (data.satisfaction_trend || []).map((d: any) => d.score),
+      data: (data.satisfaction_trend || []).map((d) => d.score),
       type: 'line',
       smooth: true,
       lineStyle: { color: '#c41d7f' },
@@ -153,11 +193,11 @@ export default function DashboardPage() {
     grid: { top: 10, bottom: 20, left: 30, right: 10 },
     xAxis: {
       type: 'category',
-      data: (data.hourly_distribution || []).map((d: any) => `${d.hour}时`),
+      data: (data.hourly_distribution || []).map((d) => `${d.hour}时`),
     },
     yAxis: { type: 'value' },
     series: [{
-      data: (data.hourly_distribution || []).map((d: any) => d.count),
+      data: (data.hourly_distribution || []).map((d) => d.count),
       type: 'bar',
       itemStyle: { color: '#1890ff', borderRadius: [4, 4, 0, 0] },
     }],
@@ -252,7 +292,7 @@ export default function DashboardPage() {
               </Col>
               <Col xs={24} md={12}>
                 <Card title="热点问题 Top 10">
-                  {(data.top_hot_questions || []).map((q: any, i: number) => (
+                  {(data.top_hot_questions || []).map((q, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #f0f0f0' }}>
                       <Tag color={i < 3 ? 'magenta' : 'default'} style={{ marginRight: 8 }}>#{i + 1}</Tag>
                       <span style={{ flex: 1, fontSize: 13 }}>{q.question}</span>
@@ -271,7 +311,7 @@ export default function DashboardPage() {
             <Card size="small" style={{ marginTop: 16 }}>
               <Space wrap>
                 <Select placeholder="问题分类" allowClear style={{ width: 120 }}
-                  onChange={(v) => setConvFilters((f: any) => ({ ...f, category: v || undefined }))}>
+                  onChange={(v) => setConvFilters((f) => ({ ...f, category: v || undefined }))}>
                   <Select.Option value="ticket">票价</Select.Option>
                   <Select.Option value="route">路线</Select.Option>
                   <Select.Option value="history">历史</Select.Option>
@@ -279,7 +319,7 @@ export default function DashboardPage() {
                   <Select.Option value="other">其他</Select.Option>
                 </Select>
                 <Input placeholder="搜索关键词" prefix={<SearchOutlined />} style={{ width: 200 }}
-                  onPressEnter={(e) => { const v = (e.target as HTMLInputElement).value; setConvFilters((f: any) => ({ ...f, keyword: v || undefined })); }} />
+                  onPressEnter={(e) => { const v = (e.target as HTMLInputElement).value; setConvFilters((f) => ({ ...f, keyword: v || undefined })); }} />
                 <Button type="primary" icon={<SearchOutlined />} onClick={handleQuery}>查询</Button>
                 <Button icon={<ReloadOutlined />} onClick={() => { setConvFilters({}); fetchConversations(1, {}); }}>重置</Button>
                 <Button icon={<DownloadOutlined />} onClick={handleExportCSV}>导出CSV</Button>
@@ -299,7 +339,7 @@ export default function DashboardPage() {
                   total: convTotal,
                   pageSize: 20,
                   showTotal: (t) => `共 ${t} 条`,
-                  onChange: (p) => fetchConversations(p),
+                  onChange: (p) => fetchConversations(p, convFilters),
                 }}
                 scroll={{ x: 900 }}
               />
@@ -321,8 +361,8 @@ export default function DashboardPage() {
                 <Card title="📊 满意度趋势（近30天）">
                   <ReactECharts option={{
                     ...trendOption,
-                    xAxis: { ...trendOption.xAxis, data: (data.satisfaction_trend || []).slice(-30).map((d: any) => d.date) },
-                    series: [{ ...trendOption.series[0], data: (data.satisfaction_trend || []).slice(-30).map((d: any) => d.score) }],
+                    xAxis: { ...trendOption.xAxis, data: (data.satisfaction_trend || []).slice(-30).map((d) => d.date) },
+                    series: [{ ...trendOption.series[0], data: (data.satisfaction_trend || []).slice(-30).map((d) => d.score) }],
                   }} style={{ height: 250 }} />
                 </Card>
               </Col>
@@ -339,7 +379,7 @@ export default function DashboardPage() {
                           { title: '经度', dataIndex: 'lng', key: 'lng' },
                           { title: '访问次数', dataIndex: 'count', key: 'count', render: (v: number) => <Tag color="blue">{v}</Tag> },
                         ]}
-                        rowKey={(r) => `${r.lat},${r.lng}`}
+                        rowKey={(r: LocationPoint) => `${r.lat},${r.lng}`}
                         size="small"
                         pagination={false}
                       />

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import axios from 'axios';
 import { adminAPI } from '../../services/api';
 
 const { Title } = Typography;
@@ -18,8 +19,11 @@ export default function AdminLoginPage() {
       localStorage.setItem('admin_user', JSON.stringify(res.data));
       message.success('登录成功！');
       navigate('/admin/dashboard');
-    } catch (err: any) {
-      message.error(err.response?.data?.error || '登录失败');
+    } catch (err: unknown) {
+      const errorMessage = axios.isAxiosError<{ error?: string }>(err)
+        ? err.response?.data?.error
+        : undefined;
+      message.error(errorMessage || '登录失败');
     } finally {
       setLoading(false);
     }

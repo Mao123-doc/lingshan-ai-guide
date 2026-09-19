@@ -1,86 +1,14 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
 import path from 'path';
 import dotenv from 'dotenv';
 import { WebSocketServer } from 'ws';
-
-import { apiRouter } from './api/v1/router';
-import { initKnowledgeBase, getKnowledgeStats } from './services/rag-service';
+import { app } from './app';
+import { initKnowledgeBase } from './services/rag-service';
 import { isLLMAvailable, getActiveModelName } from './services/llm-service';
-import { checkVectorHealth } from './services/vector-search-service';
 import { addClient } from './services/websocket-service';
-import { getIndexStats } from './services/structured-knowledge';
 
-// Load .env from project root
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const app = express();
 const PORT = parseInt(process.env.PORT || '8010');
-
-// Middleware
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginOpenerPolicy: false,
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
-app.use(cors());
-app.use(morgan('dev'));
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// Static files
-app.use('/uploads', express.static(path.resolve(__dirname, '../../data/uploads')));
-
-// Serve frontend
-const frontendDist = path.resolve(__dirname, '../../frontend/dist');
-app.use(express.static(frontendDist));
-
-// API routes
-app.use('/api/v1', apiRouter);
-
-// Health check
-app.get('/health', (_req, res) => {
-  const kb = getKnowledgeStats();
-  const structured = getIndexStats();
-  res.json({
-    status: 'ok',
-    service: '灵山胜境 AI 数字人导游',
-    version: '2.2.0',
-    llm: isLLMAvailable() ? getActiveModelName() : 'offline',
-    knowledge_chunks: kb.chunkCount,
-    knowledge_indexed: kb.isIndexed,
-    vector_search: kb.vectorAvailable,
-    structured_spots: structured.spotCount,
-    structured_fields: structured.fieldDocCount,
-  });
-});
-
-// SPA fallback
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) {
-    return next();
-  }
-  res.sendFile(path.join(frontendDist, 'index.html'));
-});
-
-// Error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: '服务器内部错误', detail: err.message });
-});
-
-// Prevent process crash from unhandled rejections
-process.on('uncaughtException', (err) => {
-  console.error('[FATAL] Uncaught exception:', err.message);
-  console.error(err.stack);
-});
-process.on('unhandledRejection', (reason) => {
-  console.error('[FATAL] Unhandled rejection:', reason);
-});
-
-// Start server
 const server = app.listen(PORT, async () => {
   console.log('');
   console.log('  ╔══════════════════════════════════════════════════╗');
@@ -96,25 +24,17 @@ const server = app.listen(PORT, async () => {
   console.log('  ╚══════════════════════════════════════════════════╝');
   console.log('');
 
-  // Initialize knowledge base in background
   console.log('[Init] 正在初始化知识库...');
   initKnowledgeBase().then(result => {
     console.log(`[Init] 知识库就绪：${result.chunkCount} 个分块，向量索引：${result.indexed ? '✅' : '⚠️ 未启用（使用关键词匹配）'}`);
-  }).catch(err => {
-    console.error('[Init] 知识库初始化失败:', err);
-  });
+  }).catch(err => console.error('[Init] 知识库初始化失败:', err));
 });
 
-// WebSocket for real-time dashboard updates and voice streaming
 const wss = new WebSocketServer({ server, path: '/ws' });
 wss.on('connection', (ws) => {
-  // Heartbeat to prevent proxy/network timeouts
   const heartbeat = setInterval(() => {
-    if (ws.readyState === ws.OPEN) {
-      ws.ping();
-    } else {
-      clearInterval(heartbeat);
-    }
+    if (ws.readyState === ws.OPEN) ws.ping();
+    else clearInterval(heartbeat);
   }, 30000);
 
   ws.on('message', (data) => {
@@ -137,4 +57,12 @@ wss.on('connection', (ws) => {
   ws.on('error', () => clearInterval(heartbeat));
 });
 
-export { app };
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught exception:', err.message);
+  console.error(err.stack);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled rejection:', reason);
+});
+
+export { app, server };

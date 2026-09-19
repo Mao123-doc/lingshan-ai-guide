@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Typography, Card, Tag, Row, Col, Steps, Select, Space } from 'antd';
+import { Button, Typography, Card, Tag, Row, Col, Steps, Select, Space, Input, Alert } from 'antd';
 import {
   HistoryOutlined, EnvironmentOutlined, HomeOutlined,
   HeartOutlined, BuildOutlined, StarOutlined, ClockCircleOutlined,
 } from '@ant-design/icons';
-import { visitorAPI } from '../../services/api';
+import { visitorAPI, type RoutePlanResponse } from '../../services/api';
 import { openBaiduNavigation } from '../../utils/navigation';
+import {
+  getRouteOutcomeLabel,
+  getRouteRejectionMessage,
+  getRouteRequestLabel,
+  getClarificationPrompt,
+  getSceneExtractionNote,
+  type RouteOutcome,
+} from './route-outcome';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -71,6 +79,18 @@ const interests = [
   { key: '祈福', icon: <HeartOutlined />, label: '祈福体验', desc: '吉祥平安之旅' },
 ];
 
+interface RecommendationStep {
+  name: string;
+  reason: string;
+  visit_duration: number;
+}
+
+interface RecommendationResult {
+  total_duration: number;
+  tips: string;
+  route: RecommendationStep[];
+}
+
 export default function RecommendPage() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<string[]>([]);
@@ -79,7 +99,11 @@ export default function RecommendPage() {
   const [ageGroup, setAgeGroup] = useState('青年');
   const [budget, setBudget] = useState('舒适型');
   const [loading, setLoading] = useState(false);
-  const [route, setRoute] = useState<any>(null);
+  const [route, setRoute] = useState<RecommendationResult | null>(null);
+  const [sceneQuery, setSceneQuery] = useState('我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？');
+  const [sceneRoute, setSceneRoute] = useState<RoutePlanResponse | null>(null);
+  const [sceneLoading, setSceneLoading] = useState(false);
+  const [clarificationInput, setClarificationInput] = useState('');
 
   const toggleInterest = (key: string) => {
     setSelected(prev =>
@@ -107,6 +131,53 @@ export default function RecommendPage() {
     }
   };
 
+  const handleScenePlan = async (query = sceneQuery) => {
+    setSceneRoute(null);
+    setSceneLoading(true);
+    try {
+      const res = await visitorAPI.planRoute(query);
+      setSceneRoute(res.data);
+    } catch (err) {
+      console.error('Scene route error:', err);
+    } finally {
+      setSceneLoading(false);
+    }
+  };
+
+  const handleSceneClarification = async () => {
+    const supplement = clarificationInput.trim();
+    if (!supplement) return;
+    const combinedQuery = `${sceneQuery.trim()}，${supplement}`;
+    setSceneQuery(combinedQuery);
+    setClarificationInput('');
+    await handleScenePlan(combinedQuery);
+  };
+
+  const routeStepCount = sceneRoute?.route?.steps?.length ?? 0;
+  const routeOutcome = (sceneRoute?.outcome ?? (sceneRoute?.feasibility ? 'feasible' : 'infeasible')) as RouteOutcome;
+  const routeOutcomeLabel = getRouteOutcomeLabel(routeOutcome, routeStepCount);
+  const routeIsExecutable = routeOutcome === 'feasible' && routeStepCount > 0;
+  const routeHasAdjustedPreferences = routeOutcome === 'feasible_with_rejected_preferences' && routeStepCount > 0;
+  const missingCriticalFields = Array.from(
+    new Set([
+      ...(sceneRoute?.scene_state?.missingCriticalFields ?? []),
+      ...(sceneRoute?.scene_extraction?.missingFields ?? []),
+    ])
+  );
+  const clarificationText =
+    sceneRoute?.clarification ||
+    sceneRoute?.explanation?.clarification ||
+    (missingCriticalFields.length > 0
+      ? missingCriticalFields.map(getClarificationPrompt).join(' ')
+      : undefined);
+  const fallbackNote = getSceneExtractionNote(sceneRoute?.scene_extraction);
+  const rejectedRequests =
+    sceneRoute?.route?.rejectedRequests ??
+    sceneRoute?.explanation?.rejected_requests ??
+    [];
+  const sceneSteps = sceneRoute?.route?.steps ?? [];
+  const evidence = sceneRoute?.evidence ?? [];
+
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
       {/* Header */}
@@ -123,6 +194,106 @@ export default function RecommendPage() {
       </div>
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 20px' }}>
+          <Card
+          title="🧭 按你的情况规划路线"
+          style={{ borderRadius: 16, marginBottom: 20, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+        >
+          <Paragraph type="secondary">
+            告诉我你现在在哪里、还剩多久、和谁一起，我会先确认时间是否来得及，再为你安排路线。
+          </Paragraph>
+          <Input.TextArea
+            value={sceneQuery}
+            onChange={event => setSceneQuery(event.target.value)}
+            autoSize={{ minRows: 2, maxRows: 4 }}
+            placeholder="例如：我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？"
+          />
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <Button type="primary" onClick={() => void handleScenePlan()} loading={sceneLoading} disabled={!sceneQuery.trim()}>
+              帮我规划路线
+            </Button>
+          </div>
+        </Card>
+
+        {sceneRoute && (
+          <Card
+            title={routeIsExecutable || routeHasAdjustedPreferences ? '✅ 为你安排的路线' : '⚠️ 路线安排提示'}
+            style={{ borderRadius: 16, marginBottom: 20, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+          >
+            <Space wrap>
+              <Tag color={routeIsExecutable ? 'green' : routeHasAdjustedPreferences ? 'gold' : 'orange'}>
+                {routeOutcomeLabel}
+              </Tag>
+              <Tag>总时长 {sceneRoute.route?.totalMinutes ?? 0} 分钟</Tag>
+              <Tag>步行 {sceneRoute.route?.walkingMinutes ?? 0} 分钟</Tag>
+              <Tag>游览 {sceneRoute.route?.visitingMinutes ?? 0} 分钟</Tag>
+              {(sceneRoute.route?.waitingMinutes ?? 0) > 0 && (
+                <Tag>等待 {sceneRoute.route?.waitingMinutes} 分钟</Tag>
+              )}
+            </Space>
+            {fallbackNote && (
+              <Alert
+                style={{ marginTop: 14 }}
+                type="info"
+                message={fallbackNote}
+              />
+            )}
+            {clarificationText && (
+              <Space direction="vertical" style={{ width: '100%', marginTop: 14 }} size={10}>
+                <Alert
+                  type="warning"
+                  message="还需要补充一点信息"
+                  description={clarificationText}
+                />
+                <Space.Compact block>
+                  <Input
+                    aria-label="路线补充信息"
+                    value={clarificationInput}
+                    onChange={event => setClarificationInput(event.target.value)}
+                    onPressEnter={() => void handleSceneClarification()}
+                    placeholder="例如：现在上午10点"
+                  />
+                  <Button
+                    type="primary"
+                    onClick={() => void handleSceneClarification()}
+                    disabled={!clarificationInput.trim()}
+                    loading={sceneLoading}
+                  >
+                    补充并重新规划
+                  </Button>
+                </Space.Compact>
+              </Space>
+            )}
+            {rejectedRequests.length > 0 && (
+              <Alert
+                style={{ marginTop: 14 }}
+                type="info"
+                message="有一项安排暂时无法加入路线"
+                description={rejectedRequests.map((item) => `${getRouteRequestLabel(item.item)}：${getRouteRejectionMessage(item.reasonCode)}`).join('；')}
+              />
+            )}
+            <Steps
+              style={{ marginTop: 18 }}
+              direction="vertical"
+              items={sceneSteps.map((item, index) => {
+                const spotName = evidence[index]?.name || '下一站';
+                if (item.performanceId) {
+                  const performanceName = item.performanceName || '目标演出';
+                  return {
+                    title: `${item.start}–${item.end} 观看${performanceName}`,
+                    description: `${item.arrive} 到达${spotName}，步行 ${item.walkMinutes} 分钟${item.waitingMinutes ? `，等待 ${item.waitingMinutes} 分钟后观看` : '，到达后观看'}`,
+                    icon: <Tag color="magenta">{index + 1}</Tag>,
+                  };
+                }
+                return {
+                  title: `${item.start}–${item.end} ${spotName}`,
+                  description: `到达 ${item.arrive}，步行 ${item.walkMinutes} 分钟，停留 ${item.visitMinutes} 分钟`,
+                  icon: <Tag color="magenta">{index + 1}</Tag>,
+                };
+              })}
+            />
+          </Card>
+        )}
+
         {/* Interest Selection */}
         <Card
           title="选择您的兴趣偏好"
@@ -251,7 +422,7 @@ export default function RecommendPage() {
                 <Steps
                   direction="vertical"
                   current={-1}
-                  items={route.route.map((item: any, i: number) => ({
+                  items={route.route.map((item, i) => ({
                     title: <Text strong>{item.name}</Text>,
                     description: (
                       <div>
@@ -298,7 +469,7 @@ export default function RecommendPage() {
                   borderRadius: 12,
                   padding: '16px 20px',
                 }}>
-                  {route.route.map((item: any, i: number) => {
+                  {route.route.map((item, i) => {
                     const img = SPOT_IMAGES[item.name];
                     const isLast = i === route.route.length - 1;
                     return (

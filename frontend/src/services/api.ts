@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+type JsonObject = Record<string, unknown>;
+type QueryParams = Record<string, string | number | boolean | undefined>;
+
 const api = axios.create({
   baseURL: '/api/v1',
   timeout: 90000,
@@ -33,6 +36,88 @@ api.interceptors.response.use(
 
 export default api;
 
+// API types
+export type RouteOutcome =
+  | 'feasible'
+  | 'feasible_with_rejected_preferences'
+  | 'needs_clarification'
+  | 'infeasible';
+
+export type SceneExtractionSource = 'llm' | 'rules' | 'fallback' | 'merged';
+export type SceneExtractionStatus = 'success' | 'fallback' | 'failed' | 'skipped';
+
+export interface SceneExtractionTrace {
+  configured: boolean;
+  executed: boolean;
+  status: SceneExtractionStatus;
+  model?: string;
+  latencyMs?: number;
+  fallbackUsed: boolean;
+  reason?: string;
+}
+
+export interface SceneExtractionMetadata {
+  source: SceneExtractionSource;
+  confidence: Record<string, number>;
+  missingFields: string[];
+  conflicts: string[];
+  trace: SceneExtractionTrace;
+}
+
+export interface RouteStep {
+  start: string;
+  end: string;
+  spotId: string;
+  arrive: string;
+  walkMinutes: number;
+  visitMinutes: number;
+  waitingMinutes?: number;
+  performanceId?: string;
+  performanceName?: string;
+  performanceStartTime?: string;
+}
+
+export interface RejectedRequest {
+  item: string;
+  reasonCode: string;
+}
+
+export interface RouteEvidence {
+  spot_id?: string;
+  name?: string;
+  source?: string;
+  confidence?: string;
+}
+
+export interface RoutePlanResponse {
+  query?: string;
+  outcome?: RouteOutcome;
+  feasibility?: boolean;
+  clarification?: string;
+  scene_state?: {
+    missingCriticalFields?: string[];
+    [key: string]: unknown;
+  };
+  route?: {
+    steps?: RouteStep[];
+    totalMinutes?: number;
+    walkingMinutes?: number;
+    visitingMinutes?: number;
+    waitingMinutes?: number;
+    rejectedRequests?: RejectedRequest[];
+    satisfiedConstraints?: string[];
+    violations?: string[];
+  };
+  explanation?: {
+    clarification?: string;
+    satisfied_constraints?: string[];
+    rejected_requests?: RejectedRequest[];
+    violations?: string[];
+  };
+  evidence?: RouteEvidence[];
+  scene_extraction?: SceneExtractionMetadata;
+}
+
 // API methods
 export const visitorAPI = {
   initSession: () => api.post('/visitor/session/init'),
@@ -40,8 +125,10 @@ export const visitorAPI = {
     api.post('/visitor/qa', { query, session_id: sessionId }),
   getSpots: () => api.get('/visitor/spots'),
   getSpotDetail: (id: string) => api.get(`/visitor/spots/${id}`),
-  recommend: (payload: any) =>
+  recommend: (payload: JsonObject) =>
     api.post('/visitor/recommend', payload),
+  planRoute: (query: string, sceneState?: JsonObject) =>
+    api.post<RoutePlanResponse>('/visitor/route/plan', { query, scene_state: sceneState }),
   submitFeedback: (sessionId: string, rating: number, comment: string) =>
     api.post('/visitor/feedback', { session_id: sessionId, rating, comment }),
   getHotQuestions: () => api.get('/visitor/hot-questions'),
@@ -59,7 +146,7 @@ export const adminAPI = {
   getSentimentReport: (period: string = 'week') =>
     api.get('/admin/reports/sentiment', { params: { period } }),
   getDigitalHuman: () => api.get('/admin/digital-human/appearance'),
-  updateDigitalHuman: (config: any) =>
+  updateDigitalHuman: (config: JsonObject) =>
     api.put('/admin/digital-human/appearance', config),
   uploadDocument: (file: File) => {
     const formData = new FormData();
@@ -74,7 +161,7 @@ export const adminAPI = {
   getKnowledgeStats: () => api.get('/admin/knowledge/stats'),
   analyzeSentiment: (text: string) =>
     api.post('/admin/reports/analyze-sentiment', { text }),
-  getConversations: (params: any) =>
+  getConversations: (params: QueryParams) =>
     api.get('/admin/conversations', { params }),
   getTopUnsatisfied: () =>
     api.get('/admin/top-unsatisfied'),
@@ -82,9 +169,13 @@ export const adminAPI = {
     api.get('/admin/visitor-locations'),
   getCategoryDistribution: () =>
     api.get('/admin/category-distribution'),
-  exportConversations: async (params: any) => {
+  exportConversations: async (params: QueryParams) => {
     const token = localStorage.getItem('admin_token');
-    const queryStr = new URLSearchParams(params).toString();
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) query.set(key, String(value));
+    });
+    const queryStr = query.toString();
     const res = await fetch(`/api/v1/admin/conversations/export?${queryStr}`, {
       headers: { 'Authorization': `Bearer ${token}` },
     });
