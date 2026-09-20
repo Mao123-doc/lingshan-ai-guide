@@ -53,3 +53,6 @@ Thumbs.db
 
 # Local linked worktrees
 .worktrees/
+
+# Test recordings & screenshots
+recordings/
