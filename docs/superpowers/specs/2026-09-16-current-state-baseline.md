@@ -1,9 +1,9 @@
 # 灵山 AI 导览历史状态基线（已被后续证据包取代）
 
-> 本文是 2026-09-16 的历史审计快照，不是当前实现的状态声明。后续已完成 Scene State、确定性路线规划、Hybrid/RRF 检索、Fact Contract 修复、Trace 状态修复和竞赛证据刷新；当前权威结果请以 `docs/competition/evaluation-report.md`、`docs/ablation_report.md`、`evaluation/results/baseline_20260917_020000/` 和 `evaluation/results/ablation_20260917_013925/` 为准。
+> ⚠️ **历史版本审计声明（必读）**：本文是 2026-09-16 的历史审计快照，记录的是当时系统处于串行优先级回退链（Vector → Structured → Keyword）的历史状态。系统已于 2026-09-17 在 `backend/src/services/rag-service.ts` 与 `hybrid-retriever.ts` 中全面重构为真正的 `Promise.all` 三路并行检索 + RRF 融合（k=60）+ Cross-Encoder 重排，并完成了 Scene State 提取与确定性路线运筹规划；当前权威结果请以 `docs/competition/evaluation-report.md`、`docs/ablation_report.md`、`evaluation/results/baseline_20260917_020000/` 和 `evaluation/results/ablation_20260917_013925/` 为准，切勿将 2026-09-16 的历史串行回退技术债务误认为当前最终实现。
 
-日期：2026-09-16  
-用途：场景创新赛道后续改造的事实基线。本文只记录当前 Git 工作区、实际代码、运行时探针和已有评测，不把设计目标当作已实现能力。
+日期：2026-09-16（注：已于 2026-09-17 完成核心技术升级并由新评测集验证）  
+用途：场景创新赛道改造的历史事实基线。本文只记录 2026-09-16 当时的 Git 工作区与代码快照，供工程审计追溯。
 
 ## 1. Git 基线与工作区
 
@@ -137,6 +137,8 @@
 3. **当前 accuracy 测量什么？** 固定 50 题上 Fact Contract 通过比例；不能外推为通用准确率、幻觉率或路线质量。
 4. **已有测试是什么？** Python evaluator/ablation runner 单元测试、RAG config/trace 测试、TypeScript/Python build；frontend lint 当前有既有失败。
 5. **哪些设计内容尚未在仓库实现？** 并行混合召回与 RRF、Scene State、路线图数据契约与 validator、确定性路线求解、解释链、运营知识缺口闭环，以及真实地图/演出/设施数据治理。
+
+> 📌 **演进跟踪（2026-09-17 已全部落地）**：以上 Phase 0 尚未实现的内容（并行混合召回、RRF 融合、Scene State 13维抽取、确定性路线求解与 14 项形式化验证）已于 2026-09-17 提交并全面通过单元测试与质量门禁，详见 `docs/competition/evaluation-report.md`。
 
 ## 8. 后续边界
 

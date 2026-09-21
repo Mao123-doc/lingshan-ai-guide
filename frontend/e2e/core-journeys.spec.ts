@@ -37,22 +37,28 @@ test('J04 voice unsupported path stays usable', async ({ page }) => {
 });
 
 test('J05 feasible scene route shows visitor-friendly outcome', async ({ page }) => {
-  await mockVisitorApis(page);
+  const { routePlanRequests } = await mockVisitorApis(page);
   await page.goto('/recommend');
   await page.getByPlaceholder(/我带腿脚不方便的妈妈/).fill('我在景区入口，还有三小时');
   await page.getByRole('button', { name: '帮我规划路线' }).click();
   await expect(page.getByText('可以按这条路线游览')).toBeVisible();
-  await expect(page.getByText('灵山大佛')).toBeVisible();
+  await expect(page.getByText('灵山大佛').first()).toBeVisible();
   await expect(page.getByText('LS-011')).not.toBeVisible();
+  expect(routePlanRequests).toHaveLength(1);
+  expect(routePlanRequests[0]).toMatchObject({ query: '我在景区入口，还有三小时' });
 });
 
 test('J06 recommendation renders route cards', async ({ page }) => {
-  await mockVisitorApis(page);
+  const { routePlanRequests } = await mockVisitorApis(page);
   await page.goto('/recommend');
   await page.getByText('佛教文化').click();
   await page.getByRole('button', { name: '生成推荐路线' }).click();
   await expect(page.getByText('推荐路线').last()).toBeVisible();
   await expect(page.getByText('灵山大佛').first()).toBeVisible();
+  expect(routePlanRequests).toHaveLength(1);
+  expect(routePlanRequests[0]).toMatchObject({
+    scene_state: { currentLocation: 'south_gate', currentTime: '09:00', interests: ['文化'] },
+  });
 });
 
 test('J07 nearby permission success exposes nearby section', async ({ page, context }) => {

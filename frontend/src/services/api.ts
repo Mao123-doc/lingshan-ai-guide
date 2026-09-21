@@ -43,7 +43,7 @@ export type RouteOutcome =
   | 'needs_clarification'
   | 'infeasible';
 
-export type SceneExtractionSource = 'llm' | 'rules' | 'fallback' | 'merged';
+export type SceneExtractionSource = 'explicit' | 'llm' | 'rules' | 'fallback' | 'merged';
 export type SceneExtractionStatus = 'success' | 'fallback' | 'failed' | 'skipped';
 
 export interface SceneExtractionTrace {
@@ -89,6 +89,43 @@ export interface RouteEvidence {
   confidence?: string;
 }
 
+export type Mobility = 'normal' | 'limited' | 'wheelchair' | 'unknown';
+export type Pace = 'slow' | 'normal' | 'fast';
+
+export interface SceneStateInput {
+  currentLocation?: string;
+  currentTime?: string;
+  remainingMinutes?: number;
+  partyType?: string;
+  mobility?: Mobility | '正常' | '行动不便' | '轮椅';
+  mealRequested?: boolean;
+  interests?: string[];
+  mustVisitSpotIds?: string[];
+  preferredPerformanceIds?: string[];
+  preferredPerformanceTimes?: Record<string, string>;
+  visitedSpotIds?: string[];
+  pace?: Pace | '轻松' | '标准' | '紧凑';
+  missingCriticalFields?: string[];
+}
+
+export interface AdvisoryProfile {
+  ageGroup?: '青年' | '中年' | '老年';
+  budget?: '经济型' | '舒适型' | '豪华型';
+}
+
+export interface RoutePlanningRequest {
+  query?: string;
+  scene_state?: SceneStateInput;
+  advisory_profile?: AdvisoryProfile;
+}
+
+export interface InputEffect {
+  field: string;
+  kind: 'hard_constraint' | 'soft_preference' | 'advisory';
+  applied: boolean;
+  summary: string;
+}
+
 export interface RoutePlanResponse {
   query?: string;
   outcome?: RouteOutcome;
@@ -112,7 +149,10 @@ export interface RoutePlanResponse {
     clarification?: string;
     satisfied_constraints?: string[];
     rejected_requests?: RejectedRequest[];
-    violations?: string[];
+    violations?: Array<{ code: string; message: string; stepIndex?: number }>;
+    input_effects?: InputEffect[];
+    route_rationale?: string[];
+    consumer_advice?: string[];
   };
   evidence?: RouteEvidence[];
   scene_extraction?: SceneExtractionMetadata;
@@ -127,7 +167,12 @@ export const visitorAPI = {
   getSpotDetail: (id: string) => api.get(`/visitor/spots/${id}`),
   recommend: (payload: JsonObject) =>
     api.post('/visitor/recommend', payload),
-  planRoute: (query: string, sceneState?: JsonObject) =>
+  /** @deprecated Use planRoute; retained only for external legacy clients. */
+  planRouteLegacy: (payload: JsonObject) =>
+    api.post<RoutePlanResponse>('/visitor/recommend', payload),
+  planRoute: (request: RoutePlanningRequest) =>
+    api.post<RoutePlanResponse>('/visitor/route/plan', request),
+  planRouteQuery: (query: string, sceneState?: SceneStateInput) =>
     api.post<RoutePlanResponse>('/visitor/route/plan', { query, scene_state: sceneState }),
   submitFeedback: (sessionId: string, rating: number, comment: string) =>
     api.post('/visitor/feedback', { session_id: sessionId, rating, comment }),

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { loadRouteGraph, RouteGraphSchema, validateRouteGraph, type RouteGraph } from './route-contract';
 import { validateRoute, type RoutePlan } from './route-validator';
+import { planRoute } from './route-planner';
 import { SceneStateSchema, type SceneState } from '../scene/scene-state';
 
 const graph = loadRouteGraph();
@@ -25,6 +26,15 @@ const basePlan = (): RoutePlan => ({
   visitingMinutes: 30,
   waitingMinutes: 0,
 });
+
+const pacedSlowPlan = planRoute({
+  ...baseScene,
+  currentTime: '09:00',
+  pace: 'slow',
+  mustVisitSpotIds: ['LS-006'],
+}, graph);
+assert.equal(pacedSlowPlan.feasible, true);
+assert.equal(validateRoute(pacedSlowPlan, { ...baseScene, pace: 'slow', mustVisitSpotIds: ['LS-006'] }, graph).valid, true);
 const has = (plan: RoutePlan, scene = baseScene, code: string) =>
   validateRoute(plan, scene, graph).violations.some(violation => violation.code === code);
 const inaccessiblePlan: RoutePlan = {

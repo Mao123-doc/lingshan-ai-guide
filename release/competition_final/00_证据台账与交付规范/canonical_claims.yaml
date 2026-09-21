@@ -1,0 +1,251 @@
+# canonical_claims.yaml — 灵小禅项目全国总决赛唯一权威事实台账与表述规范
+# 生成日期: 2026-09-20
+# 适用范围: 申报书 (TeX/MD/PDF)、答辩PPT (PPTX/PDF/MD)、逐页讲稿、答辩攻防卡及发布包
+
+meta:
+  project_name: "灵小禅 · 灵山胜境可信文旅决策智能体"
+  competition: "第八届全球校园人工智能算法精英大赛 (AIC) · 算法创新赛 · AI+场景创新赛道"
+  target_score: "95+ (国家特等奖 / 全国金牌)"
+  version: "1.0.0-final-freeze"
+  freeze_date: "2026-09-20"
+  git_sha: "0522c3869bf5dd23a35769e0e7f225737a239141"
+
+canonical_facts:
+  # 1. Fact Contract 权威基线
+  - id: FACT-01
+    claim: "Fact Contract 权威基线事实问答通过率"
+    value: "96.0% (48/50)"
+    metric_type: "empirical_baseline"
+    evidence: "evaluation/results/baseline_20260917_020000/report.md"
+    evidence_run_id: "baseline_20260917_020000"
+    allowed_wording:
+      - "Fact Contract 权威基线通过率 96.0% (48/50)"
+      - "50 题事实问答权威基线 96.0%"
+      - "事实契约测试通过率 96.0%"
+    forbidden_wording:
+      - "基线 98%"
+      - "基线 98.3%"
+      - "基线 97.5%"
+      - "问答准确率 100%"
+      - "问答零误差"
+
+  # 2. 权威基线事实召回率
+  - id: FACT-02
+    claim: "权威基线事实召回率 (Fact Recall)"
+    value: "97.0% (0.97)"
+    metric_type: "empirical_baseline"
+    evidence: "evaluation/results/baseline_20260917_020000/report.md"
+    evidence_run_id: "baseline_20260917_020000"
+    allowed_wording:
+      - "权威基线事实召回率 97.0%"
+      - "基线 Fact Recall 达到 0.97"
+    forbidden_wording:
+      - "事实召回率 100%"
+      - "无遗漏检索"
+
+  # 3. 七组消融实验完整方案
+  - id: FACT-03
+    claim: "七组消融完整方案受控运行观察值"
+    value: "98.0% (49/50)"
+    metric_type: "controlled_ablation_observation"
+    evidence: "evaluation/results/ablation_20260917_013925/report.md"
+    evidence_run_id: "ablation_20260917_013925"
+    allowed_wording:
+      - "七组消融完整方案单次受控运行观察值 98.0%"
+      - "受控实验观察值 98.0%"
+      - "Full Retrieval 本轮观察准确率 98.0%"
+    forbidden_wording:
+      - "权威基线 98.0%"
+      - "消融基线 98.0%"
+      - "已证明达 98.0%"
+      - "问答准确率 98.3%"
+      - "问答准确率 97.5%"
+
+  # 4. Cross-Encoder 重排贡献
+  - id: FACT-04
+    claim: "Cross-Encoder 重排相对无重排的增益"
+    value: "+8.0 个百分点 (98.0% vs 90.0%)"
+    metric_type: "controlled_ablation_delta"
+    evidence: "evaluation/results/ablation_20260917_013925/report.md"
+    evidence_run_id: "ablation_20260917_013925"
+    allowed_wording:
+      - "Cross-Encoder 重排在本轮受控消融中观察到 8.0 个百分点的准确率提升"
+      - "重排模块贡献 8.0 个百分点提升 (本轮消融观察)"
+    forbidden_wording:
+      - "重排绝对提升 8%"
+      - "稳定提升 8%"
+
+  # 5. 场景状态槽位理解
+  - id: FACT-05
+    claim: "13 维时空状态画像确定性抽取测试"
+    value: "100.0% (40/40)"
+    metric_type: "deterministic_benchmark"
+    evidence: "evaluation/results/scene/scene_benchmark_v1.json"
+    evidence_run_id: "scene_state_v1"
+    allowed_wording:
+      - "场景槽位测试 100.0% (40/40)"
+      - "13 维时空状态画像确定性提取测试 100% (40/40)"
+      - "关键缺失识别率 100%"
+    forbidden_wording:
+      - "真实游客理解 100%"
+      - "自然语言理解零误差"
+
+  # 6. 路线边界测试与物理合规
+  - id: FACT-06
+    claim: "路线边界形式化验证与物理硬违规"
+    value: "100.0% (60/60) 形式化合规，物理硬违规 0 次"
+    metric_type: "formal_verification"
+    evidence: "evaluation/results/route/route_validator_v1.json"
+    evidence_run_id: "route_validator_v1"
+    allowed_wording:
+      - "路线边界测试 100.0% (60/60)"
+      - "物理硬违规恒为 0 次"
+      - "14 项形式化守恒仲裁合规率 100%"
+    forbidden_wording:
+      - "任意路线 100% 可行"
+      - "规划零误差"
+
+  # 7. 数字孪生路网拓扑规模
+  - id: FACT-07
+    claim: "景区数字孪生路网节点与边规模"
+    value: "23 个路线节点 + 30 条当前登记道路边（31 条目标口径待补齐核验）"
+    metric_type: "digital_twin_topology"
+    evidence: "data/route/spots.json; data/route/edges.json; backend/src/services/route-planner.ts"
+    allowed_wording:
+      - "23 个路线节点、30 条当前登记道路边（31 条目标口径待补齐核验）"
+      - "23 个路线节点与 30 条当前登记道路边（31 条目标口径待补齐核验）"
+    forbidden_wording:
+      - "23+30"
+      - "23 个路线节点、31 条实测道路"
+      - "23 个核心景点、31 条已完成实测道路"
+
+  # 13. 当前评测重跑状态
+  - id: FACT-13
+    claim: "2026-09-21 评测重跑状态"
+    value: "确定性前端/API/场景/路线回归通过；RAG 7-profile 观测数据质量门禁 0/7"
+    metric_type: "rerun_diagnostic"
+    evidence: "docs/superpowers/plans/2026-09-21-experiment-rerun.md; evaluation/results/rerun_20260921_1405/; evaluation/results/rerun_20260921_ablation/"
+    allowed_wording:
+      - "2026-09-21 确定性回归：场景 40/40、路线 60/60、hard violations 0"
+      - "2026-09-21 RAG 重跑为 provider 失败下的非合格观测，未替换历史权威基线"
+    forbidden_wording:
+      - "2026-09-21 Full-RAG 新基线"
+      - "2026-09-21 消融证明重排无贡献"
+
+  # 8. 演艺前置排队缓冲策略
+  - id: FACT-08
+    claim: "演艺演出前置缓冲策略"
+    value: "系统通用策略 15~20 分钟；英雄案例固定 20 分钟"
+    metric_type: "scheduling_constraint"
+    evidence: "backend/src/services/route-planner.ts; evaluation/results/route/route_validator_v1.json"
+    allowed_wording:
+      - "系统演艺缓冲策略 15~20 分钟"
+      - "英雄案例固定采用 20 分钟排队与入场缓冲 (13:40 抵达，14:00 演出)"
+    forbidden_wording:
+      - "英雄案例 15 分钟缓冲"
+      - "13:45 抵达检票口"
+
+  # 9. 纯路线规划接口压测吞吐
+  - id: FACT-09
+    claim: "4核轻量节点纯路线规划求解吞吐"
+    value: "202.4 QPS (Locust 200 并发，P50=7.8ms, P95=13.4ms, 0 错误率)"
+    metric_type: "empirical_stress_test"
+    evidence: "evaluation/results/stress_test/locust_report.md"
+    boundary_note: "仅代表单台 4 核 8G 边缘轻量节点纯路线规划求解接口 (/api/route/plan)，不包含 LLM/ASR/TTS/图像识别全链路"
+    allowed_wording:
+      - "单台 4 核 8G 边缘节点纯路线规划接口实测 202.4 QPS (P95 < 14ms)"
+      - "运筹规划求解接口吞吐达 200 QPS (纯算法接口)"
+      - "纯拓扑运筹求解吞吐 200 QPS (P95 < 14ms)"
+    forbidden_wording:
+      - "全链路 200 QPS"
+      - "大模型问答 200 QPS"
+      - "端到端系统支撑 200 QPS 问答"
+
+  # 10. 用户需求调研性质与结论
+  - id: FACT-10
+    claim: "文旅痛点探索性预调研"
+    value: "探索性预调研 n=50 (35 份现场纸质与访谈 + 15 份定向回访)"
+    metric_type: "exploratory_pre_survey"
+    evidence: "竞赛汇报与文档材料包/05_现场演示与用户调研/用户调研实验设计与测评协议.md"
+    findings:
+      missed_performance: "82.0% (41/50) 曾错过演出"
+      accessibility_obstacle: "66.0% (33/50) 曾遭遇无障碍阻断 (台阶/陡坡折返)"
+      hallucination_pain: "74.0% (37/50) 曾遭遇通用 AI 事实幻觉"
+      willingness_to_use: "90.0% (45/50) 愿意使用可信多约束决策智能体"
+    allowed_wording:
+      - "文旅痛点探索性预调研 (n=50)"
+      - "探索性预调研显示 82% 曾错过演出、66% 遭遇台阶折返"
+    forbidden_wording:
+      - "正式大规模真实游客研究"
+      - "全量游客满意度已达 91%"
+      - "实测降低游客翻车率 82%"
+
+  # 11. 商业运维成本与 ROI
+  - id: FACT-11
+    claim: "轻量边缘部署运维成本与 ROI 测算"
+    value: "年综合运维成本 < 1.5 万元 (测算值)；3~6 个月收回 ROI (情景假设测算)"
+    metric_type: "financial_projection"
+    evidence: "竞赛汇报与文档材料包/03_申报文档与技术报告/核心创新与项目展示报告(万字申报底稿)_optimized.md"
+    breakdown:
+      edge_node: "约 3500 元/年 (4核8G轻量服务器)"
+      llm_api: "约 400 元/年 (意图抽取轻量调用)"
+      maintenance: "约 10000 元/年 (基础维保)"
+      one_off_implementation: "约 5 万元 (首次高精路网建模与系统部署，不计入常态年运维)"
+    allowed_wording:
+      - "单景区年综合算力与运维成本 < 1.5 万元 (测算值)"
+      - "测算 3~6 个月收回投资回报 (基于三种情景假设)"
+      - "投诉下降 40% 与观光车利用率提升 25% 均为情景假设测算值"
+    forbidden_wording:
+      - "已实现年收益"
+      - "已降低 40% 投诉"
+      - "实测 4.8 个月回本"
+
+  # 12. 英雄案例时间轴契约
+  - id: FACT-12
+    claim: "英雄案例唯一权威时空动线"
+    value: "11:00 出发 -> 13:40 梵宫检票口 -> 14:00~14:20 吉祥颂 -> 15:10 电瓶车 -> 16:00 返回正门 (总预算 300 分钟 / 5 小时)"
+    metric_type: "hero_case_contract"
+    evidence: "backend/src/services/route-planner.ts; 竞赛汇报与文档材料包/01_汇报PPT与导出版/14页高保真分镜设计稿与排版指南_optimized.md"
+    timeline_steps:
+      - time: "11:00"
+        location: "景区正门/南门"
+        action: "无障碍步道出发，途经大照壁、五明桥、佛足坛"
+      - time: "11:50"
+        location: "九龙灌浴"
+        action: "观看 11:30 场次后续或广场祈福，休息 20 分钟"
+      - time: "12:00~12:20"
+        location: "九龙灌浴"
+        action: "观看演出并完成前置 10 分钟占位缓冲"
+      - time: "12:30"
+        location: "动态纠偏节点"
+        action: "拍照延误 10 分钟后压缩非核心林道漫步"
+      - time: "13:40"
+        location: "灵山梵宫检票口"
+        action: "提前 20 分钟到达（预留入场安检与排队前置缓冲）"
+      - time: "14:00~14:20"
+        location: "灵山梵宫剧场"
+        action: "观看《吉祥颂》演出"
+      - time: "15:10"
+        location: "灵山梵宫站"
+        action: "乘坐无障碍电瓶车直达灵山大佛脚下佛手广场"
+      - time: "16:00"
+        location: "景区正门"
+        action: "准时返回出园，总耗时 300 分钟，零违规履约"
+    infeasible_defense:
+      input: "当前时间 13:40，预算 20 分钟，要求前往灵山大佛并观看 14:00《吉祥颂》"
+      behavior: "系统形式化判定不可达，触发【诚实拒绝】弹窗，优雅降级推荐【佛手广场微游览】"
+    forbidden_wording:
+      - "13:00 出发"
+      - "剩余 180 分钟"
+      - "只有三小时"
+      - "3 小时英雄案例"
+      - "13:45 抵达梵宫"
+
+frozen_submission_files:
+  declaration_tex: "竞赛汇报与文档材料包/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.tex"
+  declaration_md: "竞赛汇报与文档材料包/03_申报文档与技术报告/核心创新与项目展示报告(万字申报底稿)_optimized.md"
+  declaration_pdf: "竞赛汇报与文档材料包/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.pdf"
+  ppt_storyboard_md: "竞赛汇报与文档材料包/01_汇报PPT与导出版/14页高保真分镜设计稿与排版指南_optimized.md"
+  ppt_editable_pptx: "竞赛汇报与文档材料包/01_汇报PPT与导出版/灵小禅_竞赛汇报PPT.pptx"
+  ppt_export_pdf: "竞赛汇报与文档材料包/01_汇报PPT与导出版/灵小禅_竞赛汇报PPT_导出版.pdf"
+  ppt_script_md: "竞赛汇报与文档材料包/01_汇报PPT与导出版/竞赛汇报PPT制作说明与讲稿.md"

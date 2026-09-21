@@ -2,6 +2,7 @@ import type { SceneState } from '../scene/scene-state';
 import type { RouteGraph, RouteSpot } from './route-contract';
 import { validateRoute, type RouteOutcome, type RoutePlan, type RouteStep, type RouteViolation } from './route-validator';
 import { findPath } from './pathfinding';
+import { getVisitMinutes, normalizeRoutePreferences, preferenceScore } from './route-preferences';
 
 interface SearchState {
   current: string;
@@ -29,23 +30,6 @@ function openAt(spot: RouteSpot, time: number): boolean {
     const [start, end] = window.split('-').map(toMinutes);
     return start <= end ? time >= start && time <= end : time >= start || time <= end;
   });
-}
-
-function spotInterestScore(spot: RouteSpot, interests: string[]): number {
-  const text = spot.name;
-  let score = 0;
-  if (interests.includes('history') && /禅寺|大照壁|阿育王|无尽意/.test(text)) score += 25;
-  if (interests.includes('culture') && /大佛|梵宫|坛城|禅寺|博览馆/.test(text)) score += 25;
-  if (interests.includes('nature') && /菩提|花海|鹿鸣|湖|花街/.test(text)) score += 25;
-  if (interests.includes('architecture') && /宫|塔|门|桥|大佛/.test(text)) score += 25;
-  if (interests.includes('family') && /百子|九龙|梵宫/.test(text)) score += 25;
-  if (interests.includes('prayer') && /大佛|佛足|九龙|禅寺|弥勒/.test(text)) score += 25;
-  return score;
-}
-
-function spotPartyScore(spot: RouteSpot, partyType: string | undefined): number {
-  if (partyType !== 'couple') return 0;
-  return /拈花广场|梵天花海|香月花街|拈花堂|五灯湖/.test(spot.name) ? 40 : 0;
 }
 
 function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string): { id: string; name: string; time?: number; durationMinutes: number } | undefined {
@@ -156,7 +140,7 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
           performanceStartTime = clock(preference.time);
           performanceDurationMinutes = preference.durationMinutes;
         }
-        const visitMinutes = performanceDurationMinutes ?? spot.visit_minutes;
+        const visitMinutes = performanceDurationMinutes ?? getVisitMinutes(spot.visit_minutes, scene.pace || 'normal');
         const end = stepStart + visitMinutes;
         const withinBudget = performanceId ? stepStart <= deadline : end <= deadline;
         if (!openAt(spot, end) || !withinBudget) continue;
@@ -166,8 +150,7 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
         const performanceBonus = performanceId ? 500 : 0;
         const coverageBonus = 100;
         const score = state.score + coverageBonus + mustBonus + performanceBonus
-          + spotInterestScore(spot, scene.interests)
-          + spotPartyScore(spot, scene.partyType)
+          + preferenceScore(spot, normalizeRoutePreferences(scene))
           - path.walkMinutes;
         expanded.push({
           current: spot.id,
@@ -265,5 +248,13 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
 }
 
 export function planRoute(scene: SceneState, graph: RouteGraph, maxStops = 6): RoutePlanResult {
-  return planRouteInternal(scene, graph, maxStops, true);
+  const preferences = normalizeRoutePreferences(scene);
+  return planRouteInternal({
+    ...scene,
+    interests: preferences.interests,
+    partyType: preferences.partyType,
+    mobility: preferences.mobility,
+    pace: preferences.pace,
+    budget: preferences.budget,
+  }, graph, maxStops, true);
 }

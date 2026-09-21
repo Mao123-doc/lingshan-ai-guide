@@ -55,7 +55,7 @@ describe('RecommendPage critical states', () => {
     fireEvent.click(screen.getByRole('button', { name: '帮我规划路线' }));
 
     await waitFor(() => expect(screen.getByText('已为你安排替代方案')).toBeInTheDocument());
-    await waitFor(() => expect(screen.getByText(/灵山大佛/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByText(/灵山大佛/).length).toBeGreaterThan(0));
     expect(screen.getByText('有一项安排暂时无法加入路线')).toBeInTheDocument();
     expect(screen.getByText(/在剩余时间内赶不上这场演出/)).toBeInTheDocument();
     expect(screen.queryByText('LS-011')).not.toBeInTheDocument();
@@ -124,7 +124,7 @@ describe('RecommendPage critical states', () => {
     fireEvent.click(screen.getByRole('button', { name: '补充并重新规划' }));
 
     await waitFor(() => expect(visitorAPI.planRoute).toHaveBeenLastCalledWith(
-      expect.stringContaining('现在上午10点'),
+      expect.objectContaining({ query: expect.stringContaining('现在上午10点') }),
     ));
   });
 
@@ -188,7 +188,7 @@ describe('RecommendPage critical states', () => {
     fireEvent.click(screen.getByRole('button', { name: '帮我规划路线' }));
 
     await waitFor(() => expect(screen.getByText('我先按您提供的信息安排路线。')).toBeInTheDocument());
-    expect(screen.getByText(/灵山大佛/)).toBeInTheDocument();
+    expect(screen.getAllByText(/灵山大佛/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/fallback/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/configured/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/executed/i)).not.toBeInTheDocument();
@@ -227,5 +227,55 @@ describe('RecommendPage critical states', () => {
     expect(screen.getByText('有一项安排暂时无法加入路线')).toBeInTheDocument();
     expect(screen.getByText(/在剩余时间内赶不上这场演出/)).toBeInTheDocument();
     expect(screen.getByText(/你想看的演出/)).toBeInTheDocument();
+  });
+
+  it('submits the selection form as structured scene state through the unified planner', async () => {
+    vi.mocked(visitorAPI.planRoute).mockResolvedValue({
+      data: {
+        outcome: 'feasible',
+        route: { steps: [], totalMinutes: 0, walkingMinutes: 0, visitingMinutes: 0 },
+        scene_state: { missingCriticalFields: [] },
+      },
+    } as never);
+
+    render(<MemoryRouter><RecommendPage /></MemoryRouter>);
+    fireEvent.click(screen.getByText('佛教文化'));
+    fireEvent.click(screen.getByRole('button', { name: '生成推荐路线' }));
+
+    await waitFor(() => expect(visitorAPI.planRoute).toHaveBeenCalledWith(expect.objectContaining({
+      scene_state: expect.objectContaining({
+        currentLocation: 'south_gate',
+        currentTime: '09:00',
+        remainingMinutes: 240,
+        mobility: 'normal',
+        pace: 'normal',
+        interests: ['文化'],
+      }),
+      advisory_profile: { ageGroup: '青年', budget: '舒适型' },
+    })));
+    expect(visitorAPI.recommend).not.toHaveBeenCalled();
+  });
+
+  it('renders auditable input effects without exposing planner internals', async () => {
+    vi.mocked(visitorAPI.planRoute).mockResolvedValue({
+      data: {
+        outcome: 'feasible',
+        route: { steps: [], totalMinutes: 60, walkingMinutes: 20, visitingMinutes: 40, waitingMinutes: 0 },
+        scene_state: { missingCriticalFields: [] },
+        explanation: {
+          input_effects: [
+            { field: 'budget', kind: 'advisory', applied: true, summary: '预算用于消费建议，不改变物理路线。' },
+          ],
+          route_rationale: ['文化兴趣参与评分。'],
+        },
+      },
+    } as never);
+
+    render(<MemoryRouter><RecommendPage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: '帮我规划路线' }));
+
+    await waitFor(() => expect(screen.getByText('预算用于消费建议，不改变物理路线。')).toBeInTheDocument());
+    expect(screen.getByText('文化兴趣参与评分。')).toBeInTheDocument();
+    expect(screen.queryByText(/Beam Search|trace/i)).not.toBeInTheDocument();
   });
 });

@@ -14,6 +14,7 @@ export const test = base.extend({
 export { expect };
 
 export async function mockVisitorApis(page: Page) {
+  const routePlanRequests: Array<Record<string, unknown>> = [];
   await page.route('**/api/v1/visitor/**', async route => {
     const request = route.request();
     const url = new URL(request.url());
@@ -31,6 +32,8 @@ export async function mockVisitorApis(page: Page) {
       });
     }
     if (url.pathname.endsWith('/route/plan')) {
+      const body = request.postDataJSON();
+      routePlanRequests.push(body as Record<string, unknown>);
       return route.fulfill({ json: {
         outcome: 'feasible',
         feasibility: true,
@@ -39,15 +42,13 @@ export async function mockVisitorApis(page: Page) {
         evidence: [{ name: '灵山大佛', confidence: 'high' }],
       } });
     }
-    if (url.pathname.endsWith('/recommend')) {
-      return route.fulfill({ json: { total_duration: 120, route: [{ name: '灵山大佛', visit_duration: 60, reason: '核心景点' }], tips: '按体力安排休息。' } });
-    }
     if (url.pathname.endsWith('/feedback')) return route.fulfill({ json: { status: 'ok' } });
     if (url.pathname.endsWith('/nearby-facilities')) return route.fulfill({ json: { facilities: [{ name: '游客中心', distance: 120, lat: 31.43, lng: 120.09 }] } });
     if (url.pathname.endsWith('/nearby')) return route.fulfill({ json: { nearby_spots: [] } });
     return route.fulfill({ json: [] });
   });
   await page.route('http://127.0.0.1:8001/tts', route => route.fulfill({ json: { audio_base64: '' } }));
+  return { routePlanRequests };
 }
 
 export async function mockAdminApis(page: Page) {

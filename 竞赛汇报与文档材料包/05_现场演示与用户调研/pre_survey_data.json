@@ -1,0 +1,452 @@
+[
+  {
+    "participant_id": "P01",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P02",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P03",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P04",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P05",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": false,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P06",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P07",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P08",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P09",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P10",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P11",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P12",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": false,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P13",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P14",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P15",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P16",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P17",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P18",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P19",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P20",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P21",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P22",
+    "collection_channel": "onsite",
+    "cohort": "with_elderly",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P23",
+    "collection_channel": "onsite",
+    "cohort": "wheelchair_stroller",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P24",
+    "collection_channel": "onsite",
+    "cohort": "wheelchair_stroller",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P25",
+    "collection_channel": "onsite",
+    "cohort": "wheelchair_stroller",
+    "q1_missed_performance": false,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P26",
+    "collection_channel": "onsite",
+    "cohort": "wheelchair_stroller",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P27",
+    "collection_channel": "onsite",
+    "cohort": "wheelchair_stroller",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P28",
+    "collection_channel": "onsite",
+    "cohort": "wheelchair_stroller",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P29",
+    "collection_channel": "onsite",
+    "cohort": "wheelchair_stroller",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P30",
+    "collection_channel": "onsite",
+    "cohort": "wheelchair_stroller",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P31",
+    "collection_channel": "onsite",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P32",
+    "collection_channel": "onsite",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P33",
+    "collection_channel": "onsite",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P34",
+    "collection_channel": "onsite",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": false
+  },
+  {
+    "participant_id": "P35",
+    "collection_channel": "onsite",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P36",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P37",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P38",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": false
+  },
+  {
+    "participant_id": "P39",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P40",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P41",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": true,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P42",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": false
+  },
+  {
+    "participant_id": "P43",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P44",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": true,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P45",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": false,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P46",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": false,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": false
+  },
+  {
+    "participant_id": "P47",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": false,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": true,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P48",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": false,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P49",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": false,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": true
+  },
+  {
+    "participant_id": "P50",
+    "collection_channel": "online_followup",
+    "cohort": "general",
+    "q1_missed_performance": false,
+    "q2_accessibility_obstacle": false,
+    "q3_ai_hallucination": false,
+    "q4_willing_to_use": false
+  }
+]

@@ -1,5 +1,7 @@
 # RAG Evaluation and Ablation Evidence
 
+> **Evidence status (2026-09-21):** The tables below remain the historical, quality-gated run from `evaluation/results/ablation_20260917_013925/`; they are not results from the 2026-09-21 rerun. The new rerun is recorded separately because DeepSeek rerank/generation calls failed and all seven quality gates were ineligible.
+
 ## Current evaluation semantics
 
 The current Full-RAG path executes Query Rewrite, Vector, Structured and Keyword retrieval,
@@ -58,6 +60,12 @@ there are zero API failures, zero local fallbacks, zero trace inconsistencies, a
 
 The numbers are observations from one live-provider run. They support traceable comparison on this
 test set, not universal causal claims. The requested/provider model mismatch is recorded in each manifest.
+
+## 2026-09-21 rerun diagnostic (not a replacement baseline)
+
+The independent rerun is stored in `evaluation/results/rerun_20260921_ablation/`. All seven profiles completed 50 API calls, but every profile failed the quality gate because generation was not executed successfully, traces were inconsistent with the configured generation path, and model identity was unavailable. The observed values were: Vector only 82.0% accuracy, Structured only 54.0%, Keyword only 90.0%, Full Retrieval 90.0%, Vector + Rerank 82.0%, Full without Rerank 90.0%, and Full without Rewrite 90.0%. These are provider-failure diagnostics only; they must not be used to claim module contribution, latency improvement, or a new baseline.
+
+The 2026-09-21 runtime smoke also recorded `vector_search=true` after the local vector service was started, but `full_rag_count=0` because the LLM provider failed. See `evaluation/results/rerun_20260921_1405/`.
 
 ## Reproduction
 

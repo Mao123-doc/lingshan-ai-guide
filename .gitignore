@@ -56,3 +56,21 @@ Thumbs.db
 
 # Test recordings & screenshots
 recordings/
+
+# Temporary & Archive files
+tmp/
+*.zip
+*.tar.gz
+*.rar
+
+# LaTeX compilation intermediates
+*.aux
+*.out
+*.toc
+*.synctex.gz
+
+# Python & Testing cache
+.pytest_cache/
+
+# Local results
+results/

@@ -1,5 +1,6 @@
 import type { SceneState } from '../scene/scene-state';
 import type { RouteGraph, RouteSpot } from './route-contract';
+import { getVisitMinutes } from './route-preferences';
 
 export interface RouteStep {
   spotId: string;
@@ -160,7 +161,7 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
           violations.push({ code: 'performance_time_axis_mismatch', message: `演出时间轴与数据合同不一致：${performance.name}`, stepIndex: index });
         }
       }
-    } else if (step.visitMinutes !== spot.visit_minutes) {
+    } else if (step.visitMinutes !== getVisitMinutes(spot.visit_minutes, scene.pace || 'normal')) {
       violations.push({ code: 'visit_duration_mismatch', message: `停留时间与数据合同不一致：${spot.name}`, stepIndex: index });
     }
     previous = step.spotId;

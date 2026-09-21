@@ -48,6 +48,46 @@ export const SceneStateSchema = z.object({
 
 export type SceneState = z.infer<typeof SceneStateSchema>;
 
+const STRUCTURED_VALUE_ALIASES: Record<string, string> = {
+  文化: 'culture',
+  自然: 'nature',
+  历史: 'history',
+  建筑: 'architecture',
+  亲子: 'family',
+  祈福: 'prayer',
+  带长辈: 'with_elderly',
+  情侣: 'couple',
+  朋友: 'friends',
+  正常: 'normal',
+  行动正常: 'normal',
+  行动不便: 'limited',
+  少走路: 'limited',
+  轮椅: 'wheelchair',
+  轻松: 'slow',
+  标准: 'normal',
+  紧凑: 'fast',
+  经济型: 'economy',
+  舒适型: 'normal',
+  豪华型: 'premium',
+};
+
+export function normalizeSceneStateInput(input: Record<string, unknown>): Record<string, unknown> {
+  const normalizeValue = (value: unknown): unknown => (
+    typeof value === 'string' ? (STRUCTURED_VALUE_ALIASES[value] || value) : value
+  );
+  const interests = Array.isArray(input.interests)
+    ? [...new Set(input.interests.map(normalizeValue).filter((value): value is string => typeof value === 'string'))].sort()
+    : input.interests;
+  return {
+    ...input,
+    ...(input.mobility !== undefined ? { mobility: normalizeValue(input.mobility) } : {}),
+    ...(input.pace !== undefined ? { pace: normalizeValue(input.pace) } : {}),
+    ...(input.budget !== undefined ? { budget: normalizeValue(input.budget) } : {}),
+    ...(input.partyType !== undefined ? { partyType: normalizeValue(input.partyType) } : {}),
+    ...(interests !== undefined ? { interests } : {}),
+  };
+}
+
 function parseChineseInteger(value: string): number | undefined {
   if (/^\d+$/.test(value)) return Number(value);
   if (value === '十') return 10;

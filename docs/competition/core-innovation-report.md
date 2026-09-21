@@ -232,7 +232,7 @@ fallback_used
 
 ### 5.1 Full-RAG 问答基线
 
-当前已冻结的权威 Full-RAG Baseline 位于 `evaluation/results/baseline_20260917_020000/`：
+历史冻结的权威 Full-RAG Baseline 位于 `evaluation/results/baseline_20260917_020000/`，对应 2026-09-17 运行：
 
 | 指标 | 结果 |
 | --- | ---: |
@@ -249,7 +249,7 @@ fallback_used
 
 ### 5.2 一次完整消融观察
 
-`evaluation/results/ablation_20260917_013925/` 保存了一次 7-profile 消融：
+`evaluation/results/ablation_20260917_013925/` 保存了一次 2026-09-17、质量门禁通过的 7-profile 消融：
 
 | Profile | Accuracy | Fact Recall | Avg Latency |
 | --- | ---: | ---: | ---: |
@@ -261,7 +261,7 @@ fallback_used
 | Full without Rerank | 90.0% | 0.933 | 2358.02 ms |
 | Full without Rewrite | 98.0% | 0.993 | 2414.48 ms |
 
-正确解读方式是：这些结果证明系统具备冻结控制变量、分别关闭模块、保存真实 Trace 和失败样本的实验能力。由于 LLM 存在随机性，单次结果不能被表述为普遍因果规律。
+正确解读方式是：这些历史结果证明系统具备冻结控制变量、分别关闭模块、保存真实 Trace 和失败样本的实验能力。由于 LLM 存在随机性，单次结果不能被表述为普遍因果规律；2026-09-21 的独立重跑因 provider 失败而未通过质量门禁，不能用来证明当前模块增益。
 
 ### 5.3 场景与路线验证
 
@@ -275,9 +275,9 @@ fallback_used
 
 后续路线可靠性改造又增加了自然时间表达、演艺持续时间、多段路径搜索和对话式澄清。正式参赛材料引用更新后的路线指标前，应在最新 Git SHA 上重新生成冻结证据，不能把旧提交结果直接当成新提交结果。
 
-### 5.4 真实运行证据
+### 5.4 真实运行证据（历史合格运行）
 
-5 题 Runtime Smoke 已验证：
+2026-09-17 的 5 题 Runtime Smoke 已验证：
 
 - LLM 实际执行；
 - BGE 向量检索实际执行；
@@ -286,7 +286,11 @@ fallback_used
 - Generation 无 local fallback；
 - 5/5 请求为真实 Full-RAG。
 
-运行中请求模型为 `deepseek-chat`，Provider Trace 返回 `deepseek-flash`。该身份差异已经保留，正式材料必须披露。
+运行中请求模型为 `deepseek-chat`，Provider Trace 返回 `deepseek-flash`。该身份差异已经保留，正式材料必须披露。2026-09-21 重跑时向量服务恢复，但 LLM provider 调用失败，5 题均未形成真实 Full-RAG；该诊断结果保存在 `evaluation/results/rerun_20260921_1405/`，不替代历史 Smoke。
+
+### 5.5 当前资产与重跑边界
+
+当前路线资产审计结果为 23 个路线节点和 30 条登记道路边；项目材料曾使用“31 条道路”的目标口径，但 `data/route/edges.json` 当前实际记录数为 30。正式材料暂不把 31 写成已核验事实，待补齐第 31 条边并重新执行路线 benchmark 后再更新。后端结构化索引当前报告 22 个 indexed spots，与路线资产的 23 个节点不是同一统计口径。
 
 ---
 

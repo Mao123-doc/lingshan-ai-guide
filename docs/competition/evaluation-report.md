@@ -1,6 +1,6 @@
 # Evaluation Evidence Report
 
-## 当前可审查基线
+## 冻结权威基线（2026-09-17 历史运行）
 
 当前权威 Full-RAG Baseline 为 `evaluation/results/baseline_20260917_020000/`，对应提交
 `0522c3869bf5dd23a35769e0e7f225737a239141`。数据集为 50 道题，知识库和数据集 SHA-256
@@ -25,8 +25,9 @@ Top-K 为 8，Context Top-K 为 5。Local fallback 不计入 Full-RAG，Trace �
 失败题为 #14（多事实问题只回答了题字作者）和 #50（对整个景区游览时长进行谨慎拒答）。
 它们保留在原始结果中，没有通过修改知识库、放宽 Fact Contract 或 fallback 隐藏。
 
-提交后的 5 题 Runtime Smoke（#1、#3、#31、#37、#42）再次确认 health `ok`、LLM 非 offline、
-Vector service 可用，5/5 请求均为真实 Full-RAG，Trace 各阶段与配置一致且无 fallback。
+该段历史提交后的 5 题 Runtime Smoke（#1、#3、#31、#37、#42）确认 health `ok`、LLM 非 offline、
+Vector service 可用，5/5 请求均为真实 Full-RAG。它属于该历史提交的证据，不代表 2026-09-21
+当前运行环境已经通过同一门禁。
 证据：`evaluation/results/runtime_smoke_20260917_021500_manifest.json`。
 
 ### 模型身份说明
@@ -84,6 +85,18 @@ Full without Rewrite 本次准确率相同，Rerank 的差异也应表述为本�
 `evaluation/results/20260915T195912Z_b01d12d8/` 是提交 `7b5c...` 下的 88-query Retrieval
 Gold benchmark，5 个 profile 均 88/88 eligible。其 Recall@5、MRR 和延迟仍可作为历史检索
 对照，但由于不是当前 `0522c386...` 提交下重新生成，不把它作为当前 Full-RAG Baseline 的主指标。
+
+## 2026-09-21 重跑状态
+
+本次重跑报告位于 `docs/superpowers/plans/2026-09-21-experiment-rerun.md`。
+
+- 前端 Unit：15/15；Chromium E2E：13/13；后端 API：28/28；Python 工具：70/70。
+- Scene Gold：40/40，field accuracy 1.0，关键缺失字段识别 40/40。
+- Route Benchmark：60/60，hard violations 0，infeasible precision/recall/F1 均为 1.0。
+- RAG smoke：向量服务恢复后 `vector_search=true`，但 LLM provider 调用失败，5 个 smoke 样本均未形成真实 Full-RAG，`full_rag_count=0`。
+- 7-profile 消融已完成 7×50 API 调用，但质量门禁为 0/7；其 90.0% Full Retrieval 等数值仅用于诊断，不替换上面的历史权威结果。
+
+当前路线资产审计还发现：`data/route/spots.json` 有 23 个记录，`data/route/edges.json` 有 30 条 edge 记录；因此材料不能把 31 条道路写成当前文件已核验事实。结构化知识 health 报告 22 个 indexed spots，与路线节点数也应明确区分。
 
 ## 解释边界
 

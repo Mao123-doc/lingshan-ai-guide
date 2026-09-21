@@ -106,8 +106,9 @@ test('visitor APIs validate route, feedback and nearby inputs', async () => {
       interests: ['文化'], duration: 2, travelType: '带长辈', ageGroup: '老年', budget: '经济型',
     }));
     assert.equal(recommendation.status, 200);
-    assert.ok(Array.isArray(recommendation.body.route));
-    assert.ok(recommendation.body.total_duration <= 120);
+    assert.equal(recommendation.body.outcome, 'needs_clarification');
+    assert.equal(Array.isArray(recommendation.body.route), false);
+    assert.equal(recommendation.headers.get('deprecation'), 'true');
 
     const feedback = await server.request('/api/v1/visitor/feedback', jsonBody({
       session_id: 'api-test-session', rating: 5, comment: 'contract',
@@ -127,6 +128,93 @@ test('visitor APIs validate route, feedback and nearby inputs', async () => {
 
     const badFacility = await server.request('/api/v1/visitor/nearby-facilities?type=invalid');
     assert.equal(badFacility.status, 400);
+  } finally {
+    await server.close();
+  }
+});
+
+test('route plan accepts a pure structured request without invoking scene extraction', async () => {
+  extractSceneStateWithLLMMock = async () => {
+    throw new Error('pure structured request must not invoke extraction');
+  };
+  const server = await startTestServer();
+  try {
+    const response = await server.request('/api/v1/visitor/route/plan', jsonBody({
+      scene_state: {
+        currentLocation: 'south_gate',
+        currentTime: '09:00',
+        remainingMinutes: 180,
+        mobility: 'normal',
+        interests: ['culture', 'nature'],
+        mustVisitSpotIds: [],
+        preferredPerformanceIds: [],
+        visitedSpotIds: [],
+        missingCriticalFields: [],
+      },
+    }));
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.scene_extraction.source, 'explicit');
+    assert.equal(response.body.outcome, 'feasible');
+    assert.ok(response.body.explanation.input_effects);
+  } finally {
+    await server.close();
+  }
+});
+
+test('route plan merges query and explicit fields with explicit precedence', async () => {
+  extractSceneStateWithLLMMock = async () => ({
+    state: validExtractedState(),
+    source: 'llm',
+    confidence: { currentTime: 0.99 },
+    missingFields: [],
+    conflicts: [],
+    trace: { configured: true, executed: true, status: 'success', fallbackUsed: false },
+  });
+  const server = await startTestServer();
+  try {
+    const response = await server.request('/api/v1/visitor/route/plan', jsonBody({
+      query: '请帮我安排路线',
+      scene_state: { currentTime: '10:00' },
+    }));
+    assert.equal(response.status, 200);
+    assert.equal(response.body.scene_extraction.source, 'merged');
+    assert.equal(response.body.scene_state.currentTime, '10:00');
+    assert.deepEqual(response.body.scene_state.missingCriticalFields, []);
+  } finally {
+    await server.close();
+  }
+});
+
+test('recommend is a deprecated adapter and is equivalent when given the same explicit scene', async () => {
+  const server = await startTestServer();
+  try {
+    const sceneState = {
+      currentLocation: 'south_gate',
+      currentTime: '09:00',
+      remainingMinutes: 180,
+      mobility: 'normal',
+      interests: ['culture'],
+      mustVisitSpotIds: [],
+      preferredPerformanceIds: [],
+      visitedSpotIds: [],
+      missingCriticalFields: [],
+    };
+    const routeResponse = await server.request('/api/v1/visitor/route/plan', jsonBody({ scene_state: sceneState }));
+    const legacyResponse = await server.request('/api/v1/visitor/recommend', jsonBody({
+      currentLocation: 'south_gate',
+      currentTime: '09:00',
+      interests: ['文化'],
+      duration: 3,
+      travelType: '朋友',
+      mobility: '正常',
+    }));
+    assert.equal(routeResponse.status, 200);
+    assert.equal(legacyResponse.status, 200);
+    assert.equal(legacyResponse.headers.get('deprecation'), 'true');
+    assert.deepEqual(legacyResponse.body.route, routeResponse.body.route);
+    assert.equal('tier' in legacyResponse.body, false);
+    assert.equal('available_tiers' in legacyResponse.body, false);
   } finally {
     await server.close();
   }
@@ -171,7 +259,7 @@ test('route plan uses structured extraction and exposes only sanitized determini
     assert.equal(first.body.feasibility, first.body.route.feasible);
     assert.equal(first.body.outcome, first.body.route.outcome);
     assert.deepEqual(first.body.scene_extraction, {
-      source: 'llm',
+      source: 'merged',
       confidence: { currentLocation: 0.99, currentTime: 0.98, remainingMinutes: 0.97 },
       missingFields: [],
       conflicts: [],

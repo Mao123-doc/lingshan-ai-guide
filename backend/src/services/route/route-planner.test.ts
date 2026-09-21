@@ -23,6 +23,20 @@ assert.ok(basic.steps.length > 0);
 assert.equal(basic.violations.length, 0);
 assert.ok(basic.totalMinutes <= 180);
 
+const slow = planRoute(scene({ pace: 'slow', mustVisitSpotIds: ['LS-006'] }), graph);
+assert.equal(slow.feasible, true);
+for (const step of slow.steps) {
+  const spot = graph.spots.find(item => item.id === step.spotId);
+  if (spot && !step.performanceId) assert.equal(step.visitMinutes, Math.ceil(spot.visit_minutes * 1.2));
+}
+
+const fast = planRoute(scene({ pace: 'fast', mustVisitSpotIds: ['LS-006'] }), graph);
+assert.equal(fast.feasible, true);
+for (const step of fast.steps) {
+  const spot = graph.spots.find(item => item.id === step.spotId);
+  if (spot && !step.performanceId) assert.equal(step.visitMinutes, Math.max(10, Math.ceil(spot.visit_minutes * 0.85)));
+}
+
 const noDirectInterestMatch = planRoute(scene({ currentLocation: 'LS-011', interests: ['nature'] }), graph);
 assert.equal(noDirectInterestMatch.feasible, true);
 assert.ok(noDirectInterestMatch.steps.length > 0);

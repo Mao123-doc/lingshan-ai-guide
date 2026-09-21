@@ -11,13 +11,13 @@ import { textToSpeech } from '../../services/tts-service';
 import { isLLMAvailable, getActiveModelName, callLLM, callMultimodalLLM, isMultimodalAvailable } from '../../services/llm-service';
 import { analyzeEmotion } from '../../services/emotion-service';
 import { broadcastQueryEvent } from '../../services/websocket-service';
-import { extractSceneState, SceneStateSchema } from '../../services/scene/scene-state';
+import { SceneStateSchema } from '../../services/scene/scene-state';
+import type { SceneExtractionResult } from '../../services/scene/scene-extractor';
 import {
-  extractSceneStateWithLLM,
-  type SceneExtractionResult,
-} from '../../services/scene/scene-extractor';
-import { loadRouteGraph } from '../../services/route/route-contract';
-import { planRoute } from '../../services/route/route-planner';
+  planRouteRequest,
+  RoutePlanningInputError,
+  type RoutePlanningRequest,
+} from '../../services/route/route-planning-service';
 import { resolveDataPath } from '../../config/paths';
 import {
   saveConversation, saveFeedback, getConversationStats,
@@ -279,154 +279,7 @@ visitorRouter.post('/session/init', (_req: Request, res: Response) => {
   });
 });
 
-// ============ Recommendations ============
-
-const INTEREST_ROUTES: Record<string, any[]> = {
-  '历史': [
-    { spot_id: 'LS-010', name: '祥符禅寺', reason: '千年古刹，灵山佛教文化源头', visit_duration: 40 },
-    { spot_id: 'LS-011', name: '灵山大佛', reason: '五方五佛之东方大佛，历史意义重大', visit_duration: 60 },
-    { spot_id: 'LS-013', name: '灵山梵宫', reason: '佛教艺术殿堂，世界佛教论坛会址', visit_duration: 60 },
-    { spot_id: 'LS-016', name: '无尽意斋', reason: '赵朴初纪念馆，了解灵山渊源', visit_duration: 30 },
-    { spot_id: 'LS-008', name: '阿育王柱', reason: '佛教传播的历史象征', visit_duration: 15 },
-  ],
-  '文化': [
-    { spot_id: 'LS-011', name: '灵山大佛', reason: '佛教文化核心象征，88米青铜立佛', visit_duration: 60 },
-    { spot_id: 'LS-013', name: '灵山梵宫', reason: '佛教艺术的卢浮宫，非遗艺术瑰宝', visit_duration: 60 },
-    { spot_id: 'LS-014', name: '五印坛城', reason: '藏传佛教文化体验，小布达拉宫', visit_duration: 45 },
-    { spot_id: 'LS-006', name: '九龙灌浴', reason: '佛陀诞生故事再现，震撼动态表演', visit_duration: 30 },
-    { spot_id: 'LS-012', name: '佛教文化博览馆', reason: '万佛朝宗，佛教文化深度体验', visit_duration: 40 },
-  ],
-  '自然': [
-    { spot_id: 'LS-005', name: '菩提大道', reason: '250米印度菩提拱廊，禅意漫步', visit_duration: 20 },
-    { spot_id: 'LS-011', name: '灵山大佛', reason: '登顶俯瞰太湖全景，佛光普照', visit_duration: 60 },
-    { spot_id: 'NH-002', name: '梵天花海', reason: '30000㎡四季花海，自然美景', visit_duration: 40 },
-    { spot_id: 'LS-015', name: '曼飞龙塔', reason: '白塔园林景观，异域风情', visit_duration: 20 },
-    { spot_id: 'NH-006', name: '鹿鸣谷', reason: '山林幽静，自然禅意', visit_duration: 30 },
-  ],
-  '建筑': [
-    { spot_id: 'LS-013', name: '灵山梵宫', reason: '鲁班奖建筑杰作，7.2万㎡艺术殿堂', visit_duration: 60 },
-    { spot_id: 'LS-014', name: '五印坛城', reason: '藏式碉楼建筑，金顶红墙', visit_duration: 45 },
-    { spot_id: 'LS-015', name: '曼飞龙塔', reason: '南传佛教建筑代表，九塔组合', visit_duration: 20 },
-    { spot_id: 'LS-004', name: '五智门', reason: '汉白玉石牌坊，佛教建筑艺术', visit_duration: 15 },
-    { spot_id: 'LS-002', name: '五明桥', reason: '五桥并列，桥梁建筑之美', visit_duration: 15 },
-  ],
-  '祈福': [
-    { spot_id: 'LS-011', name: '灵山大佛', reason: '抱佛脚祈福，216级登云道', visit_duration: 60 },
-    { spot_id: 'LS-009', name: '百子戏弥勒', reason: '摸弥勒肚皮，享一生福气', visit_duration: 15 },
-    { spot_id: 'LS-006', name: '九龙灌浴', reason: '接取祈福圣水，吉祥安康', visit_duration: 30 },
-    { spot_id: 'LS-010', name: '祥符禅寺', reason: '撞钟祈福，聆听祥符禅钟', visit_duration: 30 },
-    { spot_id: 'LS-003', name: '佛足坛', reason: '触摸佛足，吉祥祈福', visit_duration: 10 },
-  ],
-};
-
-visitorRouter.post('/recommend', (req: Request, res: Response) => {
-  const {
-    interests = ['文化'],
-    duration = 4,
-    travelType = '朋友',
-    ageGroup = '青年',
-    budget = '舒适型',
-  } = req.body;
-
-  // Pick interest route
-  let fullRoute = INTEREST_ROUTES['文化'];
-  for (const interest of interests) {
-    if (INTEREST_ROUTES[interest]) { fullRoute = INTEREST_ROUTES[interest]; break; }
-  }
-
-  const fullDuration = fullRoute.reduce((sum, i) => sum + i.visit_duration, 0);
-
-  // Three tiers: ~2h (top 2-3), ~4h (top 5-6), ~6h (all)
-  let route: typeof fullRoute;
-  let totalDuration: number;
-  let tier: string;
-
-  const maxMin = duration * 60;
-
-  if (maxMin >= fullDuration) {
-    // Full route fits
-    route = fullRoute;
-    totalDuration = fullDuration;
-    tier = '深度体验';
-  } else if (maxMin >= fullDuration * 0.6) {
-    // Can fit most — take top spots sorted by duration
-    let acc = 0;
-    route = fullRoute.filter(item => {
-      if (acc + item.visit_duration <= maxMin) { acc += item.visit_duration; return true; }
-      return false;
-    });
-    totalDuration = acc;
-    tier = '经典游览';
-  } else {
-    // Short time — take top 2-3 must-see spots
-    route = fullRoute.slice(0, Math.min(3, fullRoute.length));
-    // If still too long, keep only the top 2
-    let acc = route.reduce((sum, i) => sum + i.visit_duration, 0);
-    if (acc > maxMin) {
-      route = fullRoute.slice(0, 2);
-      acc = route.reduce((sum, i) => sum + i.visit_duration, 0);
-    }
-    totalDuration = acc;
-    tier = '精华速览';
-  }
-
-  // Build personalized tips based on user profile
-  const profileTips: string[] = [];
-
-  if (travelType === '亲子') {
-    profileTips.push('亲子游建议减少长距离步行，多安排互动体验项目（如百子戏弥勒、九龙灌浴表演）');
-  } else if (travelType === '带长辈') {
-    profileTips.push('带长辈出行建议放慢节奏，沿途多安排休息区，优先选择有接驳车覆盖的景点');
-  } else if (travelType === '情侣') {
-    profileTips.push('情侣出行推荐打卡梵天花海、五灯湖等浪漫拍照点');
-  }
-
-  if (ageGroup === '老年') {
-    profileTips.push('老年游客建议减少爬坡和长时间站立，优先参观室内展馆');
-  }
-
-  if (budget === '经济型') {
-    profileTips.push('经济型预算优先推荐免费或低价景点（如菩提大道、五明桥、佛足坛等）');
-  } else if (budget === '豪华型') {
-    profileTips.push('豪华型预算可体验《吉祥颂》演出、禅茶品鉴、特色餐饮等增值项目');
-  }
-
-  const baseTips = fullDuration > 300
-    ? '建议上午9点前入园；全程约5-6小时含餐饮休息；穿着舒适运动鞋。'
-    : fullDuration > 180
-      ? '建议上午9-10点入园；游览节奏适中；可在大佛脚下多停留。'
-      : '时间紧凑可选精华景点；下次再来深入探索！';
-
-  const tips = [...profileTips, baseTips].join(' ');
-
-  res.json({
-    route,
-    total_duration: totalDuration,
-    tier,
-    available_tiers: {
-      '精华速览 ~2h': Math.round(fullRoute.slice(0, 3).reduce((s, i) => s + i.visit_duration, 0)),
-      '经典游览 ~4h': Math.round(fullRoute.slice(0, Math.ceil(fullRoute.length * 0.7)).reduce((s, i) => s + i.visit_duration, 0)),
-      '深度体验 ~6h': fullDuration,
-    },
-    profile: { travelType, ageGroup, budget, interests, duration },
-    tips,
-  });
-});
-
-// ============ Scene-aware route planning ============
-
-const ROUTE_CLARIFICATION_PROMPTS: Record<string, string> = {
-  currentTime: '你现在大约几点开始游览？例如“现在上午10点”或“10:00”。',
-  currentLocation: '你现在位于景区哪里？例如“景区入口”或“灵山大佛附近”。',
-  remainingMinutes: '你还计划游览多长时间？例如“还有3小时”或“剩90分钟”。',
-};
-
-function buildRouteClarification(fields: string[]): string | undefined {
-  const messages = [...new Set(fields)]
-    .map(field => ROUTE_CLARIFICATION_PROMPTS[field])
-    .filter((message): message is string => Boolean(message));
-  return messages.length > 0 ? messages.join(' ') : undefined;
-}
+// ============ Unified route planning ============
 
 const SAFE_SCENE_EXTRACTION_FIELDS = new Set([
   ...Object.keys(SceneStateSchema.shape),
@@ -444,7 +297,7 @@ const SAFE_SCENE_EXTRACTION_REASONS = new Set([
   'low_critical_field_confidence',
   'invalid_scene_state',
 ]);
-const SAFE_SCENE_EXTRACTION_SOURCES = new Set(['llm', 'rules', 'fallback', 'merged']);
+const SAFE_SCENE_EXTRACTION_SOURCES = new Set(['explicit', 'llm', 'rules', 'fallback', 'merged']);
 const SAFE_SCENE_EXTRACTION_STATUSES = new Set(['success', 'fallback', 'failed', 'skipped']);
 
 function sanitizeSceneExtraction(extraction: SceneExtractionResult) {
@@ -489,91 +342,52 @@ function sanitizeSceneExtraction(extraction: SceneExtractionResult) {
   };
 }
 
-visitorRouter.post('/route/plan', async (req: Request, res: Response) => {
+async function handleRoutePlan(request: RoutePlanningRequest, res: Response): Promise<void> {
   try {
-    const { query, scene_state } = req.body || {};
-    if (typeof query !== 'string' || !query.trim()) {
-      return res.status(400).json({ error: '请输入路线需求' });
-    }
-
-    let explicitSceneState: Partial<ReturnType<typeof extractSceneState>> | undefined;
-    if (scene_state !== undefined) {
-      const partial = SceneStateSchema.partial().strict().safeParse(scene_state);
-      if (!partial.success) {
-        return res.status(400).json({ error: 'scene_state 不符合数据契约', details: partial.error.flatten() });
-      }
-      explicitSceneState = partial.data;
-    }
-
-    let extraction = await extractSceneStateWithLLM(query);
-    const validatedExtraction = SceneStateSchema.safeParse(extraction.state);
-    if (!validatedExtraction.success) {
-      const fallbackState = extractSceneState(query);
-      extraction = {
-        state: fallbackState,
-        source: 'fallback',
-        confidence: {},
-        missingFields: [...fallbackState.missingCriticalFields],
-        conflicts: [],
-        trace: {
-          configured: extraction.trace.configured === true,
-          executed: extraction.trace.executed === true,
-          status: 'fallback',
-          fallbackUsed: true,
-          reason: 'invalid_scene_state',
-        },
-      };
-    }
-
-    const mergedSceneState = SceneStateSchema.safeParse({
-      ...extraction.state,
-      ...explicitSceneState,
-    });
-    if (!mergedSceneState.success) {
-      return res.status(400).json({
-        error: 'scene_state 不符合数据契约',
-        details: mergedSceneState.error.flatten(),
-      });
-    }
-    const sceneState = mergedSceneState.data;
-
-    const planningSceneState = !sceneState.currentTime
-      ? { ...sceneState, missingCriticalFields: [...new Set([...sceneState.missingCriticalFields, 'currentTime'])] }
-      : sceneState;
-    const graph = loadRouteGraph();
-    const route = planRoute(planningSceneState, graph, 12);
-    const clarification = route.outcome === 'needs_clarification'
-      ? buildRouteClarification(planningSceneState.missingCriticalFields)
-      : undefined;
-    const evidence = route.steps.map(step => {
-      const spot = graph.spots.find(item => item.id === step.spotId);
-      return {
-        spot_id: step.spotId,
-        name: spot?.name,
-        source: spot?.source,
-        confidence: spot?.confidence,
-      };
-    });
-    return res.json({
-      query,
-      scene_state: planningSceneState,
-      route,
-      feasibility: route.feasible,
-      outcome: route.outcome,
-      ...(clarification ? { clarification } : {}),
-      explanation: {
-        ...(clarification ? { clarification } : {}),
-        satisfied_constraints: route.satisfiedConstraints || [],
-        rejected_requests: route.rejectedRequests || [],
-        violations: route.violations || [],
-      },
-      evidence,
-      scene_extraction: sanitizeSceneExtraction(extraction),
+    const result = await planRouteRequest(request);
+    res.json({
+      ...result,
+      scene_extraction: result.scene_extraction,
     });
   } catch (error: unknown) {
+    if (error instanceof RoutePlanningInputError) {
+      res.status(error.statusCode).json({ error: error.message });
+      return;
+    }
     console.error('Route planning error:', error);
-    return res.status(400).json({ error: '路线需求无法解析', detail: 'invalid_request' });
+    res.status(400).json({ error: '路线需求无法解析', detail: 'invalid_request' });
   }
+}
+
+visitorRouter.post('/route/plan', async (req: Request, res: Response) => {
+  await handleRoutePlan(req.body || {}, res);
+});
+
+visitorRouter.post('/recommend', async (req: Request, res: Response) => {
+  res.setHeader('Deprecation', 'true');
+  const body = req.body || {};
+  const interests = Array.isArray(body.interests) && body.interests.length > 0 ? body.interests : ['文化'];
+  const duration = typeof body.duration === 'number' ? body.duration : undefined;
+  const sceneState = {
+    ...(typeof body.currentLocation === 'string' ? { currentLocation: body.currentLocation } : {}),
+    ...(typeof body.currentTime === 'string' ? { currentTime: body.currentTime } : {}),
+    ...(duration !== undefined ? { remainingMinutes: Math.round(duration * 60) } : {}),
+    ...(body.mobility !== undefined ? { mobility: body.mobility } : {}),
+    ...(body.pace !== undefined ? { pace: body.pace } : {}),
+    ...(body.travelType !== undefined ? { partyType: body.travelType } : {}),
+    interests,
+    mustVisitSpotIds: Array.isArray(body.mustVisitSpotIds) ? body.mustVisitSpotIds : [],
+    preferredPerformanceIds: Array.isArray(body.preferredPerformanceIds) ? body.preferredPerformanceIds : [],
+    visitedSpotIds: Array.isArray(body.visitedSpotIds) ? body.visitedSpotIds : [],
+    missingCriticalFields: [],
+  };
+  await handleRoutePlan({
+    scene_state: sceneState as RoutePlanningRequest['scene_state'],
+    advisory_profile: {
+      ...(body.ageGroup ? { ageGroup: body.ageGroup } : {}),
+      ...(body.budget ? { budget: body.budget } : {}),
+    },
+  }, res);
 });
 
 // ============ Feedback ============
