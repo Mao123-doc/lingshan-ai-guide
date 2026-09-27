@@ -108,14 +108,13 @@ canonical_facts:
   # 7. 数字孪生路网拓扑规模
   - id: FACT-07
     claim: "景区数字孪生路网节点与边规模"
-    value: "23 个路线节点 + 30 条当前登记道路边（31 条目标口径待补齐核验）"
+    value: "23 个路线节点 + 30 条当前登记道路边；31 条目标口径待补齐核验"
     metric_type: "digital_twin_topology"
     evidence: "data/route/spots.json; data/route/edges.json; backend/src/services/route-planner.ts"
     allowed_wording:
-      - "23 个路线节点、30 条当前登记道路边（31 条目标口径待补齐核验）"
-      - "23 个路线节点与 30 条当前登记道路边（31 条目标口径待补齐核验）"
+      - "当前路线资产包含 23 个节点和 30 条登记道路边"
+      - "路线 benchmark 基于 23 个节点、30 条登记道路边"
     forbidden_wording:
-      - "23+30"
       - "23 个路线节点、31 条实测道路"
       - "23 个核心景点、31 条已完成实测道路"
 

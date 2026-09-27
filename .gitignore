@@ -62,6 +62,18 @@ tmp/
 *.zip
 *.tar.gz
 *.rar
+*.7z
+~$*
+*.bak*
+*backup*.docx
+scratch_*
+scripts/tmp_inspect_frames/
+dump_*.py
+compare_ppt.py
+
+# Build output & submission exports
+output/
+算法场景创新_*/
 
 # LaTeX compilation intermediates
 *.aux
@@ -74,3 +86,4 @@ tmp/
 
 # Local results
 results/
+

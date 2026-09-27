@@ -1,0 +1,12 @@
+{
+  "name": "lingshan-competition-pptx",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Native editable PPTX generator for the Lingshan AI Guide competition deck",
+  "scripts": {
+    "build": "node compile.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}
