@@ -1,7 +1,7 @@
 {
-  "name": "灵山胜境 AI 数字人导游",
+  "name": "灵小禅 · 可信问答与路线规划",
   "short_name": "灵小禅",
-  "description": "7×24小时在线的AI数字人导游，智能问答、语音交互、情感陪伴",
+  "description": "查询景区知识来源，按时间与行动能力规划可行路线",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#faf8f5",
@@ -14,5 +14,8 @@
       "type": "image/svg+xml"
     }
   ],
-  "categories": ["travel", "education", "entertainment"]
+  "categories": [
+    "travel",
+    "education"
+  ]
 }

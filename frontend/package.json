@@ -16,17 +16,9 @@
     "@ant-design/icons": "^6.2.5",
     "antd": "^6.4.4",
     "axios": "^1.18.0",
-    "echarts": "^6.1.0",
-    "echarts-for-react": "^3.0.6",
-    "live2d-widget": "^3.1.4",
-    "live2d-widget-model-hibiki": "^1.0.5",
-    "pixi-live2d-display": "^0.5.0-beta",
-    "pixi.js": "^7.4.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.18.0",
-    "tslib": "^2.8.1",
-    "zustand": "^5.0.14"
+    "react-router-dom": "^7.18.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

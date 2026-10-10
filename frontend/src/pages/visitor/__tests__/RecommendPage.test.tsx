@@ -6,7 +6,6 @@ import { visitorAPI } from '../../../services/api';
 
 vi.mock('../../../services/api', () => ({
   visitorAPI: {
-    recommend: vi.fn(),
     planRoute: vi.fn(),
   },
 }));
@@ -253,7 +252,6 @@ describe('RecommendPage critical states', () => {
       }),
       advisory_profile: { ageGroup: '青年', budget: '舒适型' },
     })));
-    expect(visitorAPI.recommend).not.toHaveBeenCalled();
   });
 
   it('renders auditable input effects without exposing planner internals', async () => {

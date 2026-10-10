@@ -1,12 +1,6 @@
 import assert from 'node:assert/strict';
-import { EventEmitter } from 'node:events';
 import test from 'node:test';
 import { jsonBody, startTestServer } from '../helpers/api-fixtures';
-import {
-  addClient,
-  broadcastQueryEvent,
-  getAdminCount,
-} from '../../src/services/websocket-service';
 
 test('LLM outage is explicit and never masquerades as generated Full-RAG output', async () => {
   const server = await startTestServer();
@@ -43,31 +37,4 @@ test('malformed JSON is rejected without taking down the application', async () 
   } finally {
     await server.close();
   }
-});
-
-test('WebSocket admin clients receive events and are removed after disconnect', () => {
-  class FakeSocket extends EventEmitter {
-    readonly OPEN = 1;
-    readonly readyState = this.OPEN;
-    readonly messages: string[] = [];
-    send(message: string): void {
-      this.messages.push(message);
-    }
-  }
-
-  const before = getAdminCount();
-  const socket = new FakeSocket();
-  addClient(socket as never, 'admin');
-  assert.equal(getAdminCount(), before + 1);
-
-  broadcastQueryEvent({
-    query_short: '测试问题',
-    emotion: 'explain',
-    response_time_ms: 12,
-    used_llm: false,
-  });
-  assert.equal(JSON.parse(socket.messages[0]).type, 'new_query');
-
-  socket.emit('close');
-  assert.equal(getAdminCount(), before);
 });

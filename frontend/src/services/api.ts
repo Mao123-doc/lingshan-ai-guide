@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-type JsonObject = Record<string, unknown>;
-type QueryParams = Record<string, string | number | boolean | undefined>;
 
 const api = axios.create({
   baseURL: '/api/v1',
@@ -158,78 +156,21 @@ export interface RoutePlanResponse {
   scene_extraction?: SceneExtractionMetadata;
 }
 
-// API methods
+// Core API methods
 export const visitorAPI = {
-  initSession: () => api.post('/visitor/session/init'),
-  askQuestion: (query: string, sessionId: string) =>
-    api.post('/visitor/qa', { query, session_id: sessionId }),
-  getSpots: () => api.get('/visitor/spots'),
-  getSpotDetail: (id: string) => api.get(`/visitor/spots/${id}`),
-  recommend: (payload: JsonObject) =>
-    api.post('/visitor/recommend', payload),
-  /** @deprecated Use planRoute; retained only for external legacy clients. */
-  planRouteLegacy: (payload: JsonObject) =>
-    api.post<RoutePlanResponse>('/visitor/recommend', payload),
   planRoute: (request: RoutePlanningRequest) =>
     api.post<RoutePlanResponse>('/visitor/route/plan', request),
-  planRouteQuery: (query: string, sceneState?: SceneStateInput) =>
-    api.post<RoutePlanResponse>('/visitor/route/plan', { query, scene_state: sceneState }),
-  submitFeedback: (sessionId: string, rating: number, comment: string) =>
-    api.post('/visitor/feedback', { session_id: sessionId, rating, comment }),
-  getHotQuestions: () => api.get('/visitor/hot-questions'),
-  recognizeImage: (imageBase64: string) =>
-    api.post('/visitor/vision/recognize', { image_base64: imageBase64 }),
-  textToSpeech: (text: string) =>
-    api.post('/visitor/tts', { text }),
-  getStatus: () => api.get('/visitor/status'),
 };
 
 export const adminAPI = {
-  login: (username: string, password: string) =>
-    api.post('/auth/login', { username, password }),
-  getDashboard: () => api.get('/admin/dashboard/summary'),
-  getSentimentReport: (period: string = 'week') =>
-    api.get('/admin/reports/sentiment', { params: { period } }),
-  getDigitalHuman: () => api.get('/admin/digital-human/appearance'),
-  updateDigitalHuman: (config: JsonObject) =>
-    api.put('/admin/digital-human/appearance', config),
+  login: (username: string, password: string) => api.post('/auth/login', { username, password }),
   uploadDocument: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/admin/knowledge/documents', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    return api.post('/admin/knowledge/documents', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
   },
   getDocuments: () => api.get('/admin/knowledge/documents'),
-  deleteDocument: (id: string) => api.delete(`/admin/knowledge/documents/${id}`),
+  deleteDocument: (id: string) => api.delete(`/admin/knowledge/documents/${encodeURIComponent(id)}`),
   refreshIndex: () => api.post('/admin/knowledge/refresh-index'),
-  getKnowledgeStats: () => api.get('/admin/knowledge/stats'),
-  analyzeSentiment: (text: string) =>
-    api.post('/admin/reports/analyze-sentiment', { text }),
-  getConversations: (params: QueryParams) =>
-    api.get('/admin/conversations', { params }),
-  getTopUnsatisfied: () =>
-    api.get('/admin/top-unsatisfied'),
-  getVisitorLocations: () =>
-    api.get('/admin/visitor-locations'),
-  getCategoryDistribution: () =>
-    api.get('/admin/category-distribution'),
-  exportConversations: async (params: QueryParams) => {
-    const token = localStorage.getItem('admin_token');
-    const query = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) query.set(key, String(value));
-    });
-    const queryStr = query.toString();
-    const res = await fetch(`/api/v1/admin/conversations/export?${queryStr}`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `conversations_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  },
+  testKnowledge: (query: string) => api.get('/admin/knowledge/test-qa', { params: { query } }),
 };

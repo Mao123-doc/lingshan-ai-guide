@@ -1,0 +1,25 @@
+{
+  "draft_file_sha256": {
+    "草稿/业务理解.json": "3d773013850d7865716cc38721e21cfa2fa11c42a8a891c07b2e575abd2bde28",
+    "草稿/业务理解.md": "d7729b1f56bae1cac0a12cc7989c7c310f669a82229d62f89a78745b352b0321",
+    "草稿/业务理解模型稿模板.json": "1827c4ba2ebef9242b1a99c793ccc26cde6b15a14cf9e2629e70929d596e4e3c",
+    "草稿/业务理解证据.json": "1557540163abeb3ac5f9cadf8ec94bd38d5049854ddac8e4ca0b184942cbcf4f",
+    "草稿/业务理解证据.md": "c1f6788a4cc6bf0b388546a99ef7c59d505a2fff0adfd4104aa2d95ef82496f0",
+    "草稿/代码-前30页.md": "3d3b772e81a8143fc0a551fa6c1e09d4bbd6c6425d91e933229545b393b32b18",
+    "草稿/代码-后30页.md": "e8bd04fef934fd6a95d816e018c229c5c32266c7cf0a7abda13030866a157e7e",
+    "草稿/代码提取清单.json": "b1404056a41cb7e5a9131fe5c60e00c86b9d99a6b796c8bb548e280b83074e28",
+    "草稿/代码提取清单.md": "bdd17f4e7808ca2b2ab82b04a3cc7ba30b2a71f0e96f85442ad69a50b96d0426",
+    "草稿/代码文件候选清单.md": "ec7c2517c7fd8fddac43ae21774b9c8ac67d5cbe29a63e7bbd37761ef5c01f87",
+    "草稿/代码文件选择.json": "19ea86b9036488529aecec1163e0c62d4608d6a24eea2ab653bdac27c3247577",
+    "草稿/操作手册.md": "22d73332053411beb9d881980670cb4fc5d9abcc8784bf546b36eb6f0a628a4f",
+    "草稿/操作手册自检记录.json": "b46ca4a40ed16c346cd377e75444f82039e951d64dbfc42bdd5660f2bc0a1a82",
+    "草稿/操作手册自检记录.md": "84c7d5f6340cc827071d67e58e4885419c05ce2dfe1b22133a47ac8d3de0cc56",
+    "草稿/申请表信息.md": "39798bc255cbfd8690a0d28b4bd292ccdd39943f88b0e27ffe8ed64482308988",
+    "草稿/申请表字段确认.json": "746858bed3838bad2a025957e5cf3f994328175aee77c45c1181b9f5c5582e7e",
+    "截图方式确认.json": "8a36248bc0738fda9c632b7617af0ecc222fb364c140999690bb7b3bae1d39f3"
+  },
+  "markdown_confirmed": true,
+  "confirmation_note": "用户确认Markdown草稿",
+  "confirmed_at": "2026-10-06T17:00:27+00:00",
+  "confirmed_content_sha256": "ba3fd379a553b5db69c06f82955c9eada923076efe07a0ad52466f8285b205f7"
+}

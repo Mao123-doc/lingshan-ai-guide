@@ -10,17 +10,6 @@ interface ChatMessage {
   content: string;
 }
 
-interface MultimodalContent {
-  type: 'text' | 'image_url';
-  text?: string;
-  image_url?: { url: string; detail?: 'auto' | 'low' | 'high' };
-}
-
-interface MultimodalMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string | MultimodalContent[];
-}
-
 interface LLMConfig {
   apiKey: string;
   model: string;
@@ -104,83 +93,8 @@ function getFastConfig(): LLMConfig | null {
   return getFallbackConfig(); // DeepSeek for fast text
 }
 
-function getMultimodalConfig(): LLMConfig | null {
-  return getPrimaryConfig(); // Agnes for multimodal
-}
-
 export function isLLMAvailable(): boolean {
   return !!getLLMConfig();
-}
-
-export function isMultimodalAvailable(): boolean {
-  return !!getMultimodalConfig();
-}
-
-// ============================================================
-// Multimodal LLM Call (Vision)
-// ============================================================
-
-export async function callMultimodalLLM(
-  systemPrompt: string,
-  userText: string,
-  imageBase64: string,
-  options?: { temperature?: number; max_tokens?: number }
-): Promise<string> {
-  const config = getMultimodalConfig() || getLLMConfig();
-  if (!config) return '';
-
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
-
-    const messages: MultimodalMessage[] = [
-      { role: 'system', content: systemPrompt },
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: userText },
-          {
-            type: 'image_url',
-            image_url: {
-              url: `data:image/jpeg;base64,${imageBase64}`,
-              detail: 'auto',
-            },
-          },
-        ],
-      },
-    ];
-
-    try {
-      const response = await fetch(`${config.baseURL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: config.model,
-          messages,
-          temperature: options?.temperature ?? 0.3,
-          max_tokens: options?.max_tokens ?? 300,
-        }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-
-      const data = await response.json() as any;
-      if (data.error) {
-        console.error('[Vision] API error:', JSON.stringify(data.error).slice(0, 200));
-        return '';
-      }
-      return data?.choices?.[0]?.message?.content || '';
-    } catch (e) {
-      clearTimeout(timeout);
-      throw e;
-    }
-  } catch (error: any) {
-    console.error('[Vision] Multimodal call failed:', error.message?.slice(0, 100));
-    return '';
-  }
 }
 
 export function getActiveModelName(): string {

@@ -2,7 +2,7 @@
   "name": "lingshan-ai-guide",
   "version": "2.2.0",
   "private": true,
-  "description": "灵山胜境 AI 数字人导游系统 — RAG + LLM + Live2D",
+  "description": "灵小禅 · 可信问答与可行路线规划",
   "scripts": {
     "setup": "npm --prefix backend install && npm --prefix frontend install",
     "build": "npm --prefix frontend run build && npm --prefix backend run build",
@@ -17,10 +17,9 @@
   "keywords": [
     "rag",
     "llm",
-    "live2d",
-    "digital-human",
     "tour-guide",
-    "chromadb"
+    "chromadb",
+    "route-planning"
   ],
   "license": "MIT"
 }

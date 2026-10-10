@@ -7,7 +7,7 @@ import {
 import {
   UploadOutlined, ReloadOutlined, DeleteOutlined,
   FileTextOutlined, SearchOutlined, LogoutOutlined,
-  DashboardOutlined, BookOutlined, SettingOutlined, BarChartOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { adminAPI } from '../../services/api';
 
@@ -45,10 +45,7 @@ export default function KnowledgeBasePage() {
   const loadDocuments = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/knowledge/documents', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` },
-      });
-      const data = await res.json();
+      const { data } = await adminAPI.getDocuments();
       setDocuments(Array.isArray(data) ? data : []);
     } catch (_err) {
       console.error('Failed to load documents:', _err);
@@ -87,10 +84,7 @@ export default function KnowledgeBasePage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/v1/admin/knowledge/documents/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` },
-      });
+      await adminAPI.deleteDocument(id);
       message.success('文档已删除');
       loadDocuments();
     } catch {
@@ -99,7 +93,8 @@ export default function KnowledgeBasePage() {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
     navigate('/admin/login');
   };
 
@@ -107,16 +102,13 @@ export default function KnowledgeBasePage() {
     <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
       <div style={{
         background: '#fff', padding: '0 24px',
-        display: 'flex', alignItems: 'center', gap: 16,
+        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12,
         boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 24,
       }}>
         <div style={{ fontSize: 24 }}>🏯</div>
         <Title level={4} style={{ margin: 0 }}>知识库管理</Title>
         <div style={{ flex: 1 }} />
-        <Button type="text" icon={<DashboardOutlined />} onClick={() => navigate('/admin/dashboard')}>仪表盘</Button>
-        <Button type="text" icon={<BookOutlined />} onClick={() => navigate('/admin/knowledge')}>知识库</Button>
-        <Button type="text" icon={<SettingOutlined />} onClick={() => navigate('/admin/digital-human')}>数字人</Button>
-        <Button type="text" icon={<BarChartOutlined />} onClick={() => navigate('/admin/reports')}>报告</Button>
+        <Button type="text" icon={<HomeOutlined />} onClick={() => navigate('/')}>游客端</Button>
         <Button type="text" icon={<LogoutOutlined />} onClick={handleLogout} danger>退出</Button>
       </div>
 
@@ -161,6 +153,7 @@ export default function KnowledgeBasePage() {
                       </Popconfirm>
                     ) },
                 ]}
+                scroll={{ x: 600 }}
                 rowKey="id"
                 pagination={false}
                 locale={{ emptyText: '暂无文档，请上传知识文档' }}
@@ -169,7 +162,7 @@ export default function KnowledgeBasePage() {
           </Col>
 
           <Col span={24}>
-            <Card title="🔍 RAG 准确性测试" style={{ borderRadius: 12 }}>
+            <Card title="🔍 知识检索检查" style={{ borderRadius: 12 }}>
               <Space style={{ width: '100%' }} direction="vertical">
                 <Input.Search
                   placeholder="输入测试问题，验证知识库检索准确性..."
@@ -180,11 +173,7 @@ export default function KnowledgeBasePage() {
                     setTestLoading(true);
                     setTestResult(null);
                     try {
-                      const token = localStorage.getItem('admin_token');
-                      const res = await fetch(`/api/v1/admin/knowledge/test-qa?query=${encodeURIComponent(v)}`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                      });
-                      const data = await res.json() as TestResult;
+                      const { data } = await adminAPI.testKnowledge(v);
                       setTestResult(data);
                     } catch {
                       setTestResult({ error: '测试请求失败' });
@@ -224,7 +213,7 @@ export default function KnowledgeBasePage() {
                   <Result status="error" title="测试失败" subTitle={testResult.error} />
                 )}
                 <Typography.Text type="secondary">
-                  输入问题测试 RAG 检索效果 — 查看知识库是否命中相关内容
+                  检查结构化知识索引是否命中相关内容；完整问答请前往游客端。
                 </Typography.Text>
               </Space>
             </Card>

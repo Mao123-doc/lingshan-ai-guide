@@ -13,9 +13,13 @@
 
 </div>
 
+## 文件与材料入口
+
+[项目文件导航](docs/项目文件导航.md) · [竞赛材料](竞赛汇报与文档材料包/README.md) · [冻结发布包](release/competition_final/README.md) · [脚本入口](scripts/README.md)
+
 ## 项目定位
 
-灵小禅面向灵山胜境真实游客场景，提供数字人问答、景点讲解、语音播报、图片识别和多约束路线规划。它不把路线可行性完全交给大语言模型，而是将“语义理解”和“物理决策”分开：模型负责理解游客表达与组织解释，确定性规划器负责时间预算、路网连通、行动能力、演出时间窗和最终可行性校验。
+灵小禅面向灵山胜境真实游客场景，当前核心版本只提供可信文字问答和多约束路线规划，后台仅保留知识库维护。它不把路线可行性完全交给大语言模型，而是将“语义理解”和“物理决策”分开：模型负责理解游客表达与组织解释，确定性规划器负责时间预算、路网连通、行动能力、演出时间窗和最终可行性校验。
 
 游客可以提出类似这样的请求：
 
@@ -31,14 +35,16 @@
 - ♿ **无障碍约束**：对轮椅和行动不便游客过滤不可达道路或景点，并在结果中保留被拒绝请求及原因。
 - ⏱️ **诚实拒绝与优雅降级**：区分 `feasible`、`feasible_with_rejected_preferences`、`needs_clarification` 和 `infeasible`，缺信息就追问，超时就解释。
 - 🧾 **可审计证据链**：记录 query rewrite、三路检索、RRF、重排、上下文、生成和 fallback 状态，支持回溯“答案为什么产生”。
-- 🧑‍🎨 **数字人交互**：React + Live2D/PixiJS 游客端，支持问答、路线看板、语音交互、景点图片和情绪反馈。
-- 🛠️ **运营管理后台**：JWT 认证、知识库上传和索引重建、对话导出、情感分析、游客统计和数字人配置。
+- 💬 **简洁游客端**：首页保留问答与路线两个入口；问答页展示来源片段、检索相关度和响应耗时。
+- 🛠️ **知识库维护**：JWT 登录、知识文档上传/删除、索引重建和结构化检索检查。
+
+2026-10-03 已移除数字人、语音、图片识别、周边设施、情感报告与运营统计。启动只需主服务和向量服务。历史 PPT、视频及冻结发布包保留原版，不代表当前功能；当前范围与迁移说明见 [核心版本说明](docs/core-version.md)。
 
 ## 系统架构
 
 ```mermaid
 flowchart LR
-    U[游客浏览器\nReact 19 + Live2D] -->|HTTP / WebSocket| A[Express 主服务\nTypeScript :8010]
+    U[游客浏览器\nReact 19] -->|HTTP| A[Express 主服务\nTypeScript :8010]
     A --> Q[场景理解\nScene State + 置信度门禁]
     A --> R[RAG 调度\nPromise.all 三路检索]
     R --> V[Vector\nChromaDB + BGE]
@@ -47,7 +53,6 @@ flowchart LR
     R --> F[RRF 融合\nk = 60]
     A --> P[路线规划器\n图搜索 + 时间约束]
     P --> C[Route Validator\n可达性与形式化校验]
-    A --> T[TTS 服务\nPython :8001]
     A --> X[Vector 服务\nPython :8002]
     A --> D[(data/\n知识库与路线资产)]
 ```
@@ -69,7 +74,7 @@ flowchart LR
 - Node.js `>=18`
 - Python `>=3.10`
 - Windows 下推荐使用 PowerShell、Chrome 或 Edge
-- 如需完整 RAG 与语音能力，需要配置 LLM API，并安装 Python 服务依赖
+- 如需完整 RAG 能力，需要配置 LLM API，并安装 Python 服务依赖
 
 ### 安装与配置
 
@@ -87,8 +92,8 @@ Copy-Item .env.example .env
 | --- | --- | --- |
 | `DEEPSEEK_API_KEY` | 文本生成与相关模型调用 | 无 |
 | `DEEPSEEK_MODEL` | DeepSeek 模型名 | `deepseek-chat` |
-| `AGNES_API_KEY` | 多模态与文本 fallback | 无 |
-| `AGNES_MODEL` | 多模态模型名 | `agnes-2.0-flash` |
+| `AGNES_API_KEY` | 备用文本生成 | 无 |
+| `AGNES_MODEL` | 备用文本模型名 | `agnes-2.0-flash` |
 | `AGNES_BASE_URL` | Agnes OpenAI-compatible 地址 | `https://apihub.agnes-ai.com/v1` |
 | `PORT` | Express 主服务端口 | `8010` |
 | `CORS_ORIGINS` | 跨域白名单 | `http://localhost:5173,http://localhost:8010` |
@@ -98,7 +103,6 @@ Copy-Item .env.example .env
 
 最简单的 Windows 方式是双击 `scripts/start.bat`。它会安装依赖、构建前端，并依次启动：
 
-- TTS 服务：`http://127.0.0.1:8001`
 - 向量检索服务：`http://127.0.0.1:8002`
 - Express 主服务：`http://localhost:8010`
 
@@ -108,13 +112,13 @@ Copy-Item .env.example .env
 # 构建前端并编译后端
 npm run build
 
-# 终端 1：TTS
-python backend/python/tts_server.py
+# 安装向量服务依赖（首次运行）
+python -m pip install -r backend/python/requirements.txt
 
-# 终端 2：向量检索
+# 终端 1：向量检索
 python backend/python/vector_service.py
 
-# 终端 3：主服务
+# 终端 2：主服务
 npm run dev
 ```
 
@@ -144,17 +148,14 @@ npm --prefix frontend run dev
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| `POST` | `/visitor/qa` | 基于知识证据的游客问答，支持流式结果 |
+| `POST` | `/visitor/qa` | 返回答案、检索证据与 Trace；保留 SSE 兼容入口 |
 | `POST` | `/visitor/route/plan` | 统一路线规划入口，接受自然语言或结构化 `scene_state` |
 | `POST` | `/visitor/recommend` | 兼容旧客户端的路线推荐适配入口 |
-| `POST` | `/visitor/tts` | 文本转语音 |
-| `POST` | `/visitor/vision/recognize` | 景点图片识别与讲解 |
-| `GET` | `/visitor/spots` | 景点列表与详情 |
-| `GET` | `/visitor/nearby` | 按坐标查询周边景点 |
-| `GET` | `/visitor/nearby-facilities` | 查询周边设施 |
 | `POST` | `/auth/login` | 管理员登录并获取 JWT |
 | `POST` | `/auth/refresh` | 刷新管理员 JWT |
-| `*` | `/admin/*` | JWT 保护的运营管理接口 |
+| `*` | `/admin/knowledge/*` | JWT 保护的知识库维护接口 |
+| `POST` | `/visitor/session/init` | 创建问答会话 |
+| `GET` | `/visitor/status` | 文本模型与知识索引状态 |
 
 路线规划请求可以只传自然语言：
 
@@ -223,12 +224,12 @@ npm run build --prefix frontend
 lingshan-ai-guide/
 ├── backend/
 │   ├── src/api/v1/                 # 游客、认证与管理 API
-│   ├── src/services/               # RAG、场景理解、路线规划、校验、TTS、情绪
-│   └── python/                     # 向量检索、TTS、ASR 与评测工具
+│   ├── src/services/               # RAG、场景理解、路线规划与校验
+│   └── python/                     # 向量检索与评测工具
 ├── frontend/
 │   ├── src/pages/visitor/           # 首页、问答页、路线推荐页
-│   ├── src/pages/admin/             # 管理后台页面
-│   └── public/                     # Live2D 模型与景点静态资源
+│   ├── src/pages/admin/             # 登录与知识库维护
+│   └── public/                     # 路线展示使用的景点静态资源
 ├── data/
 │   ├── raw/                        # 官方指南与知识库原始语料
 │   └── route/                      # 23 个节点、30 条道路边、设施与演出数据

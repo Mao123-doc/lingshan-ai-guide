@@ -1,0 +1,2443 @@
+{
+  "project_root": "E:\\Projects\\lingshan-ai-guide-Mao123-doc",
+  "selection_required": true,
+  "model_selection_required": true,
+  "confirmation_required": true,
+  "user_confirmed": true,
+  "target_pages": 60,
+  "lines_per_page": 55,
+  "target_lines": 3300,
+  "estimated_selected_lines": 5755,
+  "estimated_selected_pages": 105,
+  "estimated_all_candidate_lines": 107139,
+  "estimated_all_candidate_pages": 1948,
+  "supplement_rule": "模型优先选择能体现软件核心功能和真实运行逻辑的源码；不足60页时再从其他相关源码中补充；候选源码仍不足时才生成全部代码材料。",
+  "confirmation_stage": "code-selection",
+  "next_action": "请由模型填写 草稿/代码文件选择.json 的抽取选择和选择理由，再让用户确认；确认后运行 confirm_stage.py --stage code-selection。",
+  "instructions": "The script only inventories source files. The model must choose selected/model_reason before user confirmation. Selected files are extracted in full with blank-only lines removed and long lines wrapped to deterministic physical lines.",
+  "files": [
+    {
+      "path": "frontend/src/App.tsx",
+      "selected": true,
+      "line_count": 56,
+      "material_line_count": 52,
+      "priority": 0,
+      "selection_tier": "frontend",
+      "evidence": "入口文件证据",
+      "model_reason": "前端顶层路由与导航外壳：声明页面路由映射与AdminGuard守卫"
+    },
+    {
+      "path": "frontend/src/main.tsx",
+      "selected": true,
+      "line_count": 10,
+      "material_line_count": 9,
+      "priority": 0,
+      "selection_tier": "frontend",
+      "evidence": "入口文件证据",
+      "model_reason": "前端启动主入口：创建 React 19 根节点并挂载根路由，系统的最顶层起点"
+    },
+    {
+      "path": "backend/src/api/v1/router.ts",
+      "selected": true,
+      "line_count": 15,
+      "material_line_count": 11,
+      "priority": 10,
+      "selection_tier": "frontend",
+      "evidence": "路由文件证据",
+      "model_reason": "API v1路由分发器：集中挂载/visitor、/admin与/auth三大业务控制器"
+    },
+    {
+      "path": "frontend/src/pages/admin/__tests__/AdminFlows.test.tsx",
+      "selected": false,
+      "line_count": 29,
+      "material_line_count": 26,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/pages/admin/KnowledgeBasePage.tsx",
+      "selected": true,
+      "line_count": 225,
+      "material_line_count": 219,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": "知识库维护与检索检查页：知识文档上传、列表/删除、触发向量与结构化索引重建及检索诊断"
+    },
+    {
+      "path": "frontend/src/pages/admin/LoginPage.tsx",
+      "selected": true,
+      "line_count": 82,
+      "material_line_count": 77,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": "管理员安全登录页面：账号密码认证表单、JWT本地存储与后台路由跳转"
+    },
+    {
+      "path": "frontend/src/pages/visitor/__tests__/HomePage.test.tsx",
+      "selected": false,
+      "line_count": 18,
+      "material_line_count": 22,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/pages/visitor/__tests__/QAPage.test.tsx",
+      "selected": false,
+      "line_count": 77,
+      "material_line_count": 78,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/pages/visitor/__tests__/RecommendPage.test.tsx",
+      "selected": false,
+      "line_count": 279,
+      "material_line_count": 272,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/pages/visitor/HomePage.tsx",
+      "selected": true,
+      "line_count": 40,
+      "material_line_count": 44,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": "游客首页入口交互组件：提供智能问答与路线规划双核心入口及常见问题引导"
+    },
+    {
+      "path": "frontend/src/pages/visitor/QAPage.tsx",
+      "selected": true,
+      "line_count": 158,
+      "material_line_count": 172,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": "智能文字问答与证据追溯页：核心问答流、会话新建、回答依据抽屉"
+    },
+    {
+      "path": "frontend/src/pages/visitor/RecommendPage.tsx",
+      "selected": true,
+      "line_count": 64,
+      "material_line_count": 190,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": "多约束路线规划看板页：路线诉求自然语言提交、时间轴动线展示、不可行条件与地图唤起"
+    },
+    {
+      "path": "frontend/src/pages/visitor/route-outcome.ts",
+      "selected": true,
+      "line_count": 100,
+      "material_line_count": 95,
+      "priority": 20,
+      "selection_tier": "frontend",
+      "evidence": "页面文件证据",
+      "model_reason": "规划结果状态解析与动线构建：统一解析4类规划状态，格式化时间轴"
+    },
+    {
+      "path": "backend/src/api/v1/admin.ts",
+      "selected": true,
+      "line_count": 244,
+      "material_line_count": 232,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "知识库管理业务控制器：Multer文件上传、切片列表、删除及向量/结构化知识库重建调度"
+    },
+    {
+      "path": "backend/src/api/v1/auth.ts",
+      "selected": true,
+      "line_count": 99,
+      "material_line_count": 88,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "身份认证与凭证管理控制器：PBKDF2密码散列校验、JWT签发校验与权限拦截"
+    },
+    {
+      "path": "backend/src/api/v1/visitor.ts",
+      "selected": true,
+      "line_count": 167,
+      "material_line_count": 158,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "游客端API业务控制器：承接/qa问答请求调用RAG、承接/route/plan调用规划引擎"
+    },
+    {
+      "path": "backend/src/services/emotion-service.ts",
+      "selected": false,
+      "line_count": 123,
+      "material_line_count": 106,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/llm-service.test.ts",
+      "selected": false,
+      "line_count": 36,
+      "material_line_count": 34,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/llm-service.ts",
+      "selected": true,
+      "line_count": 433,
+      "material_line_count": 383,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "LLM适配层与防幻觉安全围栏：DeepSeek/Agnes调用封装、Prompt注入控制与纯知识摘录兜底"
+    },
+    {
+      "path": "backend/src/services/rag-config.test.ts",
+      "selected": false,
+      "line_count": 70,
+      "material_line_count": 73,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/rag-config.ts",
+      "selected": true,
+      "line_count": 36,
+      "material_line_count": 34,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "RAG检索参数与阈值配置：检索topK、相似度阈值、RRF权重常数（k=60）及重排策略开关"
+    },
+    {
+      "path": "backend/src/services/rag-rerank.test.ts",
+      "selected": false,
+      "line_count": 21,
+      "material_line_count": 19,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/rag-service.ts",
+      "selected": true,
+      "line_count": 1086,
+      "material_line_count": 1030,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "混合RAG总调度与全链路Trace：Promise.all三路并行检索、重排调用、证据链元数据组装与审计"
+    },
+    {
+      "path": "backend/src/services/rag-trace.test.ts",
+      "selected": false,
+      "line_count": 115,
+      "material_line_count": 106,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/retrieval/hybrid-retriever.test.ts",
+      "selected": false,
+      "line_count": 36,
+      "material_line_count": 32,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/retrieval/hybrid-retriever.ts",
+      "selected": true,
+      "line_count": 61,
+      "material_line_count": 55,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "RRF倒数排名融合核心算法：将向量、结构化与关键词检索结果按排名加权对齐归一"
+    },
+    {
+      "path": "backend/src/services/route/pathfinding.test.ts",
+      "selected": false,
+      "line_count": 30,
+      "material_line_count": 34,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/route/pathfinding.ts",
+      "selected": true,
+      "line_count": 64,
+      "material_line_count": 63,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "Dijkstra拓扑寻路与无障碍过滤：空间拓扑阻抗计算，动态过滤陡坡与台阶边，求解物理可达最短路径"
+    },
+    {
+      "path": "backend/src/services/route/route-benchmark.test.ts",
+      "selected": false,
+      "line_count": 165,
+      "material_line_count": 174,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/route/route-contract.ts",
+      "selected": true,
+      "line_count": 85,
+      "material_line_count": 82,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "数字孪生路网数据契约：23景点设施、30道路边（米数/耗时/坡度/无障碍）强类型契约"
+    },
+    {
+      "path": "backend/src/services/route/route-planner.test.ts",
+      "selected": false,
+      "line_count": 162,
+      "material_line_count": 167,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/route/route-planner.ts",
+      "selected": true,
+      "line_count": 260,
+      "material_line_count": 285,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "24宽Beam Search规划求解器：束搜索状态空间启发式探索、前置15~20分钟排队缓冲、优雅降级"
+    },
+    {
+      "path": "backend/src/services/route/route-planning-service.test.ts",
+      "selected": false,
+      "line_count": 125,
+      "material_line_count": 117,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/route/route-planning-service.ts",
+      "selected": true,
+      "line_count": 292,
+      "material_line_count": 301,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "端到端规划编排调度总线：串联状态抽取、运筹规划求解、形式化验证与不可行归因分析"
+    },
+    {
+      "path": "backend/src/services/route/route-preferences.test.ts",
+      "selected": false,
+      "line_count": 61,
+      "material_line_count": 57,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/route/route-preferences.ts",
+      "selected": true,
+      "line_count": 115,
+      "material_line_count": 105,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "多目标偏好评分与坡度阻抗：游览价值评估、演出权重对齐、体能消耗惩罚与台阶阻抗折算"
+    },
+    {
+      "path": "backend/src/services/route/route-validator.test.ts",
+      "selected": false,
+      "line_count": 121,
+      "material_line_count": 174,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/route/route-validator.ts",
+      "selected": true,
+      "line_count": 196,
+      "material_line_count": 222,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "14项形式化守恒物理仲裁器：校验死线不超时、无瞬间位移、演出窗口重合度与物理刚性合规"
+    },
+    {
+      "path": "backend/src/services/scene/scene-benchmark.test.ts",
+      "selected": false,
+      "line_count": 41,
+      "material_line_count": 39,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/scene/scene-extractor.test.ts",
+      "selected": false,
+      "line_count": 400,
+      "material_line_count": 367,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/scene/scene-extractor.ts",
+      "selected": true,
+      "line_count": 508,
+      "material_line_count": 467,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "双轨状态抽取与时空门禁：规则+LLM双轨提取、FORBIDDEN_LLM_FIELDS门禁与倒排时空约束推演"
+    },
+    {
+      "path": "backend/src/services/scene/scene-state-normalization.test.ts",
+      "selected": false,
+      "line_count": 38,
+      "material_line_count": 35,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/scene/scene-state.test.ts",
+      "selected": false,
+      "line_count": 99,
+      "material_line_count": 94,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/scene/scene-state.ts",
+      "selected": true,
+      "line_count": 283,
+      "material_line_count": 275,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "13维游客场景画像定义：游客状态（位置/时长/轮椅/老人/偏好）Zod数据契约与规范化"
+    },
+    {
+      "path": "backend/src/services/scene/scene-utterance-benchmark.test.ts",
+      "selected": false,
+      "line_count": 227,
+      "material_line_count": 212,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/structured-knowledge.test.ts",
+      "selected": false,
+      "line_count": 17,
+      "material_line_count": 15,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/src/services/structured-knowledge.ts",
+      "selected": true,
+      "line_count": 372,
+      "material_line_count": 328,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "结构化知识二级属性索引：22景点×10核心属性图谱查询、精准属性过滤与事实规则匹配"
+    },
+    {
+      "path": "backend/src/services/vector-search-service.ts",
+      "selected": true,
+      "line_count": 106,
+      "material_line_count": 98,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "向量检索微服务HTTP客户端：与Python向量服务通信，提交Query获取语义切片与相似度分值"
+    },
+    {
+      "path": "backend/tests/api/admin.test.ts",
+      "selected": false,
+      "line_count": 51,
+      "material_line_count": 51,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/tests/api/auth.test.ts",
+      "selected": false,
+      "line_count": 47,
+      "material_line_count": 45,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/tests/api/core-scope.test.ts",
+      "selected": false,
+      "line_count": 22,
+      "material_line_count": 25,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/tests/api/data-lifecycle.test.ts",
+      "selected": false,
+      "line_count": 66,
+      "material_line_count": 68,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/tests/api/visitor.test.ts",
+      "selected": false,
+      "line_count": 424,
+      "material_line_count": 405,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/services/api.ts",
+      "selected": true,
+      "line_count": 176,
+      "material_line_count": 161,
+      "priority": 30,
+      "selection_tier": "frontend",
+      "evidence": "数据交互文件证据",
+      "model_reason": "前端统一HTTP请求服务：Axios封装、Token拦截注入、问答/路线/知识库管理API统一封装"
+    },
+    {
+      "path": "frontend/src/utils/navigation.ts",
+      "selected": true,
+      "line_count": 107,
+      "material_line_count": 101,
+      "priority": 60,
+      "selection_tier": "frontend",
+      "evidence": "通用能力文件证据",
+      "model_reason": "地理坐标转换与外链导航工具：GCJ-02与BD-09坐标转换，构建唤起高德地图/百度地图实景导航URL"
+    },
+    {
+      "path": "backend/src/app.ts",
+      "selected": true,
+      "line_count": 66,
+      "material_line_count": 60,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": "Express应用主管道装配：CORS跨域、JSON解析、健康检查端点及路由总装配"
+    },
+    {
+      "path": "backend/src/config/paths.ts",
+      "selected": true,
+      "line_count": 19,
+      "material_line_count": 16,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": "存储路径与知识目录配置：管理数据根目录、知识raw目录与路网资产路径"
+    },
+    {
+      "path": "backend/src/db/store.ts",
+      "selected": true,
+      "line_count": 59,
+      "material_line_count": 55,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": "会话审计持久化存储：维护核心conversations.json文件读写，实现问答审计留痕"
+    },
+    {
+      "path": "backend/src/index.ts",
+      "selected": true,
+      "line_count": 39,
+      "material_line_count": 36,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": "后端Express主服务启动入口：监听8010端口、生命周期初始化、平滑停机"
+    },
+    {
+      "path": "backend/tests/app-isolation.test.ts",
+      "selected": false,
+      "line_count": 25,
+      "material_line_count": 28,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/tests/helpers/api-fixtures.ts",
+      "selected": false,
+      "line_count": 89,
+      "material_line_count": 87,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/tests/release-contract.test.ts",
+      "selected": false,
+      "line_count": 21,
+      "material_line_count": 19,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/tests/reliability/failure-recovery.test.ts",
+      "selected": false,
+      "line_count": 40,
+      "material_line_count": 37,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/tests/security/upload-and-auth.test.ts",
+      "selected": false,
+      "line_count": 94,
+      "material_line_count": 88,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/e2e/core-journeys.spec.ts",
+      "selected": false,
+      "line_count": 95,
+      "material_line_count": 87,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/e2e/fixtures.ts",
+      "selected": false,
+      "line_count": 74,
+      "material_line_count": 78,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/e2e/mobile.spec.ts",
+      "selected": false,
+      "line_count": 10,
+      "material_line_count": 8,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/index.html",
+      "selected": false,
+      "line_count": 18,
+      "material_line_count": 20,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/test/setup.ts",
+      "selected": false,
+      "line_count": 28,
+      "material_line_count": 24,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/tests/home-capabilities.test.ts",
+      "selected": false,
+      "line_count": 10,
+      "material_line_count": 9,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/tests/route-outcome.test.ts",
+      "selected": false,
+      "line_count": 24,
+      "material_line_count": 23,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/common.js",
+      "selected": false,
+      "line_count": 187,
+      "material_line_count": 179,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/compile.js",
+      "selected": false,
+      "line_count": 18,
+      "material_line_count": 15,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-01.js",
+      "selected": false,
+      "line_count": 23,
+      "material_line_count": 34,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-02.js",
+      "selected": false,
+      "line_count": 27,
+      "material_line_count": 34,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-03.js",
+      "selected": false,
+      "line_count": 27,
+      "material_line_count": 37,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-04.js",
+      "selected": false,
+      "line_count": 33,
+      "material_line_count": 42,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-05.js",
+      "selected": false,
+      "line_count": 30,
+      "material_line_count": 43,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-06.js",
+      "selected": false,
+      "line_count": 41,
+      "material_line_count": 47,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-07.js",
+      "selected": false,
+      "line_count": 41,
+      "material_line_count": 49,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-08.js",
+      "selected": false,
+      "line_count": 35,
+      "material_line_count": 46,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-09.js",
+      "selected": false,
+      "line_count": 39,
+      "material_line_count": 57,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-10.js",
+      "selected": false,
+      "line_count": 30,
+      "material_line_count": 41,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-11.js",
+      "selected": false,
+      "line_count": 37,
+      "material_line_count": 49,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-12.js",
+      "selected": false,
+      "line_count": 48,
+      "material_line_count": 64,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-13.js",
+      "selected": false,
+      "line_count": 36,
+      "material_line_count": 51,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/slides/slide-14.js",
+      "selected": false,
+      "line_count": 27,
+      "material_line_count": 37,
+      "priority": 80,
+      "selection_tier": "frontend",
+      "evidence": "普通源码文件",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/App.css",
+      "selected": false,
+      "line_count": 3,
+      "material_line_count": 3,
+      "priority": 90,
+      "selection_tier": "frontend",
+      "evidence": "样式文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/index.css",
+      "selected": false,
+      "line_count": 57,
+      "material_line_count": 50,
+      "priority": 90,
+      "selection_tier": "frontend",
+      "evidence": "样式文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/pages/visitor/HomePage.css",
+      "selected": false,
+      "line_count": 16,
+      "material_line_count": 19,
+      "priority": 90,
+      "selection_tier": "frontend",
+      "evidence": "样式文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "frontend/src/pages/visitor/QAPage.css",
+      "selected": false,
+      "line_count": 19,
+      "material_line_count": 22,
+      "priority": 90,
+      "selection_tier": "frontend",
+      "evidence": "样式文件证据",
+      "model_reason": ""
+    },
+    {
+      "path": "docs/competition/canonical_claims.yaml",
+      "selected": false,
+      "line_count": 250,
+      "material_line_count": 247,
+      "priority": 95,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "release/competition_final/00_证据台账与交付规范/canonical_claims.yaml",
+      "selected": false,
+      "line_count": 250,
+      "material_line_count": 247,
+      "priority": 95,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/quality_gates.py",
+      "selected": false,
+      "line_count": 193,
+      "material_line_count": 172,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/run_ablation.py",
+      "selected": false,
+      "line_count": 552,
+      "material_line_count": 503,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/run_runtime_smoke.py",
+      "selected": false,
+      "line_count": 275,
+      "material_line_count": 250,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/test_ablation_runner.py",
+      "selected": false,
+      "line_count": 332,
+      "material_line_count": 283,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/test_accuracy.py",
+      "selected": false,
+      "line_count": 380,
+      "material_line_count": 335,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/test_accuracy_unit.py",
+      "selected": false,
+      "line_count": 324,
+      "material_line_count": 264,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/test_quality_gates.py",
+      "selected": false,
+      "line_count": 151,
+      "material_line_count": 129,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/test_questions.json",
+      "selected": false,
+      "line_count": 52,
+      "material_line_count": 174,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/test_questions_out_of_scope.json",
+      "selected": false,
+      "line_count": 142,
+      "material_line_count": 142,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/test_retrieval_benchmark.py",
+      "selected": false,
+      "line_count": 134,
+      "material_line_count": 121,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/tools/test_runtime_smoke.py",
+      "selected": false,
+      "line_count": 130,
+      "material_line_count": 109,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "backend/python/vector_service.py",
+      "selected": true,
+      "line_count": 245,
+      "material_line_count": 218,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": "独立高性能向量检索微服务：基于ChromaDB与BAAI/bge-large-zh-v1.5模型的本地向量编码与查询"
+    },
+    {
+      "path": "data/admin_config.json",
+      "selected": false,
+      "line_count": 5,
+      "material_line_count": 6,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/chunks_cache.json",
+      "selected": false,
+      "line_count": 725,
+      "material_line_count": 1342,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/daily_stats.json",
+      "selected": false,
+      "line_count": 273,
+      "material_line_count": 273,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/dh_config.json",
+      "selected": false,
+      "line_count": 7,
+      "material_line_count": 7,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/CACHEDIR.TAG",
+      "selected": false,
+      "line_count": 4,
+      "material_line_count": 4,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/refs/main",
+      "selected": false,
+      "line_count": 1,
+      "material_line_count": 1,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/refs/refs/pr/35",
+      "selected": false,
+      "line_count": 1,
+      "material_line_count": 1,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/snapshots/79e7739b6ab944e86d6171e44d24c997fc1e0116/1_Pooling/config.json",
+      "selected": false,
+      "line_count": 7,
+      "material_line_count": 7,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/snapshots/79e7739b6ab944e86d6171e44d24c997fc1e0116/config.json",
+      "selected": false,
+      "line_count": 40,
+      "material_line_count": 40,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/snapshots/79e7739b6ab944e86d6171e44d24c997fc1e0116/config_sentence_transformers.json",
+      "selected": false,
+      "line_count": 7,
+      "material_line_count": 7,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/snapshots/79e7739b6ab944e86d6171e44d24c997fc1e0116/modules.json",
+      "selected": false,
+      "line_count": 20,
+      "material_line_count": 20,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/snapshots/79e7739b6ab944e86d6171e44d24c997fc1e0116/sentence_bert_config.json",
+      "selected": false,
+      "line_count": 4,
+      "material_line_count": 4,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/snapshots/79e7739b6ab944e86d6171e44d24c997fc1e0116/special_tokens_map.json",
+      "selected": false,
+      "line_count": 7,
+      "material_line_count": 7,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/snapshots/79e7739b6ab944e86d6171e44d24c997fc1e0116/tokenizer.json",
+      "selected": false,
+      "line_count": 21280,
+      "material_line_count": 21280,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/model_cache/models--BAAI--bge-large-zh-v1.5/snapshots/79e7739b6ab944e86d6171e44d24c997fc1e0116/tokenizer_config.json",
+      "selected": false,
+      "line_count": 15,
+      "material_line_count": 15,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/route/edges.json",
+      "selected": false,
+      "line_count": 32,
+      "material_line_count": 62,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/route/facilities.json",
+      "selected": false,
+      "line_count": 5,
+      "material_line_count": 11,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/route/performances.json",
+      "selected": false,
+      "line_count": 4,
+      "material_line_count": 8,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "data/route/spots.json",
+      "selected": false,
+      "line_count": 25,
+      "material_line_count": 71,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "docs/maintenance/2026-10-03-cleanup-manifest.json",
+      "selected": false,
+      "line_count": 1469,
+      "material_line_count": 1722,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/manifests/legacy-v1.json",
+      "selected": false,
+      "line_count": 19,
+      "material_line_count": 21,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/ablation_20260917_013925/structured_only.json",
+      "selected": false,
+      "line_count": 17384,
+      "material_line_count": 19013,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T182538Z_7ae62627/config.json",
+      "selected": false,
+      "line_count": 40,
+      "material_line_count": 40,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T182538Z_7ae62627/hashes.json",
+      "selected": false,
+      "line_count": 16,
+      "material_line_count": 18,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T182538Z_7ae62627/raw_results.json",
+      "selected": false,
+      "line_count": 13905,
+      "material_line_count": 15310,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T182538Z_7ae62627/summary.json",
+      "selected": false,
+      "line_count": 23,
+      "material_line_count": 24,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T184803Z_0d2025ff/config.json",
+      "selected": false,
+      "line_count": 88,
+      "material_line_count": 88,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T184803Z_0d2025ff/hashes.json",
+      "selected": false,
+      "line_count": 16,
+      "material_line_count": 18,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T184803Z_0d2025ff/summary.json",
+      "selected": false,
+      "line_count": 79,
+      "material_line_count": 80,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T192323Z_aed25ae1/config.json",
+      "selected": false,
+      "line_count": 52,
+      "material_line_count": 52,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T192323Z_aed25ae1/hashes.json",
+      "selected": false,
+      "line_count": 16,
+      "material_line_count": 18,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T192323Z_aed25ae1/summary.json",
+      "selected": false,
+      "line_count": 37,
+      "material_line_count": 38,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T195912Z_b01d12d8/config.json",
+      "selected": false,
+      "line_count": 88,
+      "material_line_count": 88,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T195912Z_b01d12d8/hashes.json",
+      "selected": false,
+      "line_count": 16,
+      "material_line_count": 18,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/archive_early_runs/20260915T195912Z_b01d12d8/summary.json",
+      "selected": false,
+      "line_count": 79,
+      "material_line_count": 80,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/rerun_20260921_1405/runtime_smoke.json",
+      "selected": false,
+      "line_count": 4822,
+      "material_line_count": 8371,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/rerun_20260921_1405/runtime_smoke_manifest.json",
+      "selected": false,
+      "line_count": 458,
+      "material_line_count": 458,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/route/route_validator_v1.json",
+      "selected": false,
+      "line_count": 29,
+      "material_line_count": 35,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/runtime_smoke_20260917_021500.json",
+      "selected": false,
+      "line_count": 4658,
+      "material_line_count": 7935,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/runtime_smoke_20260917_021500_manifest.json",
+      "selected": false,
+      "line_count": 471,
+      "material_line_count": 471,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/scene/scene_benchmark_v1.json",
+      "selected": false,
+      "line_count": 35,
+      "material_line_count": 35,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/stress_test/locust_benchmark_data.json",
+      "selected": false,
+      "line_count": 77,
+      "material_line_count": 78,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/results/stress_test/locustfile.py",
+      "selected": false,
+      "line_count": 85,
+      "material_line_count": 84,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/retrieval/benchmark.py",
+      "selected": false,
+      "line_count": 320,
+      "material_line_count": 277,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/retrieval/retrieval_gate_config.json",
+      "selected": false,
+      "line_count": 10,
+      "material_line_count": 11,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/retrieval/retrieval_gold_v1.json",
+      "selected": false,
+      "line_count": 95,
+      "material_line_count": 272,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/retrieval/run_benchmark.py",
+      "selected": false,
+      "line_count": 308,
+      "material_line_count": 287,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/route/route_gate_config.json",
+      "selected": false,
+      "line_count": 10,
+      "material_line_count": 11,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/scene/scene_gate_config.json",
+      "selected": false,
+      "line_count": 10,
+      "material_line_count": 10,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/scene/scene_gold_v1.json",
+      "selected": false,
+      "line_count": 42,
+      "material_line_count": 131,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "evaluation/scene/scene_utterance_benchmark.json",
+      "selected": false,
+      "line_count": 61,
+      "material_line_count": 152,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "output/latex/灵小禅_项目说明书_赛事标准95plus版.tex",
+      "selected": false,
+      "line_count": 818,
+      "material_line_count": 922,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "output/pdf/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.aux",
+      "selected": false,
+      "line_count": 4,
+      "material_line_count": 4,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "output/pdf/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.toc",
+      "selected": false,
+      "line_count": 58,
+      "material_line_count": 77,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "release/competition_final/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.tex",
+      "selected": false,
+      "line_count": 606,
+      "material_line_count": 731,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/apply_centering.py",
+      "selected": false,
+      "line_count": 162,
+      "material_line_count": 149,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/apply_image_size_12x9.py",
+      "selected": false,
+      "line_count": 111,
+      "material_line_count": 98,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/audit_artifacts.py",
+      "selected": false,
+      "line_count": 26,
+      "material_line_count": 26,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/audit_doc_issues.py",
+      "selected": false,
+      "line_count": 28,
+      "material_line_count": 28,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/audit_docx_formatting.py",
+      "selected": false,
+      "line_count": 66,
+      "material_line_count": 63,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/audit_headings.py",
+      "selected": false,
+      "line_count": 22,
+      "material_line_count": 23,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/audit_tables.py",
+      "selected": false,
+      "line_count": 32,
+      "material_line_count": 26,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/check_fig8.py",
+      "selected": false,
+      "line_count": 18,
+      "material_line_count": 17,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/check_images_pil.py",
+      "selected": false,
+      "line_count": 19,
+      "material_line_count": 18,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/check_intext_reps.py",
+      "selected": false,
+      "line_count": 27,
+      "material_line_count": 27,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/check_media_refs.py",
+      "selected": false,
+      "line_count": 49,
+      "material_line_count": 43,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/check_p485.py",
+      "selected": false,
+      "line_count": 18,
+      "material_line_count": 17,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/check_p785.py",
+      "selected": false,
+      "line_count": 17,
+      "material_line_count": 16,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/detailed_figure_list.py",
+      "selected": false,
+      "line_count": 85,
+      "material_line_count": 75,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/extract_all_docx_images.py",
+      "selected": false,
+      "line_count": 16,
+      "material_line_count": 15,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/find_all_fig_mentions.py",
+      "selected": false,
+      "line_count": 31,
+      "material_line_count": 31,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/find_all_tu.py",
+      "selected": false,
+      "line_count": 35,
+      "material_line_count": 32,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/find_broken_paragraphs.py",
+      "selected": false,
+      "line_count": 22,
+      "material_line_count": 19,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/find_urls_in_docx.py",
+      "selected": false,
+      "line_count": 11,
+      "material_line_count": 12,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/humanize_final_content.py",
+      "selected": false,
+      "line_count": 333,
+      "material_line_count": 424,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/humanize_final_docx.py",
+      "selected": false,
+      "line_count": 252,
+      "material_line_count": 275,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_all_caps.py",
+      "selected": false,
+      "line_count": 15,
+      "material_line_count": 15,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_caption_runs.py",
+      "selected": false,
+      "line_count": 22,
+      "material_line_count": 21,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_docx_figures.py",
+      "selected": false,
+      "line_count": 68,
+      "material_line_count": 58,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_docx_p1_410.py",
+      "selected": false,
+      "line_count": 52,
+      "material_line_count": 44,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_drawing_xml.py",
+      "selected": false,
+      "line_count": 17,
+      "material_line_count": 15,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_exact_3.py",
+      "selected": false,
+      "line_count": 21,
+      "material_line_count": 20,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_fig3.py",
+      "selected": false,
+      "line_count": 18,
+      "material_line_count": 17,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_margins.py",
+      "selected": false,
+      "line_count": 32,
+      "material_line_count": 34,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_p373_runs.py",
+      "selected": false,
+      "line_count": 22,
+      "material_line_count": 21,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_p404.py",
+      "selected": false,
+      "line_count": 19,
+      "material_line_count": 17,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_p407_runs.py",
+      "selected": false,
+      "line_count": 23,
+      "material_line_count": 22,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_p407_xml.py",
+      "selected": false,
+      "line_count": 20,
+      "material_line_count": 18,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_p513_runs.py",
+      "selected": false,
+      "line_count": 22,
+      "material_line_count": 21,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_ref_runs.py",
+      "selected": false,
+      "line_count": 25,
+      "material_line_count": 24,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_sdt.py",
+      "selected": false,
+      "line_count": 23,
+      "material_line_count": 21,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_tables.py",
+      "selected": false,
+      "line_count": 14,
+      "material_line_count": 13,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/inspect_toc.py",
+      "selected": false,
+      "line_count": 12,
+      "material_line_count": 11,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/locate_docx_targets.py",
+      "selected": false,
+      "line_count": 47,
+      "material_line_count": 45,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/optimize_final_docx.py",
+      "selected": false,
+      "line_count": 878,
+      "material_line_count": 861,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/patch_detemplatize_docx.py",
+      "selected": false,
+      "line_count": 265,
+      "material_line_count": 325,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/patch_final_docx.py",
+      "selected": false,
+      "line_count": 207,
+      "material_line_count": 181,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/patch_final_docx_blueprint.py",
+      "selected": false,
+      "line_count": 450,
+      "material_line_count": 515,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/patch_final_docx_comprehensive.py",
+      "selected": false,
+      "line_count": 353,
+      "material_line_count": 464,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/patch_final_docx_sprint98.py",
+      "selected": false,
+      "line_count": 175,
+      "material_line_count": 193,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/patch_final_markdown.py",
+      "selected": false,
+      "line_count": 191,
+      "material_line_count": 220,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/patch_final_pptx_95plus.py",
+      "selected": false,
+      "line_count": 142,
+      "material_line_count": 140,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/patch_markdown_sprint95plus.py",
+      "selected": false,
+      "line_count": 271,
+      "material_line_count": 329,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/patch_remaining_3.py",
+      "selected": false,
+      "line_count": 26,
+      "material_line_count": 24,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/print_fig_hierarchy.py",
+      "selected": false,
+      "line_count": 68,
+      "material_line_count": 66,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/scan_doc_paragraphs.py",
+      "selected": false,
+      "line_count": 14,
+      "material_line_count": 12,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/scan_first_179.py",
+      "selected": false,
+      "line_count": 13,
+      "material_line_count": 12,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/streamline_docx.py",
+      "selected": false,
+      "line_count": 563,
+      "material_line_count": 608,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/streamline_docx_phase2.py",
+      "selected": false,
+      "line_count": 167,
+      "material_line_count": 177,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/sync_fig_numbers.py",
+      "selected": false,
+      "line_count": 43,
+      "material_line_count": 45,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/test_bolding.py",
+      "selected": false,
+      "line_count": 102,
+      "material_line_count": 100,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/test_delete.py",
+      "selected": false,
+      "line_count": 21,
+      "material_line_count": 17,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/test_heading_regex.py",
+      "selected": false,
+      "line_count": 33,
+      "material_line_count": 28,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/test_insert_pic.py",
+      "selected": false,
+      "line_count": 41,
+      "material_line_count": 36,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/test_python_docx.py",
+      "selected": false,
+      "line_count": 19,
+      "material_line_count": 16,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/test_steps.py",
+      "selected": false,
+      "line_count": 183,
+      "material_line_count": 237,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/verify_optimized_docx.py",
+      "selected": false,
+      "line_count": 363,
+      "material_line_count": 357,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/archive/material-editing/verify_patched_docx.py",
+      "selected": false,
+      "line_count": 86,
+      "material_line_count": 80,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/audit_competition_materials.ps1",
+      "selected": false,
+      "line_count": 32,
+      "material_line_count": 29,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/audit_competition_materials.py",
+      "selected": false,
+      "line_count": 405,
+      "material_line_count": 393,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/build_release_package.py",
+      "selected": false,
+      "line_count": 139,
+      "material_line_count": 141,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/generate_all_candidates.py",
+      "selected": false,
+      "line_count": 398,
+      "material_line_count": 421,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/generate_charts.py",
+      "selected": false,
+      "line_count": 281,
+      "material_line_count": 267,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/make_contact_sheet.py",
+      "selected": false,
+      "line_count": 47,
+      "material_line_count": 38,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/render_pptx.ps1",
+      "selected": false,
+      "line_count": 32,
+      "material_line_count": 30,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/pptx_minimax/verify_pptx.py",
+      "selected": false,
+      "line_count": 70,
+      "material_line_count": 59,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/run_ablation.py",
+      "selected": false,
+      "line_count": 12,
+      "material_line_count": 8,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/start.bat",
+      "selected": false,
+      "line_count": 55,
+      "material_line_count": 49,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/stop.bat",
+      "selected": false,
+      "line_count": 21,
+      "material_line_count": 17,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "scripts/verify-release.ps1",
+      "selected": false,
+      "line_count": 334,
+      "material_line_count": 323,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.aux",
+      "selected": false,
+      "line_count": 94,
+      "material_line_count": 172,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.out",
+      "selected": false,
+      "line_count": 57,
+      "material_line_count": 117,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.tex",
+      "selected": false,
+      "line_count": 606,
+      "material_line_count": 731,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.toc",
+      "selected": false,
+      "line_count": 58,
+      "material_line_count": 77,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/算法图示候选/02_Beam_Search_D2L.svg",
+      "selected": false,
+      "line_count": 163,
+      "material_line_count": 1542,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/算法图示候选/05_Time_Window_Constraint_Timefold_reference.svg",
+      "selected": false,
+      "line_count": 567,
+      "material_line_count": 1999,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    },
+    {
+      "path": "竞赛汇报与文档材料包/05_现场演示与用户调研/pre_survey_data.json",
+      "selected": false,
+      "line_count": 452,
+      "material_line_count": 452,
+      "priority": 100,
+      "selection_tier": "supplement",
+      "evidence": "补充源码证据",
+      "model_reason": ""
+    }
+  ],
+  "confirmation_note": "根据子代理D审计结果选定33个核心生产源文件，涵盖前端页面、路由、场景状态、物理规划与混合RAG，折合约104.6页，满足前30页后30页标准",
+  "confirmed_at": "2026-10-06T16:45:40+00:00",
+  "confirmed_content_sha256": "f3da198ca586bcca4f2a1e3f9ceb40d5aa21bc4ca36ba785fae6c566ebfbc210"
+}

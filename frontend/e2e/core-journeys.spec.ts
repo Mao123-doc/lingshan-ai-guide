@@ -1,12 +1,13 @@
 import { expect, test, loginAsAdmin, mockVisitorApis } from './fixtures';
 
 test('J01 home capability opens QA module', async ({ page }) => {
+  await mockVisitorApis(page);
   await page.goto('/');
-  await page.getByRole('button', { name: '智能问答，点击进入' }).click();
+  await page.getByRole('button', { name: '开始提问' }).click();
   await expect(page).toHaveURL(/\/qa$/);
 });
 
-test('J02 text QA renders streamed answer', async ({ page }) => {
+test('J02 text QA renders answer and evidence', async ({ page }) => {
   await mockVisitorApis(page);
   await page.goto('/qa');
   await expect(page.getByText('欢迎来到灵山胜境。')).toBeVisible();
@@ -28,12 +29,13 @@ test('J03 follow-up remains in the same QA session', async ({ page }) => {
   await expect(page.getByText('那它在哪里？')).toBeVisible();
 });
 
-test('J04 voice unsupported path stays usable', async ({ page }) => {
+test('J04 QA evidence is accessible', async ({ page }) => {
   await mockVisitorApis(page);
-  await page.addInitScript(() => { delete (window as Window & { SpeechRecognition?: unknown }).SpeechRecognition; });
   await page.goto('/qa');
-  await page.getByRole('button').filter({ has: page.locator('.anticon-audio') }).click();
-  await expect(page.getByPlaceholder(/想问什么|正在聆听/)).toBeVisible();
+  await page.getByPlaceholder(/想问什么/).fill('灵山大佛有多高？');
+  await page.getByPlaceholder(/想问什么/).press('Enter');
+  await page.getByRole('button', { name: '查看依据' }).click();
+  await expect(page.getByText('大佛通高88米。')).toBeVisible();
 });
 
 test('J05 feasible scene route shows visitor-friendly outcome', async ({ page }) => {
@@ -61,17 +63,15 @@ test('J06 recommendation renders route cards', async ({ page }) => {
   });
 });
 
-test('J07 nearby permission success exposes nearby section', async ({ page, context }) => {
-  await context.grantPermissions(['geolocation']);
-  await context.setGeolocation({ latitude: 31.43205, longitude: 120.09151 });
+test('J07 homepage route entry opens the planner', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: '查找附近景点' }).click();
-  await expect(page.locator('#nearby').getByRole('heading', { name: /附近景点/ })).toBeVisible();
+  await page.getByRole('button', { name: '规划路线', exact: true }).click();
+  await expect(page).toHaveURL(/\/recommend$/);
 });
 
-test('J08 admin login reaches dashboard', async ({ page }) => {
+test('J08 admin login reaches knowledge maintenance', async ({ page }) => {
   await loginAsAdmin(page);
-  await expect(page.getByText('今日问答')).toBeVisible();
+  await expect(page.getByText('知识库管理')).toBeVisible();
 });
 
 test('J09 knowledge page loads documents and supports upload', async ({ page }) => {
@@ -82,16 +82,10 @@ test('J09 knowledge page loads documents and supports upload', async ({ page }) 
   await expect(page.getByText(/上传成功/)).toBeVisible();
 });
 
-test('J10 digital-human page loads configured appearance', async ({ page }) => {
-  await loginAsAdmin(page);
+test('J10 retired admin pages return to the homepage', async ({ page }) => {
   await page.goto('/admin/digital-human');
-  await expect(page.getByText('数字人形象管理')).toBeVisible();
-});
-
-test('J11 reports page loads sentiment period', async ({ page }) => {
-  await loginAsAdmin(page);
-  await page.goto('/admin/reports');
-  await expect(page.getByText('游客感受度报告')).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('button', { name: '开始提问' })).toBeVisible();
 });
 
 test('J12 mobile viewport has no horizontal overflow on home', async ({ page }) => {

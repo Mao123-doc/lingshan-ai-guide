@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
       localStorage.setItem('admin_token', res.data.access_token);
       localStorage.setItem('admin_user', JSON.stringify(res.data));
       message.success('登录成功！');
-      navigate('/admin/dashboard');
+      navigate('/admin/knowledge');
     } catch (err: unknown) {
       const errorMessage = axios.isAxiosError<{ error?: string }>(err)
         ? err.response?.data?.error
@@ -45,7 +45,7 @@ export default function AdminLoginPage() {
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{ fontSize: 48, marginBottom: 8 }}>🏯</div>
           <Title level={3} style={{ margin: 0 }}>管理后台登录</Title>
-          <p style={{ color: '#999', marginTop: 8 }}>灵山胜境 AI 数字人导游系统</p>
+          <p style={{ color: '#999', marginTop: 8 }}>灵小禅 · 知识库维护</p>
         </div>
 
         <Form onFinish={onFinish} size="large">

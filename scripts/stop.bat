@@ -10,11 +10,6 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8010.*LISTENING" 2^>nul') d
     echo   [OK] Main server stopped (port 8010)
 )
 
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8001.*LISTENING" 2^>nul') do (
-    taskkill /f /pid %%a >nul 2>&1
-    echo   [OK] TTS service stopped (port 8001)
-)
-
 for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8002.*LISTENING" 2^>nul') do (
     taskkill /f /pid %%a >nul 2>&1
     echo   [OK] Vector search stopped (port 8002)
