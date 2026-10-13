@@ -1,0 +1,1469 @@
+{
+  "moves": [
+    [
+      "scripts/apply_centering.py",
+      "scripts/archive/material-editing/apply_centering.py"
+    ],
+    [
+      "scripts/apply_image_size_12x9.py",
+      "scripts/archive/material-editing/apply_image_size_12x9.py"
+    ],
+    [
+      "scripts/audit_artifacts.py",
+      "scripts/archive/material-editing/audit_artifacts.py"
+    ],
+    [
+      "scripts/audit_docx_formatting.py",
+      "scripts/archive/material-editing/audit_docx_formatting.py"
+    ],
+    [
+      "scripts/audit_doc_issues.py",
+      "scripts/archive/material-editing/audit_doc_issues.py"
+    ],
+    [
+      "scripts/audit_headings.py",
+      "scripts/archive/material-editing/audit_headings.py"
+    ],
+    [
+      "scripts/audit_tables.py",
+      "scripts/archive/material-editing/audit_tables.py"
+    ],
+    [
+      "scripts/check_fig8.py",
+      "scripts/archive/material-editing/check_fig8.py"
+    ],
+    [
+      "scripts/check_images_pil.py",
+      "scripts/archive/material-editing/check_images_pil.py"
+    ],
+    [
+      "scripts/check_intext_reps.py",
+      "scripts/archive/material-editing/check_intext_reps.py"
+    ],
+    [
+      "scripts/check_media_refs.py",
+      "scripts/archive/material-editing/check_media_refs.py"
+    ],
+    [
+      "scripts/check_p485.py",
+      "scripts/archive/material-editing/check_p485.py"
+    ],
+    [
+      "scripts/check_p785.py",
+      "scripts/archive/material-editing/check_p785.py"
+    ],
+    [
+      "scripts/detailed_figure_list.py",
+      "scripts/archive/material-editing/detailed_figure_list.py"
+    ],
+    [
+      "scripts/extract_all_docx_images.py",
+      "scripts/archive/material-editing/extract_all_docx_images.py"
+    ],
+    [
+      "scripts/find_all_fig_mentions.py",
+      "scripts/archive/material-editing/find_all_fig_mentions.py"
+    ],
+    [
+      "scripts/find_all_tu.py",
+      "scripts/archive/material-editing/find_all_tu.py"
+    ],
+    [
+      "scripts/find_broken_paragraphs.py",
+      "scripts/archive/material-editing/find_broken_paragraphs.py"
+    ],
+    [
+      "scripts/find_urls_in_docx.py",
+      "scripts/archive/material-editing/find_urls_in_docx.py"
+    ],
+    [
+      "scripts/humanize_final_content.py",
+      "scripts/archive/material-editing/humanize_final_content.py"
+    ],
+    [
+      "scripts/humanize_final_docx.py",
+      "scripts/archive/material-editing/humanize_final_docx.py"
+    ],
+    [
+      "scripts/inspect_all_caps.py",
+      "scripts/archive/material-editing/inspect_all_caps.py"
+    ],
+    [
+      "scripts/inspect_caption_runs.py",
+      "scripts/archive/material-editing/inspect_caption_runs.py"
+    ],
+    [
+      "scripts/inspect_docx_figures.py",
+      "scripts/archive/material-editing/inspect_docx_figures.py"
+    ],
+    [
+      "scripts/inspect_docx_p1_410.py",
+      "scripts/archive/material-editing/inspect_docx_p1_410.py"
+    ],
+    [
+      "scripts/inspect_drawing_xml.py",
+      "scripts/archive/material-editing/inspect_drawing_xml.py"
+    ],
+    [
+      "scripts/inspect_exact_3.py",
+      "scripts/archive/material-editing/inspect_exact_3.py"
+    ],
+    [
+      "scripts/inspect_fig3.py",
+      "scripts/archive/material-editing/inspect_fig3.py"
+    ],
+    [
+      "scripts/inspect_margins.py",
+      "scripts/archive/material-editing/inspect_margins.py"
+    ],
+    [
+      "scripts/inspect_p373_runs.py",
+      "scripts/archive/material-editing/inspect_p373_runs.py"
+    ],
+    [
+      "scripts/inspect_p404.py",
+      "scripts/archive/material-editing/inspect_p404.py"
+    ],
+    [
+      "scripts/inspect_p407_runs.py",
+      "scripts/archive/material-editing/inspect_p407_runs.py"
+    ],
+    [
+      "scripts/inspect_p407_xml.py",
+      "scripts/archive/material-editing/inspect_p407_xml.py"
+    ],
+    [
+      "scripts/inspect_p513_runs.py",
+      "scripts/archive/material-editing/inspect_p513_runs.py"
+    ],
+    [
+      "scripts/inspect_ref_runs.py",
+      "scripts/archive/material-editing/inspect_ref_runs.py"
+    ],
+    [
+      "scripts/inspect_sdt.py",
+      "scripts/archive/material-editing/inspect_sdt.py"
+    ],
+    [
+      "scripts/inspect_tables.py",
+      "scripts/archive/material-editing/inspect_tables.py"
+    ],
+    [
+      "scripts/inspect_toc.py",
+      "scripts/archive/material-editing/inspect_toc.py"
+    ],
+    [
+      "scripts/locate_docx_targets.py",
+      "scripts/archive/material-editing/locate_docx_targets.py"
+    ],
+    [
+      "scripts/optimize_final_docx.py",
+      "scripts/archive/material-editing/optimize_final_docx.py"
+    ],
+    [
+      "scripts/patch_detemplatize_docx.py",
+      "scripts/archive/material-editing/patch_detemplatize_docx.py"
+    ],
+    [
+      "scripts/patch_final_docx.py",
+      "scripts/archive/material-editing/patch_final_docx.py"
+    ],
+    [
+      "scripts/patch_final_docx_blueprint.py",
+      "scripts/archive/material-editing/patch_final_docx_blueprint.py"
+    ],
+    [
+      "scripts/patch_final_docx_comprehensive.py",
+      "scripts/archive/material-editing/patch_final_docx_comprehensive.py"
+    ],
+    [
+      "scripts/patch_final_docx_sprint98.py",
+      "scripts/archive/material-editing/patch_final_docx_sprint98.py"
+    ],
+    [
+      "scripts/patch_final_markdown.py",
+      "scripts/archive/material-editing/patch_final_markdown.py"
+    ],
+    [
+      "scripts/patch_final_pptx_95plus.py",
+      "scripts/archive/material-editing/patch_final_pptx_95plus.py"
+    ],
+    [
+      "scripts/patch_markdown_sprint95plus.py",
+      "scripts/archive/material-editing/patch_markdown_sprint95plus.py"
+    ],
+    [
+      "scripts/patch_remaining_3.py",
+      "scripts/archive/material-editing/patch_remaining_3.py"
+    ],
+    [
+      "scripts/print_fig_hierarchy.py",
+      "scripts/archive/material-editing/print_fig_hierarchy.py"
+    ],
+    [
+      "scripts/scan_doc_paragraphs.py",
+      "scripts/archive/material-editing/scan_doc_paragraphs.py"
+    ],
+    [
+      "scripts/scan_first_179.py",
+      "scripts/archive/material-editing/scan_first_179.py"
+    ],
+    [
+      "scripts/streamline_docx.py",
+      "scripts/archive/material-editing/streamline_docx.py"
+    ],
+    [
+      "scripts/streamline_docx_phase2.py",
+      "scripts/archive/material-editing/streamline_docx_phase2.py"
+    ],
+    [
+      "scripts/sync_fig_numbers.py",
+      "scripts/archive/material-editing/sync_fig_numbers.py"
+    ],
+    [
+      "scripts/test_bolding.py",
+      "scripts/archive/material-editing/test_bolding.py"
+    ],
+    [
+      "scripts/test_delete.py",
+      "scripts/archive/material-editing/test_delete.py"
+    ],
+    [
+      "scripts/test_heading_regex.py",
+      "scripts/archive/material-editing/test_heading_regex.py"
+    ],
+    [
+      "scripts/test_insert_pic.py",
+      "scripts/archive/material-editing/test_insert_pic.py"
+    ],
+    [
+      "scripts/test_python_docx.py",
+      "scripts/archive/material-editing/test_python_docx.py"
+    ],
+    [
+      "scripts/test_steps.py",
+      "scripts/archive/material-editing/test_steps.py"
+    ],
+    [
+      "scripts/verify_optimized_docx.py",
+      "scripts/archive/material-editing/verify_optimized_docx.py"
+    ],
+    [
+      "scripts/verify_patched_docx.py",
+      "scripts/archive/material-editing/verify_patched_docx.py"
+    ],
+    [
+      "竞赛汇报与文档材料包/upload",
+      "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿"
+    ],
+    [
+      "算法场景创新_20260925132311A006",
+      "release/submission-20260925"
+    ],
+    [
+      "竞赛汇报与文档材料包.7z",
+      "release/archives/竞赛汇报与文档材料包.7z"
+    ]
+  ],
+  "deletes": [
+    "tmp",
+    "scratch_video_frames",
+    "scripts/tmp_inspect_frames",
+    ".pytest_cache",
+    "scripts/__pycache__",
+    "compare_ppt.py",
+    "dump_pdf.py",
+    "dump_pptx.py",
+    "final_full_content.md.bak_pre_blueprint_sprint",
+    "final_full_content.md.bak_pre_humanize",
+    "scratch_pdf_dump.json",
+    "scratch_pdf_summary.txt",
+    "scratch_pptx_dump.json",
+    "scratch_pptx_summary.txt",
+    "scratch_ppt_compare.txt",
+    "竞赛汇报与文档材料包/upload/final_backup.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_before_detemplatize_20260924.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_before_sync_20260924.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_prepatch.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_pre_audit_patch.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_pre_blueprint_sprint95.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_pre_centering.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_pre_format_opt.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_pre_humanize.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_pre_sprint98.docx",
+    "竞赛汇报与文档材料包/upload/final_backup_pre_streamline_20260924.docx",
+    "竞赛汇报与文档材料包/upload/final_centered.docx",
+    "竞赛汇报与文档材料包/upload/final_full_content.md.bak_pre_humanize",
+    "竞赛汇报与文档材料包/upload/final_optimized.docx",
+    "竞赛汇报与文档材料包/upload/final_test_12x9.docx"
+  ],
+  "deleted_files": [
+    {
+      "path": "tmp/extracted_p13_img0.jpeg",
+      "bytes": 1027,
+      "sha256": "3053f1285b5ad04ecf6265c773c1f168039d28e5a29cfd5c8e47d2c5b5f20636",
+      "original_path": "tmp/extracted_p13_img0.jpeg"
+    },
+    {
+      "path": "tmp/extracted_p13_img1.jpeg",
+      "bytes": 1059,
+      "sha256": "6313633b142d331ce8ce095449f23b65514c48d0e0686167dbab5117f6beca6e",
+      "original_path": "tmp/extracted_p13_img1.jpeg"
+    },
+    {
+      "path": "tmp/extracted_p14_img0.jpeg",
+      "bytes": 50728,
+      "sha256": "3b97f8136a1f4f52f6fced13eeaf321431306a7d4022af05aa11917bda2a513d",
+      "original_path": "tmp/extracted_p14_img0.jpeg"
+    },
+    {
+      "path": "tmp/extracted_p15_img0.jpeg",
+      "bytes": 1171,
+      "sha256": "22cfb76fd5313efee738e82af44755421a8a7bf0a5606f003181c3b598d56c32",
+      "original_path": "tmp/extracted_p15_img0.jpeg"
+    },
+    {
+      "path": "tmp/image1.jpeg",
+      "bytes": 54664,
+      "sha256": "68fa8f385ef8041bcda55f694a0487f9d13a64709287bbeb1cb646714e63f4ca",
+      "original_path": "tmp/image1.jpeg"
+    },
+    {
+      "path": "tmp/image10.jpeg",
+      "bytes": 40927,
+      "sha256": "87854e56e9a4b9d446b685ad3ffdd181e58a7cac883969924cece72e333225ab",
+      "original_path": "tmp/image10.jpeg"
+    },
+    {
+      "path": "tmp/image11.jpeg",
+      "bytes": 37349,
+      "sha256": "3169eacf77359dd02c0e3750619e84d4cde45b721e4d0ea8e8953d6559374057",
+      "original_path": "tmp/image11.jpeg"
+    },
+    {
+      "path": "tmp/image12.jpeg",
+      "bytes": 19443,
+      "sha256": "1f9094f51711ee7d325997318b3cc578569615fe85db2dbe637c37fd56308431",
+      "original_path": "tmp/image12.jpeg"
+    },
+    {
+      "path": "tmp/image13.jpeg",
+      "bytes": 18863,
+      "sha256": "0dc6ac9ea95e7b77fd13dd17c363bb74fb0e00ff592d2032ba487581b098f0a0",
+      "original_path": "tmp/image13.jpeg"
+    },
+    {
+      "path": "tmp/image14.jpeg",
+      "bytes": 24871,
+      "sha256": "94d5cc71fd5ff0c1d4fdecb94fdf8200b5d8b929ce537397465cccb2cd978f3b",
+      "original_path": "tmp/image14.jpeg"
+    },
+    {
+      "path": "tmp/image15.jpeg",
+      "bytes": 18954,
+      "sha256": "c834362d3038623ce470b9f190f30c84e26239b483088f117340560e424b4596",
+      "original_path": "tmp/image15.jpeg"
+    },
+    {
+      "path": "tmp/image16.jpeg",
+      "bytes": 21185,
+      "sha256": "f34a15db630593a7ee742b409c243088d998be7cab8484fdaa45585e3833e388",
+      "original_path": "tmp/image16.jpeg"
+    },
+    {
+      "path": "tmp/image17.jpeg",
+      "bytes": 33015,
+      "sha256": "645ef1f7de56e5b5ec3c01586525b7ba2e364e1be967db11bb83647eb913da0c",
+      "original_path": "tmp/image17.jpeg"
+    },
+    {
+      "path": "tmp/image18.jpeg",
+      "bytes": 33583,
+      "sha256": "790eaa4f2410b7c99fc6dccc6badce35eb4dd6e3b88ae4f6e6a84ee332567c7a",
+      "original_path": "tmp/image18.jpeg"
+    },
+    {
+      "path": "tmp/image19.jpeg",
+      "bytes": 34934,
+      "sha256": "0006b1bc70cd5286344cdad19fa800345426d424718cb995dfa024e459d7f9ec",
+      "original_path": "tmp/image19.jpeg"
+    },
+    {
+      "path": "tmp/image2.jpeg",
+      "bytes": 29824,
+      "sha256": "37c17f62f474f9b99305b3a8f41e23d91c24a1578c922b9821140ca3e9680505",
+      "original_path": "tmp/image2.jpeg"
+    },
+    {
+      "path": "tmp/image20.jpeg",
+      "bytes": 17848,
+      "sha256": "62de0f891aa91e92a4336604be46db67a870804ea00d7da98248574c1d23eb9d",
+      "original_path": "tmp/image20.jpeg"
+    },
+    {
+      "path": "tmp/image21.png",
+      "bytes": 96025,
+      "sha256": "42c4975e403a7cd3bec5c7c2040714cfae4599540d203e845bce6cc008ec91b5",
+      "original_path": "tmp/image21.png"
+    },
+    {
+      "path": "tmp/image22.jpeg",
+      "bytes": 23620,
+      "sha256": "d4d927673aa136572e167415eaf617175594b7c715858e03250b83cfb6c67a00",
+      "original_path": "tmp/image22.jpeg"
+    },
+    {
+      "path": "tmp/image3.png",
+      "bytes": 400861,
+      "sha256": "d1656cec289c929f45ff94596c08e16d7a9e0717b05374d2007f01e2d08fe44c",
+      "original_path": "tmp/image3.png"
+    },
+    {
+      "path": "tmp/image4.jpeg",
+      "bytes": 41778,
+      "sha256": "17738d4dcd4829e2da728e6d634188d85cd3ae23e362b6502e8bfebc1facdccf",
+      "original_path": "tmp/image4.jpeg"
+    },
+    {
+      "path": "tmp/image5.jpeg",
+      "bytes": 35747,
+      "sha256": "9dda220f917292853693a4133cf1782bfd85b2fd12ff2351dbba19f01ab837c5",
+      "original_path": "tmp/image5.jpeg"
+    },
+    {
+      "path": "tmp/image6.png",
+      "bytes": 3886,
+      "sha256": "c9d41f58131778c8b29c891de59cd3759134cd871575950dceaf636f933fca57",
+      "original_path": "tmp/image6.png"
+    },
+    {
+      "path": "tmp/image7.png",
+      "bytes": 5988,
+      "sha256": "03bddb261205117b80fae34ff529fddf8393af894a61bf4329754a0ce848b883",
+      "original_path": "tmp/image7.png"
+    },
+    {
+      "path": "tmp/image8.png",
+      "bytes": 375923,
+      "sha256": "567f3168293f3ae062db2089a853e5b0ce4ce5c90c87f9d41be6bf7625aa7be0",
+      "original_path": "tmp/image8.png"
+    },
+    {
+      "path": "tmp/image9.png",
+      "bytes": 6176,
+      "sha256": "b3b2d666e9c92da7f7123efba74383afaf9d0aefcc6a2aab234a1a9606234b39",
+      "original_path": "tmp/image9.png"
+    },
+    {
+      "path": "tmp/test_delete_res.docx",
+      "bytes": 1456944,
+      "sha256": "c4f003ee5c5416692e633af97ce0cac5c6219fe59e735b4e29b8f16426fb7441",
+      "original_path": "tmp/test_delete_res.docx"
+    },
+    {
+      "path": "tmp/test_docx_insert_pic.docx",
+      "bytes": 1456889,
+      "sha256": "b7ca33e3d3e3499919ebc5bbceaf2252d22cd6b59867a5f46f2fb3ced7a46f44",
+      "original_path": "tmp/test_docx_insert_pic.docx"
+    },
+    {
+      "path": "tmp/test_docx_save.docx",
+      "bytes": 1456999,
+      "sha256": "883043db9d437f007eca81a99d9b81ba07cc70b9f6001ef367215c16cf820e7f",
+      "original_path": "tmp/test_docx_save.docx"
+    },
+    {
+      "path": "tmp/video_crop_130s.jpg",
+      "bytes": 33555,
+      "sha256": "65aa689aa53dd07efbdb7df763abb35628cca1ac856cd1d514c7d417bd58f0f7",
+      "original_path": "tmp/video_crop_130s.jpg"
+    },
+    {
+      "path": "tmp/video_crop_input2_130s.jpg",
+      "bytes": 16397,
+      "sha256": "e8808a35cdd69a43c22b452175bdd521800f92ddac1a965ba3e3aec42ac94874",
+      "original_path": "tmp/video_crop_input2_130s.jpg"
+    },
+    {
+      "path": "tmp/video_crop_input_130s.jpg",
+      "bytes": 7330,
+      "sha256": "eb6b257f01fd3a1397259e9be0f1e21c2799a1b14ae869eb3cd4baca085ed7d6",
+      "original_path": "tmp/video_crop_input_130s.jpg"
+    },
+    {
+      "path": "tmp/video_frame_00_5s.jpg",
+      "bytes": 305470,
+      "sha256": "c15c42ef3d152c3e332848e9f8c30a053a3e187671ac5fbdcf7e8742bc0b7387",
+      "original_path": "tmp/video_frame_00_5s.jpg"
+    },
+    {
+      "path": "tmp/video_frame_01_30s.jpg",
+      "bytes": 103847,
+      "sha256": "b717c95413ab8a0db0e93969cff1ddb1b3365bd0000364210747e2c0627a9488",
+      "original_path": "tmp/video_frame_01_30s.jpg"
+    },
+    {
+      "path": "tmp/video_frame_02_75s.jpg",
+      "bytes": 144881,
+      "sha256": "b7cd4343ae8088abd62c78e59eb7c0ba9120b4a2329b024095cafdbbf905956d",
+      "original_path": "tmp/video_frame_02_75s.jpg"
+    },
+    {
+      "path": "tmp/video_frame_03_130s.jpg",
+      "bytes": 136788,
+      "sha256": "d8db85fefc41b396df102f6a07f4fdfd017a34ee01bbe0586618b3c2807774d7",
+      "original_path": "tmp/video_frame_03_130s.jpg"
+    },
+    {
+      "path": "tmp/video_frame_04_190s.jpg",
+      "bytes": 116349,
+      "sha256": "0b77078dfba8a407319e0faffaef5cd7655a382f515d8284ab6f72421610e314",
+      "original_path": "tmp/video_frame_04_190s.jpg"
+    },
+    {
+      "path": "tmp/video_frame_05_240s.jpg",
+      "bytes": 120009,
+      "sha256": "30888cccfc531de00de136283fe5f888c10e81eb4958e23452d7e9f5ac551581",
+      "original_path": "tmp/video_frame_05_240s.jpg"
+    },
+    {
+      "path": "tmp/video_frame_247s.jpg",
+      "bytes": 281734,
+      "sha256": "48000828f911116344e91cccd6c6830815ccfaa52afdc0ade67b58464b5e70ba",
+      "original_path": "tmp/video_frame_247s.jpg"
+    },
+    {
+      "path": "tmp/v_130s.jpg",
+      "bytes": 136788,
+      "sha256": "d8db85fefc41b396df102f6a07f4fdfd017a34ee01bbe0586618b3c2807774d7",
+      "original_path": "tmp/v_130s.jpg"
+    },
+    {
+      "path": "tmp/v_135s.jpg",
+      "bytes": 155088,
+      "sha256": "b72d947fac1e3b76bfdca4d0ef4159540cc9d67b99958e2056e3a242654447e4",
+      "original_path": "tmp/v_135s.jpg"
+    },
+    {
+      "path": "tmp/v_140s.jpg",
+      "bytes": 155688,
+      "sha256": "a79b4cbaee3e36d909625f78ca8ba9909a1fe79bfca3777262ca05a3e1fd3e6f",
+      "original_path": "tmp/v_140s.jpg"
+    },
+    {
+      "path": "tmp/v_145s.jpg",
+      "bytes": 115037,
+      "sha256": "18a8be172e3ef1a8487afa8f0233df50f4b2ba81e30f31544ab9de0505ab42cf",
+      "original_path": "tmp/v_145s.jpg"
+    },
+    {
+      "path": "tmp/v_150s.jpg",
+      "bytes": 99982,
+      "sha256": "647860f7eeadace7abe1fe1f2d4d893c825640c07d733fa345bcf6ae48d3cbd1",
+      "original_path": "tmp/v_150s.jpg"
+    },
+    {
+      "path": "tmp/v_155s.jpg",
+      "bytes": 137702,
+      "sha256": "a289ff0415143888164f322bbbd6c006a5a33538a7cf92c416f55b6aaf5f16fc",
+      "original_path": "tmp/v_155s.jpg"
+    },
+    {
+      "path": "tmp/v_160s.jpg",
+      "bytes": 135067,
+      "sha256": "a2bc3ca645596b18c4fcb624d4d27098dbb985dd0066c7525084e1b581c3b8cf",
+      "original_path": "tmp/v_160s.jpg"
+    },
+    {
+      "path": "tmp/v_165s.jpg",
+      "bytes": 254808,
+      "sha256": "309c01290ca5f58964b54b9db25ca9d11e92f4b43ee1f485f08192ad260238a6",
+      "original_path": "tmp/v_165s.jpg"
+    },
+    {
+      "path": "tmp/v_170s.jpg",
+      "bytes": 329663,
+      "sha256": "e4af85d94737441b6fd3e74d123176d85704635dc2ce5024e9942c2fedd32c0c",
+      "original_path": "tmp/v_170s.jpg"
+    },
+    {
+      "path": "tmp/v_175s.jpg",
+      "bytes": 263421,
+      "sha256": "1574709fd3704a3b329d4835f5b21cda24888c675f41ad0a4503650424cb8dec",
+      "original_path": "tmp/v_175s.jpg"
+    },
+    {
+      "path": "tmp/v_180s.jpg",
+      "bytes": 276472,
+      "sha256": "06e59633e44fc9f3e06884794a9bb2f9c7266094e5c953546d214740515fa229",
+      "original_path": "tmp/v_180s.jpg"
+    },
+    {
+      "path": "tmp/v_185s.jpg",
+      "bytes": 109781,
+      "sha256": "7515490b31e09c185063443e83e07a4f41bb3924eb44ca064f909b3d108b2532",
+      "original_path": "tmp/v_185s.jpg"
+    },
+    {
+      "path": "tmp/v_190s.jpg",
+      "bytes": 116349,
+      "sha256": "0b77078dfba8a407319e0faffaef5cd7655a382f515d8284ab6f72421610e314",
+      "original_path": "tmp/v_190s.jpg"
+    },
+    {
+      "path": "tmp/v_195s.jpg",
+      "bytes": 187370,
+      "sha256": "463afc0d94a61d2435e8381b0f902dac031b5b5b0d44e54cecd80e7830ad28f8",
+      "original_path": "tmp/v_195s.jpg"
+    },
+    {
+      "path": "tmp/v_200s.jpg",
+      "bytes": 125783,
+      "sha256": "1d99f23723049100ded3dd686aa168172aacabcf1f033ca61f9570c7db6deca3",
+      "original_path": "tmp/v_200s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/frame_005s.jpg",
+      "bytes": 305470,
+      "sha256": "c15c42ef3d152c3e332848e9f8c30a053a3e187671ac5fbdcf7e8742bc0b7387",
+      "original_path": "scratch_video_frames/frame_005s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/frame_030s.jpg",
+      "bytes": 103847,
+      "sha256": "b717c95413ab8a0db0e93969cff1ddb1b3365bd0000364210747e2c0627a9488",
+      "original_path": "scratch_video_frames/frame_030s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/frame_060s.jpg",
+      "bytes": 135594,
+      "sha256": "a462f8e6d1bca706aedfdbf80deb6bab3e3607a809639f708550aefd5d82e30c",
+      "original_path": "scratch_video_frames/frame_060s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/frame_090s.jpg",
+      "bytes": 152554,
+      "sha256": "262e55d9879ea3b66c060932fb547c37ec51ab42d8004ad7110549babb80f2a5",
+      "original_path": "scratch_video_frames/frame_090s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/frame_120s.jpg",
+      "bytes": 163502,
+      "sha256": "8ea26e47a20a44c581c9344c79219d889ea89d545a91102b8e0e109ef787c83d",
+      "original_path": "scratch_video_frames/frame_120s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/frame_150s.jpg",
+      "bytes": 99982,
+      "sha256": "647860f7eeadace7abe1fe1f2d4d893c825640c07d733fa345bcf6ae48d3cbd1",
+      "original_path": "scratch_video_frames/frame_150s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/frame_180s.jpg",
+      "bytes": 276472,
+      "sha256": "06e59633e44fc9f3e06884794a9bb2f9c7266094e5c953546d214740515fa229",
+      "original_path": "scratch_video_frames/frame_180s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/frame_210s.jpg",
+      "bytes": 249527,
+      "sha256": "f59e9409c5ec5e9c033e2d94ca298e6c127ee038c8f589049856ebbdab5d4706",
+      "original_path": "scratch_video_frames/frame_210s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/frame_240s.jpg",
+      "bytes": 120009,
+      "sha256": "30888cccfc531de00de136283fe5f888c10e81eb4958e23452d7e9f5ac551581",
+      "original_path": "scratch_video_frames/frame_240s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_010s.jpg",
+      "bytes": 278889,
+      "sha256": "549d82325666f13a4f96d5fdb18a5147a8d55ab4d30b1546a8c3d252a727098e",
+      "original_path": "scratch_video_frames/full_010s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_030s.jpg",
+      "bytes": 103847,
+      "sha256": "b717c95413ab8a0db0e93969cff1ddb1b3365bd0000364210747e2c0627a9488",
+      "original_path": "scratch_video_frames/full_030s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_050s.jpg",
+      "bytes": 134764,
+      "sha256": "c6ec6a03409221d9fad72007e58a4beee4186566184aa7f2116ada3d3890a085",
+      "original_path": "scratch_video_frames/full_050s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_070s.jpg",
+      "bytes": 142873,
+      "sha256": "7c211daefdf915e75e47e08f45a80849747c4baa517ef069362a7b2ddb243aea",
+      "original_path": "scratch_video_frames/full_070s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_090s.jpg",
+      "bytes": 152554,
+      "sha256": "262e55d9879ea3b66c060932fb547c37ec51ab42d8004ad7110549babb80f2a5",
+      "original_path": "scratch_video_frames/full_090s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_110s.jpg",
+      "bytes": 94306,
+      "sha256": "e786ca606e6557198e8fe08a6955686ecf35f9de28147acaa614227e321bf972",
+      "original_path": "scratch_video_frames/full_110s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_130s.jpg",
+      "bytes": 136788,
+      "sha256": "d8db85fefc41b396df102f6a07f4fdfd017a34ee01bbe0586618b3c2807774d7",
+      "original_path": "scratch_video_frames/full_130s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_150s.jpg",
+      "bytes": 99982,
+      "sha256": "647860f7eeadace7abe1fe1f2d4d893c825640c07d733fa345bcf6ae48d3cbd1",
+      "original_path": "scratch_video_frames/full_150s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_170s.jpg",
+      "bytes": 329663,
+      "sha256": "e4af85d94737441b6fd3e74d123176d85704635dc2ce5024e9942c2fedd32c0c",
+      "original_path": "scratch_video_frames/full_170s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_190s.jpg",
+      "bytes": 116349,
+      "sha256": "0b77078dfba8a407319e0faffaef5cd7655a382f515d8284ab6f72421610e314",
+      "original_path": "scratch_video_frames/full_190s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_210s.jpg",
+      "bytes": 249527,
+      "sha256": "f59e9409c5ec5e9c033e2d94ca298e6c127ee038c8f589049856ebbdab5d4706",
+      "original_path": "scratch_video_frames/full_210s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/full_230s.jpg",
+      "bytes": 159964,
+      "sha256": "3ef9eee82242c373575680e60c7c3b21dc082d3a6321ffe0d4d62b5a27672ec1",
+      "original_path": "scratch_video_frames/full_230s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_010s.jpg",
+      "bytes": 43681,
+      "sha256": "d4e3e65024f24f4c3404d93a947bf260f0ab4103f0d042e11b8aeaf4b61f323d",
+      "original_path": "scratch_video_frames/sub_010s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_025s.jpg",
+      "bytes": 19380,
+      "sha256": "d8dbbca51a89b1f3d6f451e1b983525ddab9a382db02a653767715eb123b9e4c",
+      "original_path": "scratch_video_frames/sub_025s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_040s.jpg",
+      "bytes": 22949,
+      "sha256": "4466ad99108681605a843c71f8c20a0a17292304afcaca80cd3782ed41c34170",
+      "original_path": "scratch_video_frames/sub_040s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_055s.jpg",
+      "bytes": 21000,
+      "sha256": "d28053e212791fe2b85d2eb14ce0a6b5adce35771f8242c50f2613aca4e65e08",
+      "original_path": "scratch_video_frames/sub_055s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_070s.jpg",
+      "bytes": 21730,
+      "sha256": "f418c28679436a87d24957e707ecd553cced1ef6b5fd299f78dcb2974dd1e2ac",
+      "original_path": "scratch_video_frames/sub_070s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_085s.jpg",
+      "bytes": 21487,
+      "sha256": "f281aa73ef2d40c02c969cc13c56286bc26921db90c86c0234fa9d1ab7d91a8a",
+      "original_path": "scratch_video_frames/sub_085s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_100s.jpg",
+      "bytes": 22292,
+      "sha256": "e916e9bf3e1fdfc034f9f3f4037bbb025b9330e4d5ccaf8257faa7f4a5b45713",
+      "original_path": "scratch_video_frames/sub_100s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_115s.jpg",
+      "bytes": 15198,
+      "sha256": "41fae7c905e39c3af378ff42497c7b864b0518b8752f1ec67041cd1e15a31678",
+      "original_path": "scratch_video_frames/sub_115s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_130s.jpg",
+      "bytes": 30475,
+      "sha256": "f409f96066155dff936bb17b7d2d044d9f64510c5414c56d8c0d2d75c72dba34",
+      "original_path": "scratch_video_frames/sub_130s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_145s.jpg",
+      "bytes": 15144,
+      "sha256": "1bbf4c1ecda3aa11e7a076798a4b694c1acb64b6ab2f7f91e4d4bff333167430",
+      "original_path": "scratch_video_frames/sub_145s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_160s.jpg",
+      "bytes": 17437,
+      "sha256": "14570ea5137ec43feb192c895159383991a125439400ad63d87efd814f629cd7",
+      "original_path": "scratch_video_frames/sub_160s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_175s.jpg",
+      "bytes": 17231,
+      "sha256": "a1acd2869e763d93f3d472e1fdba6d4e7b44b0407c629a5c2f3071c3e0ca2e30",
+      "original_path": "scratch_video_frames/sub_175s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_190s.jpg",
+      "bytes": 19185,
+      "sha256": "1ecebd98946a82caebf2351e8e93b20e07b7293a6d790105737946084e6331b5",
+      "original_path": "scratch_video_frames/sub_190s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_205s.jpg",
+      "bytes": 16956,
+      "sha256": "3d81488f373c2ed035a7957fb5c41f50fc4083a8a17ff1756162db5716390989",
+      "original_path": "scratch_video_frames/sub_205s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_220s.jpg",
+      "bytes": 23937,
+      "sha256": "63199e4592c09cf2057c55e042b7ef1d7b4606935b23004734a6f884f8996c87",
+      "original_path": "scratch_video_frames/sub_220s.jpg"
+    },
+    {
+      "path": "scratch_video_frames/sub_235s.jpg",
+      "bytes": 23737,
+      "sha256": "34f9ff15e3324e8852a048aadbf7a8faa5f161342ce485a1c120b2399321b00e",
+      "original_path": "scratch_video_frames/sub_235s.jpg"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_10s.png",
+      "bytes": 1043668,
+      "sha256": "d2c286411ebb07e585efee8bbbaa62f5d40c68c3c73aa78f8ee2e06c83253019",
+      "original_path": "scripts/tmp_inspect_frames/frame_10s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_120s.png",
+      "bytes": 355624,
+      "sha256": "243b0bd7f4ccc6e851bb9dc500150d1aa3db52b204adbbc34c0fb358ffb846db",
+      "original_path": "scripts/tmp_inspect_frames/frame_120s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_130s.png",
+      "bytes": 299439,
+      "sha256": "e0e8e9a72dafe62a5ee78823bb8ca97c35942ac9a8391f4663e506102a99ff5b",
+      "original_path": "scripts/tmp_inspect_frames/frame_130s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_135s.png",
+      "bytes": 401333,
+      "sha256": "5875f195f7e8dc58b060f982d094a0f2dc9ffcc3c4899d046841652fdfb65830",
+      "original_path": "scripts/tmp_inspect_frames/frame_135s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_140s.png",
+      "bytes": 396067,
+      "sha256": "c461c22b5b8b30290ce58edda7ea73edf509900d047125c2d21c09ac306adf87",
+      "original_path": "scripts/tmp_inspect_frames/frame_140s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_160s.png",
+      "bytes": 359319,
+      "sha256": "6274a6c5b3c876128b204c2cd15f0076bbfab0a5f9e32c22b755e1123eee720f",
+      "original_path": "scripts/tmp_inspect_frames/frame_160s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_165s.png",
+      "bytes": 1099801,
+      "sha256": "15507e2b3f7510bfdbae4629826d5c01300049871950fa601de6f587a3c7ef65",
+      "original_path": "scripts/tmp_inspect_frames/frame_165s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_170s.png",
+      "bytes": 1025533,
+      "sha256": "8dde867a296a2d95da02e9020a6a09364d1f2bf305fa48913e9c3346167a1851",
+      "original_path": "scripts/tmp_inspect_frames/frame_170s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_175s.png",
+      "bytes": 995798,
+      "sha256": "e90c7f5fed60187691bd9efc5b52520f3572ae4f37dd89c87148784c5dc63075",
+      "original_path": "scripts/tmp_inspect_frames/frame_175s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_200s.png",
+      "bytes": 282214,
+      "sha256": "787ea2739faa7ba03b8653d0d35f9b90b12a25f48c5861bcddf25ef30577cee4",
+      "original_path": "scripts/tmp_inspect_frames/frame_200s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_225s.png",
+      "bytes": 399249,
+      "sha256": "d09e58fe9593ff1aa2ce2b97077571155b6e54e64e21288c43bce5f13022e4fc",
+      "original_path": "scripts/tmp_inspect_frames/frame_225s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_235s.png",
+      "bytes": 416972,
+      "sha256": "2d527e41e4b32f426915405d1731bb1136af47f119d10129410124707474f662",
+      "original_path": "scripts/tmp_inspect_frames/frame_235s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_239s.png",
+      "bytes": 415470,
+      "sha256": "2bb15c5881514974cf6cf56573138c9d17d43bb9ca29b91f08cc9f9aef36dd33",
+      "original_path": "scripts/tmp_inspect_frames/frame_239s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_240s.png",
+      "bytes": 285682,
+      "sha256": "03fe0bd688df564c88016ff8397959dc58e1447fe0f00a10c6a192c0044bfaf2",
+      "original_path": "scripts/tmp_inspect_frames/frame_240s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_241s.png",
+      "bytes": 276734,
+      "sha256": "e1f555897b72c578573c88dc3f75fb12438fd74885c7dfddf79e3713ed0ed6ad",
+      "original_path": "scripts/tmp_inspect_frames/frame_241s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_245s.png",
+      "bytes": 1039018,
+      "sha256": "7fb1ab60b26cb0c8e3fc70e88337daba37d42dc874bb526450a6ccd46805c8c7",
+      "original_path": "scripts/tmp_inspect_frames/frame_245s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_255s.png",
+      "bytes": 1049916,
+      "sha256": "cfab16f0d76e4de1c3f3210f518ef451f94ea2d7035ece88acab0896c01b4a72",
+      "original_path": "scripts/tmp_inspect_frames/frame_255s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_30s.png",
+      "bytes": 249436,
+      "sha256": "93b563a68c47eddd45ba0f024a9248de5443be51f011d08d44f8680e6a5a70e7",
+      "original_path": "scripts/tmp_inspect_frames/frame_30s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_60s.png",
+      "bytes": 341486,
+      "sha256": "54e540f68801f17f1d8e2a650064b5fce9c9494ef006c2d1c50ea6202f4c6025",
+      "original_path": "scripts/tmp_inspect_frames/frame_60s.png"
+    },
+    {
+      "path": "scripts/tmp_inspect_frames/frame_90s.png",
+      "bytes": 396760,
+      "sha256": "2e33938531fc8571a0b1256d26650f6e8e0c58efe5f54484f2cdfd8c200e426e",
+      "original_path": "scripts/tmp_inspect_frames/frame_90s.png"
+    },
+    {
+      "path": ".pytest_cache/.gitignore",
+      "bytes": 39,
+      "sha256": "e7c6bb30148cf667606dcd63e7ca77acaa3cfb0c8303bf09e6419e1e1669dc6d",
+      "original_path": ".pytest_cache/.gitignore"
+    },
+    {
+      "path": ".pytest_cache/CACHEDIR.TAG",
+      "bytes": 191,
+      "sha256": "37dc88ef9a0abeddbe81053a6dd8fdfb13afb613045ea1eb4a5c815a74a3bde4",
+      "original_path": ".pytest_cache/CACHEDIR.TAG"
+    },
+    {
+      "path": ".pytest_cache/README.md",
+      "bytes": 310,
+      "sha256": "420e808d79a6c25d3cda0af33bc4782314a14949866682c68ce8149e89b66b70",
+      "original_path": ".pytest_cache/README.md"
+    },
+    {
+      "path": ".pytest_cache/v/cache/nodeids",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "original_path": ".pytest_cache/v/cache/nodeids"
+    },
+    {
+      "path": "scripts/__pycache__/audit_competition_materials.cpython-313.pyc",
+      "bytes": 24927,
+      "sha256": "2d41481294c3723830ef6d8f70816f054310a192155a010e84e10506b4f9ed9e",
+      "original_path": "scripts/__pycache__/audit_competition_materials.cpython-313.pyc"
+    },
+    {
+      "path": "scripts/__pycache__/patch_final_pptx_95plus.cpython-313.pyc",
+      "bytes": 4509,
+      "sha256": "18dc9b154f1a7da432d0e209eb503ef8352cadd9c6983cc2812d1141b2a7c893",
+      "original_path": "scripts/__pycache__/patch_final_pptx_95plus.cpython-313.pyc"
+    },
+    {
+      "path": "scripts/__pycache__/test_steps.cpython-313.pyc",
+      "bytes": 22308,
+      "sha256": "02f2bb854918ab43c633159fa583ea121c1de87232a5bbfcc57b20d1c0a94e4e",
+      "original_path": "scripts/__pycache__/test_steps.cpython-313.pyc"
+    },
+    {
+      "path": "compare_ppt.py",
+      "bytes": 1129,
+      "sha256": "0d08871d60a2799408a2f15755f939d096ff7d89d8a1a674eeb2bb976e0bd623",
+      "original_path": "compare_ppt.py"
+    },
+    {
+      "path": "dump_pdf.py",
+      "bytes": 575,
+      "sha256": "1b8e4b5861adf75ef78368bb63537bec35d62a43d620267c89640cde67a5edfc",
+      "original_path": "dump_pdf.py"
+    },
+    {
+      "path": "dump_pptx.py",
+      "bytes": 438,
+      "sha256": "42fffef9c5c8230f4d87465a19d179c695e2aabdb902d3855a525cac2ebbaaea",
+      "original_path": "dump_pptx.py"
+    },
+    {
+      "path": "final_full_content.md.bak_pre_blueprint_sprint",
+      "bytes": 76280,
+      "sha256": "6928fc943d0df32b171fea222ed4571dcc8f0c2573891c557a986c9e87d84841",
+      "original_path": "final_full_content.md.bak_pre_blueprint_sprint"
+    },
+    {
+      "path": "final_full_content.md.bak_pre_humanize",
+      "bytes": 77096,
+      "sha256": "3725c88ffdfa20427aa9ad43f88175e2f71fb74a5c1a1ff9aa04f5388db716d0",
+      "original_path": "final_full_content.md.bak_pre_humanize"
+    },
+    {
+      "path": "scratch_pdf_dump.json",
+      "bytes": 96991,
+      "sha256": "674c9ca840d0948e2e4d9452f2ddb02c83c0796d265ac3170fb65ad78461f96b",
+      "original_path": "scratch_pdf_dump.json"
+    },
+    {
+      "path": "scratch_pdf_summary.txt",
+      "bytes": 80279,
+      "sha256": "6a7d314fc662400e89edaafdb3532dc946e9d8fd4deaa7a2b847827cb4fd5323",
+      "original_path": "scratch_pdf_summary.txt"
+    },
+    {
+      "path": "scratch_pptx_dump.json",
+      "bytes": 18006,
+      "sha256": "260dc3a2297eef37d9c8f7302f567ca46fd0d4ec054dafabd4122a023f8e8b76",
+      "original_path": "scratch_pptx_dump.json"
+    },
+    {
+      "path": "scratch_pptx_summary.txt",
+      "bytes": 14093,
+      "sha256": "bb425ad034ad05bb7ef009d9ccd72fac067142482e8847bf297faeea27c889ce",
+      "original_path": "scratch_pptx_summary.txt"
+    },
+    {
+      "path": "scratch_ppt_compare.txt",
+      "bytes": 4527,
+      "sha256": "5552ca3ebbda2bcd57cb182692023a294553001479273a32005887ed4f08bf14",
+      "original_path": "scratch_ppt_compare.txt"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup.docx",
+      "bytes": 1153349,
+      "sha256": "c4810e288c5b8f8748dd1ea26086f0c192dc37afec4d733fe230f10ba7b850a5",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_before_detemplatize_20260924.docx",
+      "bytes": 1456436,
+      "sha256": "0a20406542e8c83183400b238f9073117aa57e9bcc5fedc25eb4c0126e6dfa66",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_before_detemplatize_20260924.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_before_sync_20260924.docx",
+      "bytes": 989750,
+      "sha256": "7cc1cefdc7c59e174f16903478214a8785a519fab68531c44826bb37f5345655",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_before_sync_20260924.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_prepatch.docx",
+      "bytes": 1456999,
+      "sha256": "180a6b77ab4f47c3cb5f7c630d95b0a4a0159afc1bf529baf4641fa7efd71ead",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_prepatch.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_pre_audit_patch.docx",
+      "bytes": 1451077,
+      "sha256": "ce7f5d9054cd75bdc65527713b983550c8b660518c6e4757810eca78a395add8",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_pre_audit_patch.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_pre_blueprint_sprint95.docx",
+      "bytes": 1451077,
+      "sha256": "ce7f5d9054cd75bdc65527713b983550c8b660518c6e4757810eca78a395add8",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_pre_blueprint_sprint95.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_pre_centering.docx",
+      "bytes": 1455483,
+      "sha256": "7dd890bcb290490472f7aeb9598d14c3af491c7b20384455c5a5cd2d90b05c6f",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_pre_centering.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_pre_format_opt.docx",
+      "bytes": 1456673,
+      "sha256": "bfd77298d4d9021f0100cf8591bee18d4bf85eb0ef296fe90af4a0b3e8ad4cc6",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_pre_format_opt.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_pre_humanize.docx",
+      "bytes": 990872,
+      "sha256": "9341a684a047bfa77e15c471dabfcc7a68fb734785c9a514f054a1129007f66b",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_pre_humanize.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_pre_sprint98.docx",
+      "bytes": 988890,
+      "sha256": "a9c1683cb79be171df4bf2cea7f9ac138b24dc43b377ecf7697049fdb9f8e1ef",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_pre_sprint98.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_backup_pre_streamline_20260924.docx",
+      "bytes": 1456188,
+      "sha256": "35f2e947382cd20ca5a012b1551865cdb90f5bfe6f605a38b36f6278d7d5a745",
+      "original_path": "竞赛汇报与文档材料包/upload/final_backup_pre_streamline_20260924.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_centered.docx",
+      "bytes": 1455483,
+      "sha256": "9a1492d8446279262aee1066005c4f17a25668c65661eb338ed16564956f3d04",
+      "original_path": "竞赛汇报与文档材料包/upload/final_centered.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_full_content.md.bak_pre_humanize",
+      "bytes": 77096,
+      "sha256": "3725c88ffdfa20427aa9ad43f88175e2f71fb74a5c1a1ff9aa04f5388db716d0",
+      "original_path": "竞赛汇报与文档材料包/upload/final_full_content.md.bak_pre_humanize"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_optimized.docx",
+      "bytes": 1451077,
+      "sha256": "ce7f5d9054cd75bdc65527713b983550c8b660518c6e4757810eca78a395add8",
+      "original_path": "竞赛汇报与文档材料包/upload/final_optimized.docx"
+    },
+    {
+      "path": "竞赛汇报与文档材料包/03_申报文档与技术报告/Word工作稿/final_test_12x9.docx",
+      "bytes": 988970,
+      "sha256": "f25b078dc49b7baa8c9637708ebdcc79034af66b66e92aadb3e40a843affee97",
+      "original_path": "竞赛汇报与文档材料包/upload/final_test_12x9.docx"
+    }
+  ],
+  "protected": {
+    "backend/package-lock.json": "f829c2fe8892f75b9cb2c99558f73fdbb1ee7218ba347e77902e6bf2605c624c",
+    "backend/package.json": "51d828b209b9f2638a1afa2f10cd663a66127d537e6611d3ad715d252d8914c2",
+    "backend/python/asr_service.py": "434f1e412808c47b6c8fddd8f47d5806921e079c3937814d4adce3e23187a597",
+    "backend/python/requirements.txt": "55631108c074290bd283a24b7cf7d299b73cee2a12dd869906059152cf79e0a8",
+    "backend/python/tools/quality_gates.py": "3a36303b35df01f499c45fed6fb009f179aa01681e2bc135d9f708a608ac0dc6",
+    "backend/python/tools/run_ablation.py": "6fba48bd134df1c04a5488134527020beb09e0ba6b2c16caa18ae05fa8ae3412",
+    "backend/python/tools/run_runtime_smoke.py": "0f79c65dde77c8f545ac6d9dd4d37b6b7b883848df135d9036b6c15b4ede42bb",
+    "backend/python/tools/test_ablation_runner.py": "b959091ec0dd0220610b29301f0929058035b0fd765f46d1c074a524b38426ed",
+    "backend/python/tools/test_accuracy.py": "62d2c68a71bd3b74816762195a22bad1b90ff05268e70520e898244c75be19cc",
+    "backend/python/tools/test_accuracy_unit.py": "6907af43b7d6e35a5177689b2e97044f4e850116cff0f50bb2f3bbd63b1b7b4c",
+    "backend/python/tools/test_quality_gates.py": "7c51cc9749ac72aa8beb40f1230cb88aa0f9be297835a9fe737c2bce2744cbb3",
+    "backend/python/tools/test_questions.json": "ced34ff2df51b57a71bb4ebeec196dc0ce5ea4ab24e5b056cd5e579d6307b1a2",
+    "backend/python/tools/test_questions_out_of_scope.json": "f742a370f62ab8914f14ca11a9f6406ab9847f10ac96d673ffb08dd177e7c8cf",
+    "backend/python/tools/test_retrieval_benchmark.py": "d23e9ea28cb7294922bd75f84d59670650606aafcb73f17bbc84da0977d41dbf",
+    "backend/python/tools/test_runtime_smoke.py": "a0a2d7e26d2e0b88095f30b31fe6aa41db07e87b619cdf04373076a1c6f802f8",
+    "backend/python/tools/tts_gen.py": "4511de427c1a8753f2929df0a649caf376e4671bd468a001bba76178be236758",
+    "backend/python/tools/tts_gen_viseme.py": "d7569fdb563eeb7d65c51ebbb49bb6eac4286961db79a37006ac7726cdcf9582",
+    "backend/python/tts_server.py": "012a0583fe013d1b375e5e21063c0327d46c845691afb498ceda78dee9c9ff23",
+    "backend/python/vector_service.py": "b53fadb237220ec45f5f4623234d560d879cbba91d7b0c4501eb414cd590f5be",
+    "backend/src/api/v1/admin.ts": "cdfdb5bdeeb8fd1f55cdc10cacc7925cb208e30ce46f041de2fdfdc4180c820d",
+    "backend/src/api/v1/auth.ts": "f792f98466d526f55e4d6ac236d3843df8393b33b43fb12dd37d5c80a35a923f",
+    "backend/src/api/v1/router.ts": "812ebc408e99256817b3fd05a8b91f97dfdf0bfd0451e23948e85c5d9d88ed42",
+    "backend/src/api/v1/visitor.ts": "0b599944a4cf8dffa4c0f2aa4be0be14613c9692fec6fc0ebb1510c210662162",
+    "backend/src/app.ts": "ccff3a15e488decb47360ebcefb3fa89289fce5b956acb1e963c7e452b016d21",
+    "backend/src/config/paths.ts": "0a9f45b1d1e7021a79108e86cb1f4803d8a02ead403d53bedf2e4658238997c4",
+    "backend/src/db/store.ts": "10569f0ecc2864568cad7c23647afac74e2a7d6c7bc63de8236e79d47be7fbe6",
+    "backend/src/index.ts": "afcec48de4695255faa47fdb8b466cec277eaeb49f9b9c35d45899e7f2c50b64",
+    "backend/src/services/emotion-service.ts": "f8dd39ba90c930b7a5a8c36c969d06cd0570a8cdaafcc643b85a09f58ac03005",
+    "backend/src/services/llm-service.test.ts": "5428b19d07e81b1baf2a295b5fa22e9ea00e0c204b8e312452710389bcfc42f2",
+    "backend/src/services/llm-service.ts": "fc08657437edd71dba6d2a6b575d76539042ab661bc867585084be768cdc0008",
+    "backend/src/services/rag-config.test.ts": "eb6082a6612fb930148cde57f1361891a349b0165fc91bd08233ffe8a17a3d54",
+    "backend/src/services/rag-config.ts": "6498f74093424fc28f53e4c23c67288c62c861ae9aca19d377ebedf298936035",
+    "backend/src/services/rag-rerank.test.ts": "4b539ac447768a5f57987fef6793f185d36d5281111ef154ac85b1ead369ac4f",
+    "backend/src/services/rag-service.ts": "c7cf870e26482c20f5e1ed59c2e623b44c10b12193ea319985011c0219bd1821",
+    "backend/src/services/rag-trace.test.ts": "b611753c8ff6988b5925f35b78279027ca4e4d5506492967545f8a9765efb60e",
+    "backend/src/services/retrieval/hybrid-retriever.test.ts": "072eefeca6763b8f6f17bb31b1aa291fc18e6225ce185f99eca7b6bacd9923b9",
+    "backend/src/services/retrieval/hybrid-retriever.ts": "ffc78c4a3d6fd6cf5e07c8bec3813d7272d5805f5a3a0a13a99498b98fdea0f9",
+    "backend/src/services/route/pathfinding.test.ts": "cfff800927c2c8e71d126298ff26b7f38f37e33b3fc26ea580b7e0f7fcba7907",
+    "backend/src/services/route/pathfinding.ts": "b16c735234fb1c1da06c9261d45f6f7aa3e966787b9c222df199cba438fbbea9",
+    "backend/src/services/route/route-benchmark.test.ts": "5915446cb88cabe93096991b0d3e99eddd02a677c82104fdb6e4f200c8bbabb9",
+    "backend/src/services/route/route-contract.ts": "67eed0e9d4ff52591be439070069b29945e85757338f1c6afe4f2b510696e29a",
+    "backend/src/services/route/route-planner.test.ts": "3f5d73ab1351fa9a9f8966aa4899f2f5a43fa456f7d9536341992228082e3c04",
+    "backend/src/services/route/route-planner.ts": "228150299ed6319df0ac0743e8c22af470fe69edf638202d382aad93ddea2a96",
+    "backend/src/services/route/route-planning-service.test.ts": "a2726c53cd170dbde71f62947935a964faccf20fbbddfc847f0e307ac94e1421",
+    "backend/src/services/route/route-planning-service.ts": "f7c909c537ff6fc1de476bd4e2478550fb19ec7f428625def91c43184190122a",
+    "backend/src/services/route/route-preferences.test.ts": "5c6b967c721f86043deba71907b14fc14da391ef2074168456e8dd73f249454f",
+    "backend/src/services/route/route-preferences.ts": "a72e460c8fed844c21996e42bbeea50f58e5d93aa0b5a53ee2423118121f45b8",
+    "backend/src/services/route/route-validator.test.ts": "b4c0dfddd76743d092576abef3f74c9ba76a53db05450e79d6a4417f2d3aab6b",
+    "backend/src/services/route/route-validator.ts": "cc8b649f9d623390a59836dbb3e175598e8714d237430868b41c28f00292d7da",
+    "backend/src/services/scene/scene-benchmark.test.ts": "8333f18aacd2e4f353ce7bddf1ea7becdf8eca21f825969ef7abae17baa9e1c7",
+    "backend/src/services/scene/scene-extractor.test.ts": "4156f3781005e7890400dc577cce584c596c9169159f5bcb55139e642ed2f2a2",
+    "backend/src/services/scene/scene-extractor.ts": "acc5008ab820bf6dc53923db9dd48f6f678c59d0db473f21f5b7a11c017fcd92",
+    "backend/src/services/scene/scene-state-normalization.test.ts": "7df177d35fcec0ec100562bf1fd2b2b7d3effaa25adb2e331a1cb26fc6c4c809",
+    "backend/src/services/scene/scene-state.test.ts": "e195722e43bfa01b946d84047b7c868826b6eda49c415d092d82789e7ec8ae2c",
+    "backend/src/services/scene/scene-state.ts": "f09fa5247d6333729b14ab2060358d569248755b36962a7a5d8842fb9d8412e0",
+    "backend/src/services/scene/scene-utterance-benchmark.test.ts": "0c7dd8d8bc913d4fa96321953b7ce28a4cdfc162e6ff6d7bb326451f598b8262",
+    "backend/src/services/structured-knowledge.test.ts": "f794d20412d3893cc012644125005f54960d9f11515ebfe7e545c09a7195b00f",
+    "backend/src/services/structured-knowledge.ts": "22e1faf4cdf8cce8d5b6e494ff429f7133b87f62f455754b45ba7090eff56e79",
+    "backend/src/services/tts-service.ts": "b05e8bb9391567541b6272cf1602cf783d41d92654a834b6c1f74ba14a35d281",
+    "backend/src/services/vector-search-service.ts": "677b338922cbfdb66880b706325e9e4ea4afc36a02d5a6ce8c8a3db872daab37",
+    "backend/src/services/websocket-service.ts": "be9fa17d50be7a6e195db6a6908005a20908e9285efdf03fde392913c2b0b9e8",
+    "backend/tests/api/admin.test.ts": "12da9d335299571d92207756eadc9099b4c5d3d7784bed2966d464ef73724752",
+    "backend/tests/api/auth.test.ts": "4108b447d23311623753083470ec43acb64027ef92f865b974e7ad8ac49d93e6",
+    "backend/tests/api/data-lifecycle.test.ts": "f41f65717c353ef921b5e8ec149bfd671f76b95b9b10a0f0dc06be650c2540b3",
+    "backend/tests/api/visitor.test.ts": "038c22c94dcef10f4dc23904a27a768268c1ebaf6606f3985288811b8556423a",
+    "backend/tests/app-isolation.test.ts": "1b8ead6391ad4e6c31c1297e38e98d84f3c4a3bc3e83d96d1c73991916ecef42",
+    "backend/tests/helpers/api-fixtures.ts": "dbb6e87c7b4e82acefed38d6019c5167406771103286fcb95dd9cf2437665480",
+    "backend/tests/release-contract.test.ts": "115fb88a72e56fd59d59424b4774a35c3d6183b9bedab4076ce9d0bd73beae1f",
+    "backend/tests/reliability/failure-recovery.test.ts": "fd2ff4bc66d89081a94b1c9135de1cbc4e1ab928b6477afff68ed5c364e451bf",
+    "backend/tests/security/upload-and-auth.test.ts": "2fe2f70ff1205da0c31f6e0dfa15f3caf5f771c1345af2312cc41735552843fd",
+    "backend/tsconfig.json": "466a5894505b7fb5f25ed0ad8e50b9a9bcb599c038b167bf552f68ff0df8618d",
+    "frontend/.gitignore": "d50ab07e11fa4bf3b1c7c3312e1d7baeab56cca756832ccf40476823ad2a38b7",
+    "frontend/e2e/core-journeys.spec.ts": "d1b4bad35dd5318fd8128807a4c051ee4dd32b4b82198aa8c5f2972b643e3290",
+    "frontend/e2e/fixtures.ts": "281ca81b1e68282881a86e397d6f660bb82a8accdfeca6786ef4ae5566e24df0",
+    "frontend/e2e/mobile.spec.ts": "dd60cb6848c16b71dd7ce65b96cbc75b1d6409ac2bc952138241a86f0e11e922",
+    "frontend/eslint.config.js": "f19395caf80173ffbd41ab74f8eef4fc26c042f84a937de4a6286ec5c13ad401",
+    "frontend/index.html": "ad2ebac19ac4807452d250c0f0a4d069d98febecc9d9a9bfca462f96f538dda7",
+    "frontend/package-lock.json": "be852c92c92b8545ab25ce165531c198495939b024d13b05900d5ac4e84d16a2",
+    "frontend/package.json": "6071eec6c96320f962f6b75279d08fe526d04c52f6e69c0dc58b78d74a64f9b9",
+    "frontend/playwright.config.ts": "aa164588d7f5c1f1aa33b34bfa5293e404837cc6e344a68bed0a5a40d24fc1fe",
+    "frontend/public/ayuwang_pillar.jpg": "567f3573a8eb41e825e3dae1c4777165bf2e124a9d23ea9f765781c062cb76a7",
+    "frontend/public/background.jpg": "1c2b0e51456d3daeceeb61aadd738f0cc8bccfd2dc10efcdca50a19fddb448dd",
+    "frontend/public/bailian_pond.jpg": "10cd119273be38efccfdc0f17ae05673f668cb86422fa892037a7b201a948012",
+    "frontend/public/baiziximile.jpg": "390c79bc1a61772d05958d381139700a004d3ed0e17aea75f0074d4c51677dcf",
+    "frontend/public/dengyun_road.jpg": "2dcdc940c50439489e09880f6732cf3d98eae2d988d0f557017eeea7e9f8fffb",
+    "frontend/public/fantian_huahai.jpg": "3ef328eba3df8626858885f5231c28809f719474c547f7f6db27b05a2f15a938",
+    "frontend/public/fojiao_museum.jpg": "d882ee42785b882ead8245a858af10149d606778ff3d34dfa62cc9f43a9e01d2",
+    "frontend/public/foshou_zhang.jpg": "2fe41917fc60d2c676737ae15ccbe12c2c66e5b80022aca1a8548caacebf79c4",
+    "frontend/public/fozu_altar.jpg": "870bf647308fa2461c503301e617408b6897bc4984d80b33b50fc36b42a7b757",
+    "frontend/public/jiulong_guanyu.jpg": "ce13daae940c816e65a1fb97920ec03799cd7ce65b8b496283132698b0e33269",
+    "frontend/public/lingshan_dafo.jpg": "e7a0b814f6831a3461e1cd8654df4c0507ec0e0f137decf7353389277d9ebab3",
+    "frontend/public/lingshan_fangong.jpg": "d6ea6a9fa8f1645c1a698a7cc09ff8de1d10fd659bfc5f7ae8871503eee01a06",
+    "frontend/public/lingshan_zhaobi.jpg": "4720b2699d156204b3787bfbde4adaf4fce6351117bd96698d7188cdab8b0ae8",
+    "frontend/public/liujiao_well.jpg": "673c25263998ffd3c6355df0269226123ec95de3e86884575af8d58029d92ca5",
+    "frontend/public/live2dcubismcore.min.js": "913e10e881aa7abec8e65bbb8c2540db3fe9acf987c7537befa521f8a7f51009",
+    "frontend/public/luming_valley.jpg": "021083a182740ffadd5371d4ba71a85d94074ed28e782184f6826f0acd30b978",
+    "frontend/public/manfeilong_pagoda.jpg": "2a40bee9e50c3e904bed93c44f84b36740cb5558c7dad7834f9d8e3881b03297",
+    "frontend/public/manifest.json": "b85f5d94a931a0d62265d6429d6ffcd67f68dfda6b62f884ef40292328c7eb67",
+    "frontend/public/models/hibiki/exp/f01.exp.json": "bb38147217e26e31e75ea1ecbcb3509838b142e754a1a984f41098e8f8697532",
+    "frontend/public/models/hibiki/exp/f02.exp.json": "c5519fdc068e359b5471533ce01fa5ec0831ed7786006f5f717f9f23e07b258f",
+    "frontend/public/models/hibiki/exp/f03.exp.json": "ba70fad71f09666c73a1cf826b8b3c4800496daa345d481ac20347e9a2623ca7",
+    "frontend/public/models/hibiki/exp/f04.exp.json": "a48ca9239b101e63bedeaf90d675ceee910f1ac49bf882d959627e190f037612",
+    "frontend/public/models/hibiki/exp/f05.exp.json": "797cf1486fde883df7bf3c689fae929e1e3ffe6f956a9dbd4ac33b00ef28140d",
+    "frontend/public/models/hibiki/exp/f06.exp.json": "c483120cf4334e4a418e68be25308927a3aea01aedc1ff6fdfd2655db99885b4",
+    "frontend/public/models/hibiki/hibiki.model.json": "458b615f700e31b2a2a16594b6be16a9de1874d4524f6b35f3b034c907d09636",
+    "frontend/public/models/hibiki/hibiki.physics.json": "9116de31a9f8653c95aca5215d3733307cafbebf82e45f472972c9387ac7d176",
+    "frontend/public/models/hibiki/moc/hibiki.2048/texture_00.png": "5f6ae9aeef94deabb638fc1e2ad3fab43eb408e1095d1d73ee4382ae04cddfdd",
+    "frontend/public/models/hibiki/moc/hibiki.moc": "f215c63f20f0140e59e665f1adf2943ba6841174c4149693d4c188f12e39a0da",
+    "frontend/public/models/hibiki/mtn/hibiki_01.mtn": "a81aa26986d75491213170033dc98ae528e68b37e932ee3e0acc362a1b1e0365",
+    "frontend/public/models/hibiki/mtn/hibiki_02.mtn": "06fe8b89a449403a8c814ae1882e2ba123247a212b48c4c6e0f9c43e7c90316d",
+    "frontend/public/models/hibiki/mtn/hibiki_03.mtn": "47e6eabbe8b65d1fd11a31dfbc00c74defd64754404368612918fbadf2d26f18",
+    "frontend/public/models/hibiki/mtn/hibiki_04.mtn": "20b0dc627277160fe99cabf7d8a66ace9c74b662ae81f2d4458790b23e764f6f",
+    "frontend/public/models/hibiki/mtn/hibiki_05.mtn": "4dbe35af3b203f50256f6e852bf07712bc4b15f3ebe9c249f8b4685ef3292335",
+    "frontend/public/models/hibiki/mtn/idle_01.mtn": "7a0321bb97bb137a9eeeaaa8acf322155bd8bc038908ab77f9fe4119b6c2f3f3",
+    "frontend/public/models/hibiki/mtn/idle_02.mtn": "0027e7da512c1f41459511d9b5d920188aac2f19cfb2e53e5508c40f392db327",
+    "frontend/public/models/hibiki/mtn/idle_03.mtn": "cb2d4722574c930a98cef86a89a4541a40f1147d235e143ca71feff1a8b9c884",
+    "frontend/public/models/hibiki/mtn/idle_04.mtn": "984c75c36ee4e3290a6d99345c4b0c169ccf90f9206103c4f006970837ada392",
+    "frontend/public/models/hibiki/snd/hibiki_01.mp3": "74cd8bf4d165cd76f4e34afeafb88fa0805e619a121ef3da63e9ff36b95de498",
+    "frontend/public/models/hibiki/snd/hibiki_02.mp3": "7a67c363ea3d5ff67f8227017c67ae3ae29c2554118b960fc67fc889ca8308b0",
+    "frontend/public/models/hibiki/snd/hibiki_03.mp3": "9c01f7868b69e3fa32df63371d78ca485e7f93b17bb367889cca37ad09a99a9d",
+    "frontend/public/models/hibiki/snd/hibiki_04.mp3": "43abf57879e82286b733ee4b2c91b8027925559687056bd7bbb67fb646b86fd2",
+    "frontend/public/models/hibiki/snd/hibiki_05.mp3": "954cd6304be01cc108eda14bdffcfd6e9db95ca11697ed85d96c502af41b3cf7",
+    "frontend/public/nianhua_hall.jpg": "898cafdb7afd70c8083efd15dfc8d57f805285c1d272172c2f430174f5c74497",
+    "frontend/public/nianhua_square.jpg": "84cc175c9d15cde4521eb36089f1acc6a8b858ef2859899fc7b3f2f776cb0447",
+    "frontend/public/nianhua_wan.jpg": "4764cfe6c54f841b489fc46cd601d4205ccfeb4e5dc9c4b265d518173baa564e",
+    "frontend/public/puti_avenue.jpg": "ebf29835beca1e15fd8298feaffc3156d2551e7c1bd51b368ae3f4f3f69846d9",
+    "frontend/public/shengjing_gate.jpg": "47f989dd38d286c87b940fe36eab07b6bfe4a3220ee5e22b0f6bcaf317fd49ca",
+    "frontend/public/tianxiadiyizhang.jpg": "4d014432dba6053f0583ea6b36bb088de32a2388de6db757a91cdba228c028b9",
+    "frontend/public/wuhu_lamp.jpg": "ccb9459b77904e4287053d82f7579e1d8abe4dd6fe60256947bb430d5f1292cb",
+    "frontend/public/wuming_bridge.jpg": "cefc167b8fca9aa18c274ff5aa3e41b63e7130ad0d2a48784c213891e090a6fa",
+    "frontend/public/wuyin_tancheng.jpg": "0551705f6b435e3bb9653c9ffa8d27fca3c277743030da7d5a52e4ccd388f1cd",
+    "frontend/public/wuzhi_gate.jpg": "3cf958ff2e56b9ab8269e095a4ec4a0945691383b4222f729cec9545dd25f855",
+    "frontend/public/xiangfu_temple.jpg": "5efc3a08fa3c844e87f952a7ca8b186614010ab447bd4f4250ecc8e1fc3dffbd",
+    "frontend/public/xiangmo_relief.jpg": "4720b2699d156204b3787bfbde4adaf4fce6351117bd96698d7188cdab8b0ae8",
+    "frontend/public/xiangyue_street.jpg": "e67cc92b959b449fde1cfea15ccb4068e3387527fa7c7030d53a9ea288a06155",
+    "frontend/public/xingtan_square.jpg": "0909ba89515b3d389a0c5c523caac391ba0bffefbb6691a03f08f473a1b6f97b",
+    "frontend/public/xixin_pond.jpg": "4ab18a7ba814cd177af2101a17016ffbc07273b1e536959e4c232dcc0a1455af",
+    "frontend/public/zhenbao_hall.jpg": "24e739ca270ca7d8b5824fc9f83cb52dcd48efafcc7e6c6cb68bcd9fc9a39d87",
+    "frontend/src/App.css": "a4eb5ed59f189f91ec1aceb74378b10c2d5d2a8b8873c71822641ff48e83f6d1",
+    "frontend/src/App.tsx": "f0cc9fa5c65125ed007b35fbd3a07807ee0f07571409bc365f842e9890635144",
+    "frontend/src/assets/character-portrait.png": "f0ec27ba84a82a3353c053c8dc4d08b10b990b61ac17d482bd43a2adb279d08f",
+    "frontend/src/assets/hero.png": "881ffbcaafc212e49addad08846a5b82761355fa20624253af3477ba33262c5c",
+    "frontend/src/assets/portrait-celadon.png": "fde664111e33d5a6cbaefe19632d1a040889a466cd1018543d7497d7f2f810e4",
+    "frontend/src/assets/portrait-ink-wash.png": "e06fe71938c007322b665b0f1983871c6791bebcbf9a311931d335b71d0616e0",
+    "frontend/src/assets/portrait-tang-splendor.png": "c049e064b477f4abd8cc137eb751690eb8ce303c2bba5586700b711e6a7c65ce",
+    "frontend/src/assets/portrait-zen-red-gold.png": "4566a7f30f34c2e51b23b8701c8664b12a7f3737a6c3deace8d93629c0fdadb3",
+    "frontend/src/components/visitor/DigitalHuman.css": "1f5ef316c5eeedc03fc67c0dec41d99ddec90a4748ad6d2ed2e6dd694258b536",
+    "frontend/src/components/visitor/DigitalHuman.tsx": "740627f39a47c392bffad93b4e0411e9cea5dcf263de5fcd28d2484c9f810dda",
+    "frontend/src/components/visitor/Live2DCanvas.tsx": "17bc3a02bd7f87dec92ce4da854e1f1b91086010902fc01898e69ef4cca69882",
+    "frontend/src/components/visitor/audio-context.ts": "028a942e9f40819c87093a7bce06c69b8be3144314084c1b9eba78002b7d9101",
+    "frontend/src/index.css": "df8583690836e08441d3ccee7d84602b2281bcc657b2b096887814a194fef34e",
+    "frontend/src/main.tsx": "eaa1c2131830c5b9120cce7bda892edec8ba346a7d6a9ef7948a59f3ac1e6f9c",
+    "frontend/src/pages/admin/DashboardPage.tsx": "3e5f75a068e253d99eac6244bcecb967be880bbf106ee664687b887e8abc002a",
+    "frontend/src/pages/admin/DigitalHumanPage.css": "f7be8fd341ee03d0a7edd4ee3d6125292e22348df7a6563dab4b50d9a26d1f5d",
+    "frontend/src/pages/admin/DigitalHumanPage.tsx": "281a65eb1fd84be849f06d02c04152e84ffacc5e259180dc04394faaf51d31ac",
+    "frontend/src/pages/admin/KnowledgeBasePage.tsx": "076329e35238548390e505aebb64e4cb43b8ef906b3ebfe0b06d2a4511ae3bea",
+    "frontend/src/pages/admin/LoginPage.tsx": "61bfac9f753625152953139334f1f78ab902464ede07220766dfc8c6e279b4df",
+    "frontend/src/pages/admin/SentimentReportPage.tsx": "a69bbeb1e9e7991c2316c3c6edd567f7c3bd1d6412e9654a9ea3fc933dd99f9e",
+    "frontend/src/pages/admin/__tests__/AdminFlows.test.tsx": "5f406f8507a143ff9f46348766cd2236cd4bfd73ad16605cc977c9b3b84c631d",
+    "frontend/src/pages/visitor/HomePage.css": "007a9835b6303cac1eb2a121259c7c9b41cb4e88d37bf851058abde9a1ea28ed",
+    "frontend/src/pages/visitor/HomePage.tsx": "1caabf444684c8ebd12e4b18c703bc7dbdfb190eeffce2a05051faf6fb4fa771",
+    "frontend/src/pages/visitor/QAPage.css": "097bcfa106945869c94c8edba5a10a2f39644118f8fb35018ca047ce38b54489",
+    "frontend/src/pages/visitor/QAPage.tsx": "4d919f489c6102be8c1c509e5d31fecdf1fed666a7d64e62edd0aa8fb9f2adbf",
+    "frontend/src/pages/visitor/RecommendPage.tsx": "102387dbb6c9772ec0e79e49584a3ccdf4550e7be4127cc22d874a506e7c3172",
+    "frontend/src/pages/visitor/__tests__/HomePage.test.tsx": "cd57e895b9233acade39a31aa22e3b1eee878b6cf1f21d00a4c1399d3de2d777",
+    "frontend/src/pages/visitor/__tests__/QAPage.test.tsx": "6ba1c89dd4276bce2b7035cc755a220f92e101cdd8566cdf7663891a404fecb7",
+    "frontend/src/pages/visitor/__tests__/RecommendPage.test.tsx": "a1f556e89e0b65c4c512718e990b85fcc8fe584c92a6289d20eeb4b69b0c0bb2",
+    "frontend/src/pages/visitor/home-capabilities.ts": "349c0a4e8478bf5d22a406e1dad614ce93899764d685bd80ea7143227c06e065",
+    "frontend/src/pages/visitor/route-outcome.ts": "f89e23d8db25cb1a89c53a4f49b15bb13edfe6266c2ef69f819a7dbc5df4a082",
+    "frontend/src/services/api.ts": "7b41a6aeb95217433fe5e4393e6ca14ca51634cf2fb5840a136a048a588b6043",
+    "frontend/src/stores/chatStore.ts": "3f07341e82959f3ef6c6cad1e1e1461296117e3b8b1a4449138570b9be0a56e8",
+    "frontend/src/test/setup.ts": "099fcb5eb2993d1c32b91e78ec40f4e112f889e70561a3a716c9d945657101bd",
+    "frontend/src/utils/navigation.ts": "5d0b2b6d0f59a3debddf074cb4e1cb35397e52a341685c0723b033b0293a58e5",
+    "frontend/tests/home-capabilities.test.ts": "b58d05d16467beb03d975576d6fd662b569018b0c998402daa436de90b3bbe13",
+    "frontend/tests/route-outcome.test.ts": "c3a2ae5be78970540cd8525e0af809026a3c36496de842ec356307b92cb17b05",
+    "frontend/tsconfig.app.json": "61ab483a94a0556e57ea95cc7353bb07b9f3084c0691364070bbf853910646e8",
+    "frontend/tsconfig.json": "ad28d132ee48d6e23917cf5827cace785d0fc01a44ca68b0dda51cc8c3fd3f52",
+    "frontend/tsconfig.node.json": "e0f1936992f77a707102795e8ea311ae74cb54de87b221bb32b44055af66ff7e",
+    "frontend/vite.config.ts": "1f4308664c02fc85be4ad365c6dacefd25247dd7aafb39a9a4a9d18e09c2686a",
+    "frontend/vitest.config.ts": "3426f1579796c3fa68d528536ca08b226d0bc84466908bcaaba9f03e6cd25291",
+    "data/admin_config.json": "d1bd59911c43f45027a309473c1fbe76ad6bef67a639921c8b7d209b1e93082a",
+    "data/dh_config.json": "cdcd3383664c045a2eb8b09426c164e436c462becb0fae51ae9fcbef296b026a",
+    "data/raw/knowledge_dataset.txt": "a63301e735f5d5d9ef22fc55ee392fe59de8117d735e822b60c8be08b34b5a94",
+    "data/raw/knowledge_guide.txt": "f5e51a9d6390aa3ac9d6cecb5936416b4c1299692f265254f40981239dbd703f",
+    "data/raw/景点景区旅游数据行为分析数据.xlsx": "173113373ecb75a2e6e572f3a6396597bc66be1e5af68547d04002d36251af52",
+    "data/raw/灵山胜境 景点结构化数据集.docx": "f320d4677a6e6af72f754180f7a5f304519860a08768d94719901b2f9c9af99c",
+    "data/raw/灵山胜境：历史、文化、景点特色与个性化游览指南.docx": "88ce8d303b9b65c5f8764db2f1bbc06dd7e4bfcc5381dca707b2409a05782a07",
+    "data/route/edges.json": "8b098ff30a63b01cada102f137f88350d3b488e1020d3be1902bae96fd92961e",
+    "data/route/facilities.json": "fd94153d610f7c77f734fb46f2ce5cf657de9a0cc3d9c8272ee8240774acfdd2",
+    "data/route/performances.json": "0fbbf773c6d199e3072780acdde84ceb09d8fabf0bbc5146634c51c7f0acadb6",
+    "data/route/spots.json": "52ff6e24faccf619fbae2a8937eb0050efa636ffbb3564dff34074bfe9ab393b",
+    "evaluation/manifests/legacy-v1.json": "8375f444818ea468ebcbee2a55baf9929233b8353ba2d4381d096d6b6459bb48",
+    "evaluation/results/ablation_20260917_013925/component_ablation.json": "bc528c9ae95b7d524558cd85cfc75269eb71d598969d14e2e62c779d787d9983",
+    "evaluation/results/ablation_20260917_013925/full_retrieval.json": "7c5dd4d75ded4d8c5bfa215ab44e1dc2eaed146ac7a8ed36b468402ac8726193",
+    "evaluation/results/ablation_20260917_013925/full_without_rerank.json": "8e67aadc28cbe1336eb39a94345eed1782e8cc175dc1c4f7a0677f4f94fd85da",
+    "evaluation/results/ablation_20260917_013925/full_without_rewrite.json": "905f750b6d51581de3c097592c990c07bc5d3ee77c6f7fddef36e3c6be101c6c",
+    "evaluation/results/ablation_20260917_013925/keyword_only.json": "88475ee95c95e8e6d623ab31e509dd90567e08d775515f93d86f1d9447e66f44",
+    "evaluation/results/ablation_20260917_013925/manifest.json": "25254be5445a061ffd44e00022b3e182ce5896398d190a172007f58412b12be1",
+    "evaluation/results/ablation_20260917_013925/report.md": "ff926de6174544dc14b602d7ff33d42ff396b5c4151deacd609f0671aaf7fd91",
+    "evaluation/results/ablation_20260917_013925/structured_only.json": "1b0ac94eb00205636a1108e0c0fb805c0f137a1c57eb88d0fce995e34f54eef2",
+    "evaluation/results/ablation_20260917_013925/vector_only.json": "77f58768f78f33d63d3e648f3d2c3e1f8da68d1f65a567a88c04c228afa5e735",
+    "evaluation/results/ablation_20260917_013925/vector_rerank.json": "0e9cd3bd6b77dd5314917d8ec4bd34df80ad7b610df20ba556c738df73b42d73",
+    "evaluation/results/baseline_20260917_020000/full_retrieval.json": "322b9623b9134090ef4572a60ba47fcbb7374d1542312b5312f4c2b78e66fcf4",
+    "evaluation/results/baseline_20260917_020000/manifest.json": "a19c13342e4a404e4520caf65d604d0141153c4b079d84d24ad9ab37d8700c7b",
+    "evaluation/results/baseline_20260917_020000/report.md": "b8fc39eb6de04f4c2b28dd17377c29943786eae03e572174609ad6866b1f104a",
+    "evaluation/results/formal_baseline_20260916/full_retrieval.json": "56f192638639bae3b3146888297a825cc12926da64505a0577660f6d4c0a485e",
+    "evaluation/results/formal_baseline_20260916/generated_report.md": "a58dacab627b15abd91699b8edbafbfff18bdd29f280117d1ecc509f6db112dc",
+    "evaluation/results/formal_baseline_20260916/manifest.json": "f7cfc22cd0bab93068e2fdcd6cb8c97c70d750f1a6bb82ff5bc504dfa48124f2",
+    "evaluation/results/route/route_validator_v1.json": "939154b965bc5f4c159eb8bab39917dca8356482a13d275688838fde7b91ac12",
+    "evaluation/results/runtime_smoke_20260917_021500.json": "43c04424d949536f2ccea4504400e8c885b058367a91eb833fe567b4a7a061a7",
+    "evaluation/results/runtime_smoke_20260917_021500_manifest.json": "3af7a211ece805dd5d8faed0684ce1b102cf012bce4308418b26c0a9de66be46",
+    "evaluation/results/scene/scene_benchmark_v1.json": "cf11111e8bf9cd0163f098cd477471b0647f13c689a0e05a0e830a10df4b5e7f",
+    "evaluation/retrieval/benchmark.py": "ab4d58702ff146a7f72c2aa08d072dd6f109eb35dd7d0ff1e0acde9e5de35e0c",
+    "evaluation/retrieval/retrieval_gate_config.json": "7ad3e0bb6b2169320ea3db013ddcecca3a9bc11118dba14d6d072f572d36db36",
+    "evaluation/retrieval/retrieval_gold_v1.json": "dadbcae7bdb522822d096333b13773a375b11d8c60e8d8af2c554968d0f6b000",
+    "evaluation/retrieval/run_benchmark.py": "fc913b7b55b2d06a197ddd9e7b3c5a3ba1a95162697991475d87a6af2853b276",
+    "evaluation/route/route_gate_config.json": "441dc59bba30ac49d99079cee24b0d3d8ba6739dad7806137b3af06aacfe0ed5",
+    "evaluation/scene/scene_gate_config.json": "c897c42b094921becbbe33aae9ad0d7724749bfba40d4ea0ea5e459b0a2b2866",
+    "evaluation/scene/scene_gold_v1.json": "2e5b88c7e4261dd85639873f7fba143f47072d424f820d7d62c02dd08aa4efd9",
+    "evaluation/scene/scene_utterance_benchmark.json": "6b2cdb0f892a60c96c1e0aaea1e6a938e2ef761bb6587b086e5e4bf8c8076ecb",
+    "evaluation/verification/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "release/competition_final/00_证据台账与交付规范/archive_manifest.md": "6234a127dc495c65db11d20b62e211ee4befbcd3abd9298992695423ecb61657",
+    "release/competition_final/00_证据台账与交付规范/canonical_claims.yaml": "4d4a65e4bdbccd5fe7c185404b41054c976c614e19a6e692a613eb5260933928",
+    "release/competition_final/00_证据台账与交付规范/commercial_financial_model.md": "7ad731179b0d2083e0dcf165f3f74f15acb9000bec20b36087906fd735437897",
+    "release/competition_final/01_汇报PPT与导出版/14页高保真分镜设计稿与排版指南_optimized.md": "d153c4ddf42edad1baa5ccd0ac37e063eaeacb650404c25a79e40adf8799673c",
+    "release/competition_final/01_汇报PPT与导出版/灵小禅_竞赛汇报PPT.pptx": "c41590d134eb7f1abf6b364bf0666cf2fd3bfe50a6905e6c8fd32c3a0436dacf",
+    "release/competition_final/01_汇报PPT与导出版/灵小禅_竞赛汇报PPT_导出版.pdf": "7c6d137d84721f4b491982ef1ab5de8fb35183a9f322e86fdcc0446b377ec17d",
+    "release/competition_final/01_汇报PPT与导出版/竞赛汇报PPT制作说明与讲稿.md": "8c83f47cd198d25dacd1582060a3a951c3e335d86bb6794b59f80023f7cd4044",
+    "release/competition_final/03_申报文档与技术报告/核心创新与项目展示报告(万字申报底稿)_optimized.md": "24bb771bc15000e3da1400419d389ceef25b3c30475b5a0abea2ff9ae864b18a",
+    "release/competition_final/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.pdf": "2c8a366f5b4a8af88fb95a12af0e6b514da152bad3397fa9c70dbb2b32bed3ec",
+    "release/competition_final/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.tex": "b9a95513ac22b9941b4fff3db9fbea1093bd05415d72b0d253236d075f6b7817",
+    "release/competition_final/README.md": "6ce475ab200b72e2b0260375c33d66aca3c3b00f8f077518009f2890fcad4eee",
+    "release/competition_final/SHA256SUMS.txt": "c2c2b18805d37ed719e09eb1d97e68ee907d8bcb2fba12c862c3ffadc6256a6b"
+  },
+  "updated_scripts": [
+    "scripts/archive/material-editing/apply_centering.py",
+    "scripts/archive/material-editing/apply_image_size_12x9.py",
+    "scripts/archive/material-editing/audit_artifacts.py",
+    "scripts/archive/material-editing/audit_docx_formatting.py",
+    "scripts/archive/material-editing/audit_doc_issues.py",
+    "scripts/archive/material-editing/audit_headings.py",
+    "scripts/archive/material-editing/audit_tables.py",
+    "scripts/archive/material-editing/check_fig8.py",
+    "scripts/archive/material-editing/check_images_pil.py",
+    "scripts/archive/material-editing/check_intext_reps.py",
+    "scripts/archive/material-editing/check_media_refs.py",
+    "scripts/archive/material-editing/check_p485.py",
+    "scripts/archive/material-editing/check_p785.py",
+    "scripts/archive/material-editing/detailed_figure_list.py",
+    "scripts/archive/material-editing/extract_all_docx_images.py",
+    "scripts/archive/material-editing/find_all_fig_mentions.py",
+    "scripts/archive/material-editing/find_all_tu.py",
+    "scripts/archive/material-editing/find_broken_paragraphs.py",
+    "scripts/archive/material-editing/find_urls_in_docx.py",
+    "scripts/archive/material-editing/humanize_final_content.py",
+    "scripts/archive/material-editing/humanize_final_docx.py",
+    "scripts/archive/material-editing/inspect_all_caps.py",
+    "scripts/archive/material-editing/inspect_caption_runs.py",
+    "scripts/archive/material-editing/inspect_docx_figures.py",
+    "scripts/archive/material-editing/inspect_docx_p1_410.py",
+    "scripts/archive/material-editing/inspect_drawing_xml.py",
+    "scripts/archive/material-editing/inspect_exact_3.py",
+    "scripts/archive/material-editing/inspect_fig3.py",
+    "scripts/archive/material-editing/inspect_margins.py",
+    "scripts/archive/material-editing/inspect_p373_runs.py",
+    "scripts/archive/material-editing/inspect_p404.py",
+    "scripts/archive/material-editing/inspect_p407_runs.py",
+    "scripts/archive/material-editing/inspect_p407_xml.py",
+    "scripts/archive/material-editing/inspect_p513_runs.py",
+    "scripts/archive/material-editing/inspect_ref_runs.py",
+    "scripts/archive/material-editing/inspect_sdt.py",
+    "scripts/archive/material-editing/inspect_tables.py",
+    "scripts/archive/material-editing/inspect_toc.py",
+    "scripts/archive/material-editing/locate_docx_targets.py",
+    "scripts/archive/material-editing/optimize_final_docx.py",
+    "scripts/archive/material-editing/patch_detemplatize_docx.py",
+    "scripts/archive/material-editing/patch_final_docx.py",
+    "scripts/archive/material-editing/patch_final_docx_blueprint.py",
+    "scripts/archive/material-editing/patch_final_docx_comprehensive.py",
+    "scripts/archive/material-editing/patch_final_docx_sprint98.py",
+    "scripts/archive/material-editing/patch_final_markdown.py",
+    "scripts/archive/material-editing/patch_markdown_sprint95plus.py",
+    "scripts/archive/material-editing/patch_remaining_3.py",
+    "scripts/archive/material-editing/print_fig_hierarchy.py",
+    "scripts/archive/material-editing/scan_doc_paragraphs.py",
+    "scripts/archive/material-editing/scan_first_179.py",
+    "scripts/archive/material-editing/streamline_docx.py",
+    "scripts/archive/material-editing/streamline_docx_phase2.py",
+    "scripts/archive/material-editing/sync_fig_numbers.py",
+    "scripts/archive/material-editing/test_bolding.py",
+    "scripts/archive/material-editing/test_delete.py",
+    "scripts/archive/material-editing/test_heading_regex.py",
+    "scripts/archive/material-editing/test_insert_pic.py",
+    "scripts/archive/material-editing/test_python_docx.py",
+    "scripts/archive/material-editing/verify_optimized_docx.py",
+    "scripts/archive/material-editing/verify_patched_docx.py"
+  ],
+  "deletion_status": "completed_after_user_confirmation",
+  "verification": {
+    "protected_files_unchanged": 233,
+    "retained_word_files_content_unchanged": 5,
+    "markdown_comparison": "normalize Git CRLF/LF",
+    "release_checksums_verified": 10,
+    "script_syntax_checked": 63,
+    "navigation_links_checked": 22,
+    "approved_deletions_verified": 143,
+    "git_diff_check": "passed"
+  }
+}

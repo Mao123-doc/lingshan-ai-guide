@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0.."
 echo ========================================================
-echo   LingShan AI Digital Human Tour Guide
+echo   LingShan Trusted Q&A and Route Planner
 echo ========================================================
 echo.
 
@@ -10,6 +10,7 @@ cd backend
 if not exist "node_modules" (
     echo [Setup] Installing backend dependencies...
     call npm install
+    if errorlevel 1 exit /b 1
 )
 cd ..
 
@@ -17,27 +18,28 @@ cd frontend
 if not exist "node_modules" (
     echo [Setup] Installing frontend dependencies...
     call npm install
+    if errorlevel 1 exit /b 1
 )
 cd ..
 
-if not exist "frontend\dist" (
+(
     echo [Setup] Building frontend...
     cd frontend
     call npm run build
+    if errorlevel 1 exit /b 1
     cd ..
 )
 
-python -c "import edge_tts" >nul 2>&1
+python -c "import chromadb; import sentence_transformers" >nul 2>&1
 if errorlevel 1 (
     echo [Setup] Installing Python packages...
-    pip install edge-tts chromadb sentence-transformers -q
+    python -m pip install -r backend\python\requirements.txt
+    if errorlevel 1 exit /b 1
 )
 
 :: ---- Start services ----
 echo.
 echo Starting services...
-start "TTS" /min cmd /c "cd backend && python python\tts_server.py"
-echo [OK] TTS (port 8001)
 start "Vector" /min cmd /c "cd backend && python python\vector_service.py"
 echo [OK] Vector search (port 8002)
 timeout /t 5 /nobreak >nul

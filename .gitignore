@@ -87,3 +87,7 @@ output/
 # Local results
 results/
 
+
+# Local submission and compressed-package archives
+/release/submission-*/
+/release/archives/
