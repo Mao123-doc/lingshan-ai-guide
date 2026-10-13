@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { openBaiduNavigation, type LatLng } from '../../utils/navigation';
 import { getCapabilityRoute } from './home-capabilities';
+import characterImg from '../../assets/character-portrait.png';
 import './HomePage.css';
 
 const { Title, Paragraph, Text } = Typography;
@@ -612,6 +613,7 @@ export default function HomePage() {
       <aside className="dh-floating-widget" data-testid="dh-floating-widget">
         <div className={`dh-bubble ${showDhBubble ? 'visible' : ''}`} role="status">
           <div className="dh-bubble__title">
+            <img src={characterImg} alt="小灵头像" className="dh-bubble__avatar-img" />
             <span className="dh-bubble__pulse" />
             <span>AI 导游小灵</span>
           </div>
@@ -628,7 +630,9 @@ export default function HomePage() {
             setShowDhBubble(true);
           }}
         >
-          <div className="dh-trigger-avatar">🧘‍♀️</div>
+          <div className="dh-trigger-avatar">
+            <img src={characterImg} alt="AI 导游小灵" className="dh-trigger-avatar-img" />
+          </div>
           <div className="dh-trigger-text">
             <div className="dh-trigger-status">
               <span>AI 导游</span>
