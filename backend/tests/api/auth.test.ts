@@ -18,7 +18,7 @@ test('auth rejects invalid credentials and protects admin routes', async () => {
 test('auth issues and refreshes an admin token', async () => {
   const server = await startTestServer();
   try {
-    const login = await server.request('/api/v1/auth/login', jsonBody({ username: 'admin', password: 'lingshan2026' }));
+    const login = await server.request('/api/v1/auth/login', jsonBody({ username: 'admin', password: 'public-api-test-password' }));
     assert.equal(login.status, 200);
     assert.equal(login.body.role, 'admin');
     assert.equal(typeof login.body.access_token, 'string');

@@ -30,6 +30,9 @@ const chineseDigits: Record<string, number> = {
 };
 
 export const SceneStateSchema = z.object({
+  returnToExit: z.boolean().optional(),
+  exitSpotId: z.string().min(1).optional(),
+  performanceBufferMinutes: z.number().int().min(0).max(60).optional(),
   currentLocation: z.string().optional(),
   currentTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
   remainingMinutes: z.number().int().positive().optional(),
@@ -280,4 +283,9 @@ export function extractSceneState(query: string): SceneState {
     visitedSpotIds: detectVisitedSpotIds(query),
     missingCriticalFields,
   });
+}
+
+/** Strict visitor planning never derives the actual clock from a desired show. */
+export function hasExplicitCurrentTime(query: string): boolean {
+  return Boolean(extractClock(query) || extractTimeRange(query));
 }

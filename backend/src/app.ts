@@ -17,7 +17,9 @@ export function createApp(): Express {
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   }));
-  app.use(cors());
+  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:8010')
+    .split(',').map(value => value.trim()).filter(Boolean);
+  app.use(cors({ origin: (origin, callback) => callback(null, !origin || allowedOrigins.includes(origin)) }));
   app.use(morgan('dev'));
   app.use(express.json({ limit: '20mb' }));
   app.use(express.urlencoded({ extended: true }));

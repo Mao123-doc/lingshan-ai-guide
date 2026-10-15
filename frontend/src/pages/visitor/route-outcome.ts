@@ -49,6 +49,8 @@ export function getRouteRejectionMessage(reasonCode: string): string {
       return '在剩余时间内赶不上这场演出';
     case 'no_alternative_route':
       return '暂时找不到合适的替代安排';
+    case 'return_to_exit_unreachable':
+      return '剩余时间内无法沿登记路网返回出口，请尽快联系景区工作人员';
     case 'must_visit_unreachable':
       return '你指定的地点按目前安排无法到达';
     case 'missing_critical_field':

@@ -46,6 +46,7 @@ interface Props {
 }
 
 interface CoreModelLike {
+  setParamFloat?: (id: string, value: number, weight: number) => void;
   getParameterCount: () => number;
   getParameterId: (index: number) => string;
   setParameterValueById: (index: number, value: number, weight: number) => void;
@@ -88,6 +89,7 @@ export default function Live2DCanvas({
   const targetMouth = useRef(0);
   const currentMouth = useRef(0);
   const lastExpRef = useRef<number>(-1);
+  const emotionRef = useRef(emotion);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onLoadedRef = useRef(onLoaded);
   const onErrorRef = useRef(onError);
@@ -104,6 +106,7 @@ export default function Live2DCanvas({
 
   // ---- emotion → expression -------------------------------------------------
   useEffect(() => {
+    emotionRef.current = emotion;
     const expIdx = EMOTION_EXP[emotion] ?? 0;
     if (expIdx === lastExpRef.current || !loadedRef.current) return;
     lastExpRef.current = expIdx;
@@ -121,17 +124,24 @@ export default function Live2DCanvas({
       // its required global runtime is absent; the parent then renders the
       // existing static portrait fallback without an uncaught page error.
       if (!hasCubism2Runtime()) {
-        if (!cancelled) onErrorRef.current?.();
-        return;
+        const runtimeURL = '/live2d-cubism2-core.js';
+        await new Promise<void>((resolve, reject) => {
+          let script = document.querySelector<HTMLScriptElement>('script[data-live2d-runtime]');
+          if (!script) { script = document.createElement('script'); script.src = runtimeURL; script.dataset.live2dRuntime = 'true'; document.head.appendChild(script); }
+          script.addEventListener('load', () => resolve(), { once: true });
+          script.addEventListener('error', () => { script?.remove(); reject(new Error('Live2D runtime unavailable')); }, { once: true });
+        });
       }
+      if (cancelled) return;
 
       // Dynamic imports to avoid bundling issues if Live2D isn't available
       const [PIXI, { Live2DModel }] = await Promise.all([
         import('pixi.js'),
-        import('pixi-live2d-display'),
+        import('pixi-live2d-display/cubism2'),
       ]);
 
       if (cancelled) return;
+      Live2DModel.registerTicker(PIXI.Ticker);
 
       // ---- PIXI Application ------------------------------------------------
       const app = new PIXI.Application({
@@ -176,7 +186,7 @@ export default function Live2DCanvas({
             const count = cm.getParameterCount();
             for (let i = 0; i < count; i++) {
               const id = cm.getParameterId(i);
-              if (id === 'ParamMouthOpenY') {
+              if (id === 'ParamMouthOpenY' || id === 'PARAM_MOUTH_OPEN_Y') {
                 mouthIdxRef.current = i;
                 break;
               }
@@ -199,7 +209,9 @@ export default function Live2DCanvas({
 
           // Apply mouth parameter if found
           const mi = mouthIdxRef.current;
-          if (mi >= 0) {
+          if (m.internalModel?.coreModel?.setParamFloat) {
+            m.internalModel.coreModel.setParamFloat('PARAM_MOUTH_OPEN_Y', next, 0.8);
+          } else if (mi >= 0) {
             try {
               const cm = m.internalModel?.coreModel;
               if (cm?.setParameterValueById) {
@@ -210,6 +222,7 @@ export default function Live2DCanvas({
         });
 
         loadedRef.current = true;
+        model.expression?.(EMOTION_EXP[emotionRef.current] ?? 0);
         onLoadedRef.current?.();
 
         // ---- Start idle motion cycle ---------------------------------------
@@ -239,7 +252,7 @@ export default function Live2DCanvas({
             }
           }
         };
-        setTimeout(playIdle, 1500);
+        idleTimerRef.current = setTimeout(playIdle, 1500);
 
       } catch (err) {
         console.warn('[Live2D] Model load failed, falling back to static:', err);
@@ -248,7 +261,7 @@ export default function Live2DCanvas({
           onErrorRef.current?.();
         }
       }
-    })();
+    })().catch(() => { if (!cancelled) onErrorRef.current?.(); });
 
     // ---- cleanup -----------------------------------------------------------
     return () => {
@@ -256,8 +269,6 @@ export default function Live2DCanvas({
       loadedRef.current = false;
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       try {
-        const m = modelRef.current;
-        if (m?.internalModel) m.internalModel.destroy?.();
         appRef.current?.destroy?.(true, { children: true, texture: true });
       } catch { /* ignore destroy errors */ }
       appRef.current = null;

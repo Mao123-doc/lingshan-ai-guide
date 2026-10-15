@@ -1,6 +1,8 @@
-/** Core conversation audit log. No visitor analytics or feedback aggregation. */
-import fs from 'fs';
+/** Conversation audit persistence; a resolved write is available to feedback immediately. */
+import fs from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { resolveDataPath } from '../config/paths';
+import { operationsEvents } from '../services/operations-service';
 
 export interface ConversationRecord {
   id: string;
@@ -12,48 +14,25 @@ export interface ConversationRecord {
   used_llm: boolean;
   response_time_ms: number;
 }
-
-/** Per-file Promise chains to serialize concurrent writes and prevent data loss. */
 const writeLocks = new Map<string, Promise<void>>();
 
-function readJSON<T>(filePath: string, defaultVal: T): T {
-  try {
-    if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, 'utf-8');
-      return JSON.parse(raw);
+export function saveConversation(record: ConversationRecord): Promise<void> {
+  const file = resolveDataPath('conversations.json');
+  const previous = writeLocks.get(file) || Promise.resolve();
+  const next = previous.catch(() => {}).then(() => {
+    fs.mkdirSync(resolveDataPath(''), { recursive: true });
+    const records: ConversationRecord[] = fs.existsSync(file)
+      ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
+    const temporary = `${file}.${randomUUID()}.tmp`;
+    try {
+      fs.writeFileSync(temporary, JSON.stringify([...records, record].slice(-10000), null, 2));
+      fs.renameSync(temporary, file);
+    } finally {
+      if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
     }
-  } catch (e) {
-    console.error(`Failed to read ${filePath}:`, e);
-  }
-  return defaultVal;
-}
-
-function writeJSON(filePath: string, data: unknown): void {
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-  } catch (e) {
-    console.error(`Failed to write ${filePath}:`, e);
-  }
-}
-
-/**
- * Enqueue an atomic read-modify-write operation on a JSON file.
- * Prevents concurrent writes from overwriting each other.
- */
-function enqueueUpdate<T>(filePath: string, mutator: (data: T) => T, defaultVal: T): void {
-  const prev = writeLocks.get(filePath) || Promise.resolve();
-  const next = prev.then(() => {
-    const data = readJSON<T>(filePath, defaultVal);
-    const updated = mutator(data);
-    writeJSON(filePath, updated);
-  }).catch(err => {
-    console.error(`[Store] Write failed for ${filePath}:`, err?.message || err);
+    operationsEvents.emit('change', { type: 'new_query', id: record.id });
   });
-  writeLocks.set(filePath, next);
-}
-
-export function saveConversation(record: ConversationRecord): void {
-  const directory = resolveDataPath('');
-  fs.mkdirSync(directory, { recursive: true });
-  enqueueUpdate<ConversationRecord[]>(resolveDataPath('conversations.json'), records => [...records, record].slice(-10000), []);
+  writeLocks.set(file, next);
+  void next.finally(() => { if (writeLocks.get(file) === next) writeLocks.delete(file); }).catch(() => {});
+  return next;
 }

@@ -1,5 +1,5 @@
 import type { SceneState } from '../scene/scene-state';
-import type { RouteEdge, RouteGraph } from './route-contract';
+import type { RouteEdge, RouteGraph } from './route-types';
 
 export interface RoutePath {
   spotIds: string[];

@@ -30,7 +30,7 @@ test('document deletion cannot escape the isolated data root', async () => {
   try {
     const login = await server.request('/api/v1/auth/login', jsonBody({
       username: 'admin',
-      password: 'lingshan2026',
+      password: 'public-api-test-password',
     }));
     const protectedFile = path.join(server.dataRoot, 'conversations.json');
     fs.writeFileSync(protectedFile, '[]', 'utf8');
@@ -51,7 +51,7 @@ test('unsupported document types are rejected before persistence', async () => {
   try {
     const login = await server.request('/api/v1/auth/login', jsonBody({
       username: 'admin',
-      password: 'lingshan2026',
+      password: 'public-api-test-password',
     }));
     const body = new FormData();
     body.append('file', new Blob(['executable payload'], { type: 'application/octet-stream' }), 'payload.exe');
@@ -73,7 +73,7 @@ test('oversized document uploads are rejected', async () => {
   try {
     const login = await server.request('/api/v1/auth/login', jsonBody({
       username: 'admin',
-      password: 'lingshan2026',
+      password: 'public-api-test-password',
     }));
     const body = new FormData();
     body.append(

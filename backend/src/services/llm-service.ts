@@ -242,80 +242,56 @@ export async function* streamLLM(
   options?: { temperature?: number; max_tokens?: number }
 ): AsyncGenerator<string> {
   const config = getLLMConfig();
-  if (!config) {
-    // No LLM available — signal to caller
-    return;
-  }
-
+  if (!config) return;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25000);
-
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
     const response = await fetch(`${config.baseURL}/chat/completions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: config.model,
-        messages,
-        temperature: options?.temperature ?? 0.3,
-        max_tokens: options?.max_tokens ?? 500,
-        stream: true,
-      }),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
+      body: JSON.stringify({ model: config.model, messages, temperature: options?.temperature ?? 0.3,
+        max_tokens: options?.max_tokens ?? 500, stream: true }),
       signal: controller.signal,
     });
-    clearTimeout(timeout);
-
-    if (!response.ok || !response.body) {
-      // Fallback to non-streaming
-      const text = await response.text();
-      try {
-        const data = JSON.parse(text);
-        if (data?.error) {
-          console.error('[LLM Stream] API error:', JSON.stringify(data.error).slice(0, 200));
-          return; // signal error to caller by returning nothing
-        }
-        const content = data?.choices?.[0]?.message?.content;
-        if (content) yield content;
-      } catch { /* no content available */ }
+    if (!response.ok || !response.body) throw new Error('LLM stream request failed');
+    if (!response.headers.get('content-type')?.includes('text/event-stream')) {
+      const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) throw new Error('LLM response has no content');
+      yield content;
       return;
     }
-
-    const reader = response.body.getReader();
+    reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
-
+    let finished = false;
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
+      buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
+      buffer = done ? '' : lines.pop() || '';
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed || !trimmed.startsWith('data: ')) continue;
-        const data = trimmed.slice(6);
-        if (data === '[DONE]') return;
-
-        try {
-          const parsed = JSON.parse(data);
-          const content = parsed?.choices?.[0]?.delta?.content;
-          if (content) yield content;
-        } catch { /* skip malformed chunk */ }
+        if (!trimmed.startsWith('data:')) continue;
+        const event = trimmed.slice(5).trim();
+        if (event === '[DONE]') return;
+        const parsed = JSON.parse(event);
+        if (parsed.error) throw new Error('LLM stream provider error');
+        const choice = parsed?.choices?.[0];
+        if (choice?.finish_reason === 'stop') finished = true;
+        else if (choice?.finish_reason) throw new Error('LLM stream incomplete: generation stopped early');
+        if (choice?.delta?.content) yield choice.delta.content;
+      }
+      if (done) {
+        if (!finished) throw new Error('LLM stream incomplete: missing completion marker');
+        return;
       }
     }
-  } catch (error: any) {
+  } finally {
     clearTimeout(timeout);
-    if (error?.name === 'AbortError') {
-      console.error('[LLM Stream] Timed out after 25s');
-    } else {
-      console.error('[LLM Stream] Failed:', error?.message?.slice(0, 100));
-    }
-    // Return without yielding — caller will detect empty response and fall back
+    if (reader) { await reader.cancel().catch(() => {}); reader.releaseLock(); }
+    controller.abort();
   }
 }
 

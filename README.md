@@ -4,10 +4,10 @@
 
 **把景区问答升级为可验证的游客决策：理解自然语言，检索事实，规划可执行路线，并诚实说明不可行条件。**
 
-[![CI](https://github.com/Mao123-doc/lingshan-ai-guide/actions/workflows/ci.yml/badge.svg)](https://github.com/Mao123-doc/lingshan-ai-guide/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-2.2.0-1677ff?style=flat-square)](https://github.com/Mao123-doc/lingshan-ai-guide)
+[![CI](https://github.com/OrdoAbChao7/lingshan-ai-guide-ablation/actions/workflows/ci.yml/badge.svg)](https://github.com/OrdoAbChao7/lingshan-ai-guide-ablation/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-2.2.0-1677ff?style=flat-square)](https://github.com/OrdoAbChao7/lingshan-ai-guide-ablation)
 [![License](https://img.shields.io/badge/license-MIT-22c55e?style=flat-square)](LICENSE)
-[![Node.js](https://img.shields.io/badge/node.js-%3E%3D18-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node.js-%3E%3D22.12-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.10-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org)
 [![React](https://img.shields.io/badge/react-19-61DAFB?style=flat-square&logo=react&logoColor=111827)](https://react.dev)
 
@@ -19,7 +19,7 @@
 
 ## 项目定位
 
-灵小禅面向灵山胜境真实游客场景，当前核心版本只提供可信文字问答和多约束路线规划，后台仅保留知识库维护。它不把路线可行性完全交给大语言模型，而是将“语义理解”和“物理决策”分开：模型负责理解游客表达与组织解释，确定性规划器负责时间预算、路网连通、行动能力、演出时间窗和最终可行性校验。
+灵小禅面向灵山胜境真实游客场景，当前参赛版本提供可信问答、多约束路线、数字人、浏览器语音、识景适配、GPS附近查询和反馈，后台提供知识维护、运营统计与形象配置。它不把路线可行性完全交给大语言模型，而是将“语义理解”和“物理决策”分开：模型负责理解游客表达与组织解释，确定性规划器负责时间预算、路网连通、行动能力、演出时间窗和最终可行性校验。
 
 游客可以提出类似这样的请求：
 
@@ -31,14 +31,14 @@
 
 - 🧭 **可信游客决策**：从自然语言需求提取结构化场景状态，生成带步骤、时间预算、证据和可行性结果的路线。
 - 🔎 **三路混合检索**：向量、结构化字段和关键词检索通过 `Promise.all` 并行执行，使用 RRF（`k=60`）融合候选，再进行可选重排。
-- 🧱 **确定性路线规划**：基于当前路线资产中的 23 个节点、30 条登记道路边、景点停留时间、坡度/可达性和演出时间窗进行规划与验证。
+- 🧱 **确定性路线规划**：基于当前路线资产中的 23 个节点、30 条登记道路边、景点停留时间、登记可达性和演出时间窗进行规划与验证。
 - ♿ **无障碍约束**：对轮椅和行动不便游客过滤不可达道路或景点，并在结果中保留被拒绝请求及原因。
 - ⏱️ **诚实拒绝与优雅降级**：区分 `feasible`、`feasible_with_rejected_preferences`、`needs_clarification` 和 `infeasible`，缺信息就追问，超时就解释。
 - 🧾 **可审计证据链**：记录 query rewrite、三路检索、RRF、重排、上下文、生成和 fallback 状态，支持回溯“答案为什么产生”。
 - 💬 **简洁游客端**：首页保留问答与路线两个入口；问答页展示来源片段、检索相关度和响应耗时。
 - 🛠️ **知识库维护**：JWT 登录、知识文档上传/删除、索引重建和结构化检索检查。
 
-2026-10-03 已移除数字人、语音、图片识别、周边设施、情感报告与运营统计。启动只需主服务和向量服务。历史 PPT、视频及冻结发布包保留原版，不代表当前功能；当前范围与迁移说明见 [核心版本说明](docs/core-version.md)。
+2026-10-15 按指定 `lingxiaochan10-06.pptx` 与《项目方案2.0.pdf》恢复参赛原型。主服务与向量服务仍为两个服务，语音使用浏览器能力，视觉识别需另配提供方；当前验收与已知差异见[功能对齐台账](docs/competition/feature-contract.md)。旧 release/competition_final 与旧录屏保持历史版本，不代表本次重新验证。
 
 ## 系统架构
 
@@ -71,7 +71,7 @@ flowchart LR
 
 ### 环境要求
 
-- Node.js `>=18`
+- Node.js `>=22.12`（当前 Vite 8 工具链）
 - Python `>=3.10`
 - Windows 下推荐使用 PowerShell、Chrome 或 Edge
 - 如需完整 RAG 能力，需要配置 LLM API，并安装 Python 服务依赖
@@ -79,8 +79,8 @@ flowchart LR
 ### 安装与配置
 
 ```powershell
-git clone https://github.com/Mao123-doc/lingshan-ai-guide.git
-cd lingshan-ai-guide
+git clone https://github.com/OrdoAbChao7/lingshan-ai-guide-ablation.git
+cd lingshan-ai-guide-ablation
 
 npm run setup
 Copy-Item .env.example .env
@@ -95,9 +95,12 @@ Copy-Item .env.example .env
 | `AGNES_API_KEY` | 备用文本生成 | 无 |
 | `AGNES_MODEL` | 备用文本模型名 | `agnes-2.0-flash` |
 | `AGNES_BASE_URL` | Agnes OpenAI-compatible 地址 | `https://apihub.agnes-ai.com/v1` |
+| `VISION_BASE_URL` / `VISION_MODEL` / `VISION_API_KEY` | OpenAI-compatible 视觉模型地址、模型及密钥 | 未配时识景返回503 |
 | `PORT` | Express 主服务端口 | `8010` |
 | `CORS_ORIGINS` | 跨域白名单 | `http://localhost:5173,http://localhost:8010` |
-| `SECRET_KEY` | JWT 签名密钥 | 请在生产环境替换 |
+| `SECRET_KEY` | JWT 签名密钥 | 自行生成随机值；留空时使用进程内随机密钥，重启后令牌失效 |
+| `ADMIN_USERNAME` | 首次初始化管理员用户名 | `admin` |
+| `ADMIN_PASSWORD` | 首次初始化管理员密码 | 无，演示前自行设置 |
 
 ### 启动完整本地服务
 
@@ -130,7 +133,7 @@ npm run dev
 - 管理后台：<http://localhost:8010/admin/login>
 - 健康检查：<http://localhost:8010/health>
 
-本地演示默认管理员账号为 `admin / lingshan2026`。生产部署前请替换密钥并修改默认凭据，不要直接暴露演示配置。
+首次演示前请在 `.env` 设置 `ADMIN_PASSWORD` 和随机 `SECRET_KEY`。已有 `data/admin_config.json` 时保留其原账号与密码，环境变量不会覆盖已有哈希；未配置初始密码时生成不可预测的随机密码。不要把 `.env` 或管理员配置交给评委。
 
 ### 前端热更新
 
@@ -263,6 +266,6 @@ npm run build
 
 ## 项目链接
 
-- GitHub：[Mao123-doc/lingshan-ai-guide](https://github.com/Mao123-doc/lingshan-ai-guide)
+- GitHub：[Mao123-doc/lingshan-ai-guide](https://github.com/OrdoAbChao7/lingshan-ai-guide-ablation)
 - 当前交付目录：[release/competition_final](release/competition_final/)
 - 竞赛材料入口：[竞赛汇报与文档材料包](竞赛汇报与文档材料包/)

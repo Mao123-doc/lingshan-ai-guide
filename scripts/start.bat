@@ -51,5 +51,5 @@ echo.
 echo Opening browser...
 start http://localhost:8010
 echo Ready! http://localhost:8010
-echo Admin: http://localhost:8010/admin/login (admin / lingshan2026)
+echo Admin: http://localhost:8010/admin/login (configure ADMIN_PASSWORD in .env)
 pause

@@ -1,10 +1,8 @@
-import path from 'path';
-import dotenv from 'dotenv';
+import './config/environment';
 import { app } from './app';
 import { initKnowledgeBase } from './services/rag-service';
 import { isLLMAvailable, getActiveModelName } from './services/llm-service';
-
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+import { attachOperationsSocket } from './services/operations-socket';
 
 const PORT = parseInt(process.env.PORT || '8010');
 const server = app.listen(PORT, async () => {
@@ -18,7 +16,7 @@ const server = app.listen(PORT, async () => {
   console.log(`  ║  Health:    http://localhost:${PORT}/health          ║`);
   console.log('  ║                                                  ║');
   console.log(`  ║  LLM:       ${isLLMAvailable() ? getActiveModelName() : '离线模式'}  ║`);
-  console.log('  ║  默认账号:  admin / lingshan2026                 ║');
+  console.log('  ║  管理员密码请通过 ADMIN_PASSWORD 配置            ║');
   console.log('  ╚══════════════════════════════════════════════════╝');
   console.log('');
 
@@ -37,3 +35,4 @@ process.on('unhandledRejection', (reason) => {
 });
 
 export { app, server };
+attachOperationsSocket(server);

@@ -1,16 +1,18 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import './App.css';
 
-import HomePage from './pages/visitor/HomePage';
-import QAPage from './pages/visitor/QAPage';
-import RecommendPage from './pages/visitor/RecommendPage';
-import AdminLoginPage from './pages/admin/LoginPage';
-import DashboardPage from './pages/admin/DashboardPage';
-import KnowledgeBasePage from './pages/admin/KnowledgeBasePage';
-import DigitalHumanPage from './pages/admin/DigitalHumanPage';
-import SentimentReportPage from './pages/admin/SentimentReportPage';
+const HomePage = lazy(() => import('./pages/visitor/HomePage'));
+const QAPage = lazy(() => import('./pages/visitor/QAPage'));
+const RecommendPage = lazy(() => import('./pages/visitor/RecommendPage'));
+const AdminLoginPage = lazy(() => import('./pages/admin/LoginPage'));
+const KnowledgeBasePage = lazy(() => import('./pages/admin/KnowledgeBasePage'));
+
+const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'));
+const DigitalHumanPage = lazy(() => import('./pages/admin/DigitalHumanPage'));
+const SentimentReportPage = lazy(() => import('./pages/admin/SentimentReportPage'));
 
 /** Redirect unauthenticated users to admin login. */
 function AdminGuard({ children }: { children: React.ReactNode }) {
@@ -35,7 +37,7 @@ function App() {
       }}
     >
       <BrowserRouter>
-        <Routes>
+        <Suspense fallback={<p role="status">正在加载页面…</p>}><Routes>
           {/* Visitor */}
           <Route path="/" element={<HomePage />} />
           <Route path="/qa" element={<QAPage />} />
@@ -49,7 +51,7 @@ function App() {
           <Route path="/admin/reports" element={<AdminGuard><SentimentReportPage /></AdminGuard>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        </Routes></Suspense>
       </BrowserRouter>
     </ConfigProvider>
   );

@@ -62,6 +62,7 @@ const DigitalHuman = forwardRef<DigitalHumanHandle, Props>(
 
     // ---- audio-reactive ring pulse ------------------------------------------
     useEffect(() => {
+      let raf = 0;
       const loop = () => {
         if (ringRef.current) {
           const vol = isSpeaking ? readAudioVolume() : 0;
@@ -69,9 +70,9 @@ const DigitalHuman = forwardRef<DigitalHumanHandle, Props>(
           ringRef.current.style.opacity = String(pulse);
           ringRef.current.style.transform = `scale(${1 + pulse * 0.06})`;
         }
-        requestAnimationFrame(loop);
+        raf = requestAnimationFrame(loop);
       };
-      const raf = requestAnimationFrame(loop);
+      raf = requestAnimationFrame(loop);
       return () => cancelAnimationFrame(raf);
     }, [isSpeaking]);
 

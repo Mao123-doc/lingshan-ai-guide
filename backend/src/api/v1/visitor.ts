@@ -1,12 +1,16 @@
 import { Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { queryRAG, streamRAGQuery, getKnowledgeStats } from '../../services/rag-service';
+import { queryRAG, getKnowledgeStats } from '../../services/rag-service';
 import type { RAGExperimentConfig } from '../../services/rag-config';
 import { isLLMAvailable, getActiveModelName } from '../../services/llm-service';
 import { planRouteRequest, RoutePlanningInputError, type RoutePlanningRequest } from '../../services/route/route-planning-service';
 import { saveConversation } from '../../db/store';
+import { loadRouteGraph } from '../../services/route/route-contract';
 
 const visitorRouter = Router();
+visitorRouter.get('/route/graph', (_req, res) => {
+  res.json({ ...loadRouteGraph(), coordinate_reference: 'existing_dataset', notice: '路网属性含估算值；坐标未声明为现场测绘。' });
+});
 
 // ============ Q&A (with SSE streaming) ============
 
@@ -20,82 +24,40 @@ visitorRouter.post('/qa', async (req: Request, res: Response) => {
     const sessionId = session_id || uuidv4();
     const startTime = Date.now();
 
-    // Check if client wants streaming
+    const conversationId = uuidv4();
     const acceptSSE = req.headers.accept?.includes('text/event-stream');
-
     if (acceptSSE) {
-      // SSE Streaming response
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
       res.setHeader('X-Accel-Buffering', 'no');
-
+      res.flushHeaders();
       res.write(`data: ${JSON.stringify({ type: 'session', session_id: sessionId })}\n\n`);
-
-      let fullAnswer = '';
-      try {
-        for await (const chunk of streamRAGQuery(query, sessionId, evaluation_config as Partial<RAGExperimentConfig> | undefined)) {
-          fullAnswer += chunk;
-          res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
-        }
-      } catch (streamErr) {
-        console.error('Stream error:', streamErr);
-      }
-
-      // Save conversation
-      const elapsed = Date.now() - startTime;
-      const emotion = 'neutral';
-      saveConversation({
-        id: uuidv4(),
-        session_id: sessionId,
-        timestamp: new Date().toISOString(),
-        query,
-        answer: fullAnswer,
-        emotion,
-        used_llm: isLLMAvailable(),
-        response_time_ms: elapsed,
-      });
-
-      res.write(`data: ${JSON.stringify({
-        type: 'done',
-        session_id: sessionId,
-        emotion,
-        used_llm: isLLMAvailable(),
-        model: getActiveModelName(),
-      })}\n\n`);
-      res.end();
-    } else {
-      // Non-streaming response
-      const result = await queryRAG(query, sessionId, evaluation_config as Partial<RAGExperimentConfig> | undefined);
-
-      // Save conversation
-      const elapsed = Date.now() - startTime;
-      saveConversation({
-        id: uuidv4(),
-        session_id: sessionId,
-        timestamp: new Date().toISOString(),
-        query,
-        answer: result.answer,
-        emotion: result.emotion,
-        used_llm: result.usedLLM,
-        response_time_ms: elapsed,
-      });
-
-      res.json({
-        answer: result.answer,
-        session_id: sessionId,
-        emotion: result.emotion,
-        related_spots: result.relatedSpots,
-        used_llm: result.usedLLM,
-        model: getActiveModelName(),
-        retrieved_chunks: result.retrievedChunks,
-        response_time_ms: elapsed,
-        evaluation_trace: result.trace,
-      });
     }
+    const result = await queryRAG(query, sessionId, evaluation_config as Partial<RAGExperimentConfig> | undefined,
+      acceptSSE ? (content) => { if (!res.destroyed) res.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`); } : undefined);
+    const elapsed = Date.now() - startTime;
+    await saveConversation({
+      id: conversationId, session_id: sessionId, timestamp: new Date().toISOString(),
+      query, answer: result.answer, emotion: result.emotion,
+      used_llm: result.usedLLM, response_time_ms: elapsed,
+    });
+    const payload = {
+      answer: result.answer, conversation_id: conversationId, session_id: sessionId,
+      emotion: result.emotion, related_spots: result.relatedSpots, used_llm: result.usedLLM,
+      model: getActiveModelName(), retrieved_chunks: result.retrievedChunks,
+      response_time_ms: elapsed, evaluation_trace: result.trace,
+    };
+    if (res.destroyed) return;
+    if (acceptSSE) {
+      res.write(`data: ${JSON.stringify({ type: 'done', ...payload })}\n\n`);
+      res.end();
+    } else res.json(payload);
   } catch (error: any) {
     console.error('QA error:', error);
-    res.status(500).json({ error: '问答处理失败' });
+    if (res.headersSent) {
+      if (!res.destroyed) res.end(`data: ${JSON.stringify({ type: 'error', error: '问答处理失败，请重试' })}\n\n`);
+    } else res.status(500).json({ error: '问答处理失败' });
   }
 });
 

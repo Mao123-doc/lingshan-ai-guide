@@ -64,7 +64,7 @@ const FIELD_LABELS: Record<string, string> = {
 // Parser
 // ============================================================
 
-function parseDataset(text: string): SpotRecord[] {
+export function parseDataset(text: string): SpotRecord[] {
   const spots: SpotRecord[] = [];
   const lines = text.split('\n');
 
