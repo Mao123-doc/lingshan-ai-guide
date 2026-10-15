@@ -69,6 +69,15 @@
                   🔍 查看依据
                 </button>
                 <button
+                  class="action-btn {{speakingMsgId === item.id ? 'action-btn-active' : ''}}"
+                  size="mini"
+                  bindtap="toggleSpeakMessage"
+                  data-id="{{item.id}}"
+                  data-text="{{item.content}}"
+                >
+                  {{speakingMsgId === item.id ? '⏹️ 停止' : '🔊 播报'}}
+                </button>
+                <button
                   wx:if="{{item.answer.conversation_id && !ratedIds.includes(item.answer.conversation_id)}}"
                   class="action-btn"
                   size="mini"

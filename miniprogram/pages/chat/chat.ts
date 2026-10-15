@@ -39,6 +39,7 @@ Page({
     recordTimer: null as any,
     recordSeconds: 0,
     toolsOpen: false,
+    speakingMsgId: '',
   },
 
   onLoad(options: { q?: string }) {
@@ -62,6 +63,19 @@ Page({
     const style = storageService.getDhStyle();
     if (style !== this.data.dhStyle) {
       this.setData({ dhStyle: style });
+    }
+
+    const pending = storageService.getAndClearPendingChatQuery();
+    if (pending) {
+      if (this.data.sessionId) {
+        this.setData({ inputText: pending });
+        this.sendMessage(pending);
+      } else {
+        this.initNewSession().then(() => {
+          this.setData({ inputText: pending });
+          this.sendMessage(pending);
+        });
+      }
     }
   },
 
@@ -340,6 +354,61 @@ Page({
       });
       this.setData({ feedbackSubmitting: false });
     }
+  },
+
+  // 语音播报 / 停止播报
+  toggleSpeakMessage(e: WechatMiniprogram.CustomEvent) {
+    const msgId = e.currentTarget.dataset.id as string;
+    const text = e.currentTarget.dataset.text as string;
+
+    if (!msgId || !text) return;
+
+    if (this.data.speakingMsgId === msgId) {
+      // 停止播报
+      voiceService.stopAudio();
+      this.setData({
+        speakingMsgId: '',
+        isSpeaking: false,
+        dhEmotion: 'idle',
+      });
+      wx.showToast({
+        title: '已停止语音播报',
+        icon: 'none',
+      });
+      return;
+    }
+
+    // 开始播报
+    voiceService.stopAudio();
+    this.setData({
+      speakingMsgId: msgId,
+      isSpeaking: true,
+      dhEmotion: 'explain',
+    });
+
+    voiceService.speakText(
+      text,
+      () => {
+        // 播报结束
+        if (this.data.speakingMsgId === msgId) {
+          this.setData({
+            speakingMsgId: '',
+            isSpeaking: false,
+            dhEmotion: 'idle',
+          });
+        }
+      },
+      () => {
+        // 播报异常
+        if (this.data.speakingMsgId === msgId) {
+          this.setData({
+            speakingMsgId: '',
+            isSpeaking: false,
+            dhEmotion: 'idle',
+          });
+        }
+      }
+    );
   },
 
   // 多模态工具：语音录制

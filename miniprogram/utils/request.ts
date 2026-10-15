@@ -125,9 +125,9 @@ export function request<T = any>(options: RequestOptions): Promise<T> {
 
 /**
  * 稳健跨块 UTF-8 解码器
- * 防止多字节中文在 chunk 边界被生硬切断导致乱码
+ * 防止多字节中文与Emoji在 chunk 边界被生硬切断导致乱码
  */
-class ChunkedUtf8Decoder {
+export class ChunkedUtf8Decoder {
   private leftover: number[] = [];
 
   decode(buffer: ArrayBuffer): string {
@@ -139,32 +139,32 @@ class ChunkedUtf8Decoder {
 
     let end = combined.length;
     // 检查末尾是否含有不完整的多字节序列
-    let needed = 0;
+    let incompleteLen = 0;
     for (let i = 1; i <= 4 && end - i >= 0; i++) {
       const b = combined[end - i];
       if ((b & 0x80) === 0x00) {
-        // 单字节 ASCII
+        // 单字节 ASCII，前序字符已完整
         break;
       }
       if ((b & 0xe0) === 0xc0) {
         // 2字节 UTF-8 起始
-        if (i < 2) needed = 2 - i;
+        if (i < 2) incompleteLen = i;
         break;
       }
       if ((b & 0xf0) === 0xe0) {
         // 3字节 UTF-8 起始 (中文常用)
-        if (i < 3) needed = 3 - i;
+        if (i < 3) incompleteLen = i;
         break;
       }
       if ((b & 0xf8) === 0xf0) {
-        // 4字节 UTF-8 起始
-        if (i < 4) needed = 4 - i;
+        // 4字节 UTF-8 起始 (Emoji等)
+        if (i < 4) incompleteLen = i;
         break;
       }
     }
 
-    if (needed > 0) {
-      const cut = end - (needed === 1 ? 1 : needed === 2 ? 2 : 3);
+    if (incompleteLen > 0) {
+      const cut = end - incompleteLen;
       for (let i = cut; i < end; i++) {
         this.leftover.push(combined[i]);
       }
@@ -187,19 +187,25 @@ class ChunkedUtf8Decoder {
       const c = validSlice[i++];
       if (c < 0x80) {
         out += String.fromCharCode(c);
-      } else if (c > 0xbf && c < 0xe0) {
-        const c2 = validSlice[i++];
-        out += String.fromCharCode(((c & 0x1f) << 6) | (c2 & 0x3f));
-      } else if (c > 0xdf && c < 0xf0) {
-        const c2 = validSlice[i++];
-        const c3 = validSlice[i++];
-        out += String.fromCharCode(((c & 0x0f) << 12) | ((c2 & 0x3f) << 6) | (c3 & 0x3f));
-      } else {
-        const c2 = validSlice[i++];
-        const c3 = validSlice[i++];
-        const c4 = validSlice[i++];
-        let u = (((c & 0x07) << 18) | ((c2 & 0x3f) << 12) | ((c3 & 0x3f) << 6) | (c4 & 0x3f)) - 0x10000;
-        out += String.fromCharCode(0xd800 + (u >> 10), 0xdc00 + (u & 0x3ff));
+      } else if ((c & 0xe0) === 0xc0) {
+        if (i < validSlice.length) {
+          const c2 = validSlice[i++];
+          out += String.fromCharCode(((c & 0x1f) << 6) | (c2 & 0x3f));
+        }
+      } else if ((c & 0xf0) === 0xe0) {
+        if (i + 1 < validSlice.length) {
+          const c2 = validSlice[i++];
+          const c3 = validSlice[i++];
+          out += String.fromCharCode(((c & 0x0f) << 12) | ((c2 & 0x3f) << 6) | (c3 & 0x3f));
+        }
+      } else if ((c & 0xf8) === 0xf0) {
+        if (i + 2 < validSlice.length) {
+          const c2 = validSlice[i++];
+          const c3 = validSlice[i++];
+          const c4 = validSlice[i++];
+          let u = (((c & 0x07) << 18) | ((c2 & 0x3f) << 12) | ((c3 & 0x3f) << 6) | (c4 & 0x3f)) - 0x10000;
+          out += String.fromCharCode(0xd800 + (u >> 10), 0xdc00 + (u & 0x3ff));
+        }
       }
     }
     return out;
@@ -249,10 +255,27 @@ export function requestStream<T = any>(
         });
         return;
       }
-      // 如果后端没有按 chunked 发送，而是以普通 JSON 返回
+
+      // 如果后端以普通完整 JSON 返回（非分块）
       if (!completed && typeof res.data === 'object' && res.data !== null) {
         completed = true;
         callbacks.onDone?.(res.data as T);
+        return;
+      }
+
+      // 冲刷缓冲区中可能残留的未切分完的最后一帧
+      if (!completed && textBuffer.trim()) {
+        processBufferedFrames(textBuffer + '\n\n');
+        textBuffer = '';
+      }
+
+      // 严格契约：如果连接关闭但从未收到过 done 事件，决不标记为成功
+      if (!completed) {
+        callbacks.onError?.({
+          error: '流式响应异常终止（未收到完成标记），请重试',
+          status: 500,
+          code: 'STREAM_INCOMPLETE',
+        });
       }
     },
     fail: (err) => {
@@ -263,22 +286,20 @@ export function requestStream<T = any>(
     },
   });
 
-  task.onChunkReceived((chunkRes: { data: ArrayBuffer }) => {
-    if (aborted) return;
-    const chunkStr = decoder.decode(chunkRes.data).replace(/\r\n/g, '\n');
-    textBuffer += chunkStr;
-
+  const processBufferedFrames = (rawContent: string) => {
     let boundaryIndex: number;
-    while ((boundaryIndex = textBuffer.indexOf('\n\n')) >= 0) {
-      const frame = textBuffer.slice(0, boundaryIndex).trim();
-      textBuffer = textBuffer.slice(boundaryIndex + 2);
+    let localBuffer = rawContent;
+    while ((boundaryIndex = localBuffer.indexOf('\n\n')) >= 0) {
+      const frame = localBuffer.slice(0, boundaryIndex).trim();
+      localBuffer = localBuffer.slice(boundaryIndex + 2);
 
       if (!frame) continue;
 
       const lines = frame.split('\n');
       for (const line of lines) {
-        if (line.startsWith('data:')) {
-          const raw = line.slice(5).trim();
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('data:')) {
+          const raw = trimmedLine.slice(5).trim();
           if (!raw) continue;
           try {
             const event = JSON.parse(raw);
@@ -302,6 +323,14 @@ export function requestStream<T = any>(
         }
       }
     }
+    return localBuffer;
+  };
+
+  task.onChunkReceived((chunkRes: { data: ArrayBuffer }) => {
+    if (aborted) return;
+    const chunkStr = decoder.decode(chunkRes.data);
+    textBuffer = (textBuffer + chunkStr).replace(/\r\n/g, '\n');
+    textBuffer = processBufferedFrames(textBuffer);
   });
 
   return {

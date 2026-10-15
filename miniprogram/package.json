@@ -5,7 +5,8 @@
   "main": "app.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "compile": "tsc"
+    "compile": "tsc",
+    "test": "npx --prefix ../backend tsx --test test/miniprogram-client.test.ts"
   },
   "keywords": [
     "wechat-miniprogram",

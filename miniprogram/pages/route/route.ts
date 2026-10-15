@@ -70,12 +70,35 @@ Page({
     errorMessage: '',
   },
 
-  onLoad() {
+  onLoad(options?: { spotId?: string; name?: string; q?: string }) {
     this.loadGraphAndSpots();
     // 恢复已保存路线（如有）
     const saved = storageService.getSavedRoute();
     if (saved) {
       this.hydrateRouteResponse(saved);
+    }
+
+    if (options?.spotId) {
+      const decodedId = decodeURIComponent(options.spotId);
+      const decodedName = options.name ? decodeURIComponent(options.name) : decodedId;
+      this.setData({
+        startSpotId: decodedId,
+        progressSpotId: decodedId,
+        sceneQuery: `我想去${decodedName}游玩，请帮我规划合适路线`,
+      });
+    } else if (options?.q) {
+      this.setData({ sceneQuery: decodeURIComponent(options.q) });
+    }
+  },
+
+  onShow() {
+    const pending = storageService.getAndClearPendingRouteSpot();
+    if (pending) {
+      this.setData({
+        startSpotId: pending.spotId,
+        progressSpotId: pending.spotId,
+        sceneQuery: `我想去${pending.name}游玩，请帮我规划合适路线`,
+      });
     }
   },
 
@@ -363,9 +386,9 @@ Page({
   },
 
   // 按进度重新规划
-  replanFromProgress(completed?: string[], fromSpot?: string) {
-    const visited = completed ?? this.data.completedSpotIds;
-    const origin = fromSpot ?? this.data.progressSpotId;
+  replanFromProgress(completed?: any, fromSpot?: string) {
+    const visited = Array.isArray(completed) ? completed : this.data.completedSpotIds;
+    const origin = (typeof fromSpot === 'string' && fromSpot) ? fromSpot : this.data.progressSpotId;
     const nowMin = parseMinutes(this.data.progressTimeStr);
     const deadlineMin = parseMinutes(this.data.deadlineTimeStr);
     const remaining = deadlineMin - nowMin;
@@ -383,10 +406,10 @@ Page({
       scene_state: {
         returnToExit: true,
         exitSpotId: 'south_gate',
-        currentLocation: fromSpot,
+        currentLocation: origin,
         currentTime: this.data.progressTimeStr,
         remainingMinutes: remaining,
-        visitedSpotIds: completed,
+        visitedSpotIds: visited,
         mobility: this.data.mobility,
         pace: this.data.pace,
         interests: this.data.selectedInterests,

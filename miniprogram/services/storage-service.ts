@@ -152,4 +152,39 @@ export const storageService = {
   setDhStyle(style: string): void {
     wx.setStorageSync(KEYS.DH_STYLE, style);
   },
+
+  // 跨页面/跨Tab参数中转
+  setPendingChatQuery(query: string): void {
+    try {
+      wx.setStorageSync('lxz_pending_chat_query', query);
+    } catch {}
+  },
+
+  getAndClearPendingChatQuery(): string | null {
+    try {
+      const q = wx.getStorageSync('lxz_pending_chat_query');
+      if (q) {
+        wx.removeStorageSync('lxz_pending_chat_query');
+        return q;
+      }
+    } catch {}
+    return null;
+  },
+
+  setPendingRouteSpot(spot: { spotId: string; name: string }): void {
+    try {
+      wx.setStorageSync('lxz_pending_route_spot', spot);
+    } catch {}
+  },
+
+  getAndClearPendingRouteSpot(): { spotId: string; name: string } | null {
+    try {
+      const s = wx.getStorageSync('lxz_pending_route_spot');
+      if (s) {
+        wx.removeStorageSync('lxz_pending_route_spot');
+        return s;
+      }
+    } catch {}
+    return null;
+  },
 };

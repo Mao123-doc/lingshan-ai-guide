@@ -198,6 +198,13 @@
   background: #f3f4f6 !important;
 }
 
+.action-btn-active {
+  background: var(--primary-light) !important;
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  font-weight: 600;
+}
+
 .rated-text {
   font-size: 22rpx;
   color: #167858;

@@ -9,7 +9,8 @@
     "dev": "npm --prefix backend run dev",
     "start": "npm --prefix backend run start",
     "lint": "npm --prefix frontend run lint",
-    "typecheck:miniprogram": "npm --prefix miniprogram run typecheck"
+    "typecheck:miniprogram": "npm --prefix miniprogram run typecheck",
+    "test:miniprogram": "npm --prefix miniprogram test"
   },
   "repository": {
     "type": "git",

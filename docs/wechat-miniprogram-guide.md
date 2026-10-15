@@ -154,15 +154,35 @@ npm run dev --prefix backend
 
 ## 6. 自动化测试与质量保障
 
-我们为小程序及其 API 连通性提供了多维验证：
+我们为小程序客户端底层逻辑及其 API 连通性提供了多维自动化验证：
 
 ```powershell
-# 1. 验证微信小程序 TypeScript 类型检查与编译无误
+# 1. 验证微信小程序 TypeScript 类型检查（0 错误）
 npm run typecheck --prefix miniprogram
 
-# 2. 运行后端关于微信小程序专属契约的回归测试
+# 2. 运行微信小程序专属客户端单元测试（UTF-8多字节跨块解码、确定性离线规划、坐标换算、点击参数清洗等）
+npm test --prefix miniprogram
+
+# 3. 运行后端关于微信小程序专属契约的回归测试（包含流式问答、反馈、路线与景点契约）
 npm test --prefix backend
 
-# 3. 运行算法层路线与状态抽取 27 项测试
+# 4. 运行算法层路线与状态抽取 27 项测试（60/60 边界路线硬违规为 0）
 npm run test:algorithms --prefix backend
 ```
+
+---
+
+## 7. 语音与多模态扩展说明（WechatSI 插件）
+
+- **AI 回答语音播报**：每个助手回答气泡下方均提供【🔊 播报】与【⏹️ 停止】操作。在播报时自动联动顶部灵小禅数字人呈现讲解光环与音浪跳动动效。
+- **微信同声传译接入**：当在微信公众平台添加官方插件后，只需在 `app.json` 中配置：
+  ```json
+  "plugins": {
+    "WechatSI": {
+      "version": "0.3.5",
+      "provider": "wx069ba97bb58d59c3"
+    }
+  }
+  ```
+  `voice-service.ts` 会自动探测并调用真实云端 TTS 生成原汁原味语音。未配置时将诚实采用高质感数字人动效与状态机友好降级，绝不虚构假数据。
+

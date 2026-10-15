@@ -120,8 +120,14 @@ Page({
   goToChat(e: WechatMiniprogram.CustomEvent) {
     const q = e.currentTarget.dataset.question || '';
     if (q) {
-      wx.reLaunch({
-        url: `/pages/chat/chat?q=${encodeURIComponent(q)}`,
+      storageService.setPendingChatQuery(q);
+      wx.switchTab({
+        url: '/pages/chat/chat',
+        fail: () => {
+          wx.reLaunch({
+            url: `/pages/chat/chat?q=${encodeURIComponent(q)}`,
+          });
+        },
       });
     } else {
       wx.switchTab({

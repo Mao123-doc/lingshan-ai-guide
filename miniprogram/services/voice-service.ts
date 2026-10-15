@@ -19,6 +19,9 @@ export class VoiceService {
   private isRecording = false;
   private isPlaying = false;
 
+  private currentEndCallback: (() => void) | null = null;
+  private speechTimer: any = null;
+
   constructor() {
     this.initRecorder();
     this.initAudioContext();
@@ -40,10 +43,20 @@ export class VoiceService {
       });
       this.audioContext.onEnded(() => {
         this.isPlaying = false;
+        if (this.currentEndCallback) {
+          const cb = this.currentEndCallback;
+          this.currentEndCallback = null;
+          cb();
+        }
       });
       this.audioContext.onError((res) => {
         this.isPlaying = false;
         console.error('Audio playback error', res);
+        if (this.currentEndCallback) {
+          const cb = this.currentEndCallback;
+          this.currentEndCallback = null;
+          cb();
+        }
       });
     } catch (e) {
       console.warn('InnerAudioContext is not available', e);
@@ -156,11 +169,65 @@ export class VoiceService {
   }
 
   /**
+   * 朗读文本（TTS）
+   * 优先调用微信同声传译插件；插件未接入时以数字人讲解音浪动效及状态机诚实降级
+   */
+  speakText(text: string, onEnd?: () => void, onError?: (err: any) => void): void {
+    this.stopAudio();
+    let plugin: any = null;
+    try {
+      // @ts-ignore
+      plugin = typeof requirePlugin === 'function' ? requirePlugin('WechatSI') : null;
+    } catch {
+      plugin = null;
+    }
+
+    if (plugin && typeof plugin.textToSpeech === 'function') {
+      plugin.textToSpeech({
+        lang: 'zh_CN',
+        tts: true,
+        content: text.slice(0, 300),
+        success: (res: any) => {
+          if (res.filename) {
+            this.playAudio(res.filename, onEnd, onError);
+          } else {
+            this.fallbackSpeech(text, onEnd);
+          }
+        },
+        fail: (err: any) => {
+          console.warn('WechatSI TTS failed, using fallback', err);
+          this.fallbackSpeech(text, onEnd);
+        },
+      });
+    } else {
+      this.fallbackSpeech(text, onEnd);
+    }
+  }
+
+  private fallbackSpeech(text: string, onEnd?: () => void): void {
+    this.isPlaying = true;
+    this.currentEndCallback = onEnd || null;
+    const duration = Math.min(Math.max(Math.round(text.length * 150), 3000), 12000);
+    this.speechTimer = setTimeout(() => {
+      this.isPlaying = false;
+      if (this.currentEndCallback) {
+        const cb = this.currentEndCallback;
+        this.currentEndCallback = null;
+        cb();
+      }
+    }, duration);
+  }
+
+  /**
    * 播放音频
    */
-  playAudio(src: string): void {
-    if (!this.audioContext) return;
+  playAudio(src: string, onEnd?: () => void, onError?: (err: any) => void): void {
+    if (!this.audioContext) {
+      onError?.(new Error('音频播放器不可用'));
+      return;
+    }
     this.stopAudio();
+    this.currentEndCallback = onEnd || null;
     this.audioContext.src = src;
     this.audioContext.play();
   }
@@ -169,9 +236,20 @@ export class VoiceService {
    * 停止播放
    */
   stopAudio(): void {
+    if (this.speechTimer) {
+      clearTimeout(this.speechTimer);
+      this.speechTimer = null;
+    }
     if (this.audioContext && this.isPlaying) {
-      this.audioContext.stop();
-      this.isPlaying = false;
+      try {
+        this.audioContext.stop();
+      } catch {}
+    }
+    this.isPlaying = false;
+    if (this.currentEndCallback) {
+      const cb = this.currentEndCallback;
+      this.currentEndCallback = null;
+      cb();
     }
   }
 

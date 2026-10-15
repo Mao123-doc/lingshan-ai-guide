@@ -77,17 +77,31 @@ Page({
   askAbout() {
     const name = this.data.spot?.name;
     if (name) {
-      wx.reLaunch({
-        url: `/pages/chat/chat?q=${encodeURIComponent(`请详细介绍${name}的历史渊源与文化内涵`)}`,
+      const query = `请详细介绍${name}的历史渊源与文化内涵`;
+      storageService.setPendingChatQuery(query);
+      wx.switchTab({
+        url: '/pages/chat/chat',
+        fail: () => {
+          wx.reLaunch({
+            url: `/pages/chat/chat?q=${encodeURIComponent(query)}`,
+          });
+        },
       });
     }
   },
 
   planRouteWithSpot() {
-    const name = this.data.spot?.name;
-    if (name) {
-      wx.reLaunch({
-        url: `/pages/chat/chat?q=${encodeURIComponent(`我想去${name}游玩，请帮我规划合适路线`)}`,
+    const name = this.data.spot?.name || '';
+    const spotId = this.data.spotId;
+    if (name || spotId) {
+      storageService.setPendingRouteSpot({ spotId, name });
+      wx.switchTab({
+        url: '/pages/route/route',
+        fail: () => {
+          wx.reLaunch({
+            url: `/pages/route/route?spotId=${encodeURIComponent(spotId)}&name=${encodeURIComponent(name)}`,
+          });
+        },
       });
     }
   },
