@@ -15,7 +15,7 @@
 
 ## 文件与材料入口
 
-[项目文件导航](docs/项目文件导航.md) · [竞赛材料](竞赛汇报与文档材料包/README.md) · [冻结发布包](release/competition_final/README.md) · [脚本入口](scripts/README.md)
+[项目文件导航](docs/项目文件导航.md) · [微信小程序指南](docs/wechat-miniprogram-guide.md) · [竞赛材料](竞赛汇报与文档材料包/README.md) · [冻结发布包](release/competition_final/README.md) · [脚本入口](scripts/README.md)
 
 ## 项目定位
 
