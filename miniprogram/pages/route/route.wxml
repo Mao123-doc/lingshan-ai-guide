@@ -2,37 +2,40 @@
 <view class="container route-container">
   <!-- 离线或警告提示 -->
   <view wx:if="{{isOfflineView}}" class="alert-box alert-warning">
-    <text>正在使用本地离线路网与确定性规划器。开放时间及路网可能过期；离线模式不包含实时演出排期或大模型。</text>
+    <text class="alert-symbol">⚠️</text>
+    <text class="alert-content">正在使用本地离线路网与确定性规划器。开放时间及路网可能存在延迟；离线模式不包含动态演出排期或大模型推荐。</text>
   </view>
   <view wx:if="{{errorMessage}}" class="alert-box alert-error">
-    <text>{{errorMessage}}</text>
+    <text class="alert-symbol">✕</text>
+    <text class="alert-content">{{errorMessage}}</text>
   </view>
 
   <!-- 顶部规划方式 Tab 切换 -->
   <view class="route-tabs">
     <view
-      class="tab-item {{activeTab === 'natural' ? 'active' : ''}}"
+      class="tab-item {{activeTab === 'natural' ? 'tab-active' : ''}}"
       bindtap="switchTab"
       data-tab="natural"
     >
-      💬 游客口语智能规划
+      <text>口语智能推演</text>
     </view>
     <view
-      class="tab-item {{activeTab === 'structured' ? 'active' : ''}}"
+      class="tab-item {{activeTab === 'structured' ? 'tab-active' : ''}}"
       bindtap="switchTab"
       data-tab="structured"
     >
-      ⚙️ 多约束精准定制
+      <text>多约束精准定制</text>
     </view>
   </view>
 
   <!-- 选项卡 1：自然语言对话式规划 -->
   <view wx:if="{{activeTab === 'natural'}}" class="zen-card">
-    <view class="zen-card-title">
-      <text>🧭 告诉我您的游览情况</text>
+    <view class="card-headline">
+      <text class="headline-title">描述您的出游需求</text>
+      <text class="headline-tag">13维状态抽取</text>
     </view>
     <view class="card-tip">
-      大模型提取13维状态画像，运筹引擎负责时空推演与无障碍过滤。
+      输入任意自然语言需求，智能体自动解析时间预算、同行人体力与必看演出，由运筹引擎生成确定性路线。
     </view>
     <textarea
       class="query-textarea"
@@ -48,14 +51,15 @@
       loading="{{isLoading}}"
       disabled="{{isLoading || !sceneQuery}}"
     >
-      ✨ 运筹推演推荐路线
+      求解推荐路线
     </button>
   </view>
 
   <!-- 选项卡 2：多约束精准表单规划 -->
   <view wx:if="{{activeTab === 'structured'}}" class="zen-card">
-    <view class="zen-card-title">
-      <text>⚙️ 刚性时空硬约束定制</text>
+    <view class="card-headline">
+      <text class="headline-title">刚性时空硬约束定制</text>
+      <text class="headline-tag">运筹图搜索</text>
     </view>
 
     <!-- 起点与时间 -->
@@ -74,9 +78,9 @@
         </picker>
       </view>
       <view class="form-col">
-        <text class="form-label">当前时间</text>
+        <text class="form-label">出发时间</text>
         <picker mode="time" value="{{currentTimeStr}}" bindchange="onTimeChange">
-          <view class="picker-value">{{currentTimeStr}} ›</view>
+          <view class="picker-value font-numeric">{{currentTimeStr}} ›</view>
         </picker>
       </view>
     </view>
@@ -92,7 +96,7 @@
           bindtap="onDurationChange"
           data-hours="{{item}}"
         >
-          {{item}} 小时
+          <text class="font-numeric">{{item}}</text> 小时
         </view>
       </view>
     </view>
@@ -100,27 +104,30 @@
     <!-- 行动能力（无障碍过滤） -->
     <view class="form-section">
       <text class="form-label">行动能力（刚性无障碍过滤）</text>
-      <view class="tag-selector">
+      <view class="mobility-grid">
         <view
-          class="select-tag {{mobility === 'normal' ? 'selected' : ''}}"
+          class="mobility-card {{mobility === 'normal' ? 'mobility-selected' : ''}}"
           bindtap="onMobilityChange"
           data-val="normal"
         >
-          🚶 行动自如
+          <view class="mob-title">行动自如</view>
+          <view class="mob-desc">可走台阶与大坡度捷径</view>
         </view>
         <view
-          class="select-tag {{mobility === 'limited' ? 'selected' : ''}}"
+          class="mobility-card {{mobility === 'limited' ? 'mobility-selected' : ''}}"
           bindtap="onMobilityChange"
           data-val="limited"
         >
-          🧓 腿脚慢/带长辈
+          <view class="mob-title">缓慢/带长辈</view>
+          <view class="mob-desc">增加步行缓冲时间</view>
         </view>
         <view
-          class="select-tag {{mobility === 'wheelchair' ? 'selected' : ''}}"
+          class="mobility-card {{mobility === 'wheelchair' ? 'mobility-selected' : ''}}"
           bindtap="onMobilityChange"
           data-val="wheelchair"
         >
-          ♿ 轮椅/避开阶梯坡道
+          <view class="mob-title">轮椅/避开阶梯</view>
+          <view class="mob-desc">严密过滤非无障碍通道</view>
         </view>
       </view>
     </view>
@@ -152,7 +159,6 @@
           bindtap="toggleInterest"
           data-key="{{item.key}}"
         >
-          <text class="int-icon">{{item.icon}}</text>
           <text class="int-label">{{item.label}}</text>
         </view>
       </view>
@@ -164,7 +170,7 @@
       bindtap="handleStructuredPlan"
       loading="{{isLoading}}"
     >
-      🧭 求解多目标最优路线
+      求解多目标最优路线
     </button>
   </view>
 
@@ -176,24 +182,24 @@
         <text class="zen-tag {{routeOutcome === 'feasible' ? 'zen-tag-celadon' : (routeOutcome === 'feasible_with_rejected_preferences' ? 'zen-tag-gold' : 'zen-tag')}}">
           {{routeOutcomeLabel}}
         </text>
-        <text class="outcome-total">总耗时 {{routePlan.route.totalMinutes || 0}} 分钟</text>
+        <text class="outcome-total font-numeric">总时长 {{routePlan.route.totalMinutes || 0}} 分钟</text>
       </view>
 
       <view class="outcome-stats">
         <view class="stat-item">
-          <text class="stat-num">{{routePlan.route.walkingMinutes || 0}}</text>
+          <text class="stat-num font-numeric">{{routePlan.route.walkingMinutes || 0}}</text>
           <text class="stat-unit">分钟步行</text>
         </view>
         <view class="stat-item">
-          <text class="stat-num">{{routePlan.route.visitingMinutes || 0}}</text>
+          <text class="stat-num font-numeric">{{routePlan.route.visitingMinutes || 0}}</text>
           <text class="stat-unit">分钟游览</text>
         </view>
         <view class="stat-item" wx:if="{{routePlan.route.waitingMinutes}}">
-          <text class="stat-num">{{routePlan.route.waitingMinutes}}</text>
+          <text class="stat-num font-numeric">{{routePlan.route.waitingMinutes}}</text>
           <text class="stat-unit">分钟候场</text>
         </view>
         <view class="stat-item">
-          <text class="stat-num">{{routeSteps.length}}</text>
+          <text class="stat-num font-numeric">{{routeSteps.length}}</text>
           <text class="stat-unit">个游览点</text>
         </view>
       </view>
@@ -219,7 +225,7 @@
       <!-- 偏好诚实放弃说明 -->
       <view wx:if="{{rejectedList.length > 0}}" class="alert-box alert-info">
         <view>
-          <view style="font-weight: 600; margin-bottom: 6rpx;">📋 部分偏好调整说明：</view>
+          <view style="font-weight: 700; margin-bottom: 6rpx;">偏好约束调整说明：</view>
           <view wx:for="{{rejectedList}}" wx:key="index">
             · {{item.item}}：{{item.reason}}
           </view>
@@ -229,16 +235,16 @@
 
     <!-- 动态进度监控与自动纠偏卡片 -->
     <view class="zen-card progress-card">
-      <view class="zen-card-title">
-        <text>⏱️ 游览进度打卡与纠偏</text>
+      <view class="card-headline">
+        <text class="headline-title">游览打卡与动态纠偏</text>
       </view>
       <view class="card-tip">
         确认各站打卡时间。若晚于计划超过10分钟且开启自动纠偏，系统将以剩余时间与当前位置自动重排后续动线。
       </view>
 
       <view class="progress-switch-row">
-        <text class="switch-label">超时10分钟自动增量纠偏</text>
-        <switch checked="{{autoCorrect}}" bindchange="onAutoCorrectToggle" color="#c41d7f" />
+        <text class="switch-label">超时 10 分钟自动增量纠偏</text>
+        <switch checked="{{autoCorrect}}" bindchange="onAutoCorrectToggle" color="#9d174d" />
       </view>
 
       <view wx:if="{{progressNotice}}" class="alert-box alert-info">
@@ -247,75 +253,83 @@
 
       <view class="progress-actions">
         <button class="btn-secondary" size="mini" bindtap="replanFromProgress">
-          🔄 按当前打卡进度重新规划
+          按当前打卡进度重新规划
         </button>
       </view>
     </view>
 
-    <!-- 路线时间轴明细 -->
+    <!-- 路线时间轴明细（Metro 风格拓扑动线） -->
     <view class="timeline-wrap">
-      <view class="timeline-title">📍 完整时空游览动线</view>
+      <view class="timeline-title">时空游览动线</view>
 
-      <view
-        wx:for="{{routeSteps}}"
-        wx:key="stepIndex"
-        class="step-card {{completedSpotIds.indexOf(item.spotId) >= 0 ? 'step-completed' : ''}} {{item.isReturn ? 'step-return' : ''}}"
-      >
-        <view class="step-badge">
-          <text>{{item.isReturn ? '🏁' : item.stepIndex}}</text>
-        </view>
-        <view class="step-main">
-          <view class="step-header">
-            <view class="step-name">
-              {{item.isReturn ? '返回出口：' : ''}}{{item.spotName}}
-              <text wx:if="{{item.performanceName}}" class="tag-performance">
-                🎬 {{item.performanceName}}
+      <view class="timeline-list">
+        <view
+          wx:for="{{routeSteps}}"
+          wx:key="stepIndex"
+          class="step-item {{completedSpotIds.indexOf(item.spotId) >= 0 ? 'step-completed' : ''}} {{item.isReturn ? 'step-return' : ''}}"
+        >
+          <!-- 左侧节点标识与连线 -->
+          <view class="step-axis">
+            <view class="step-node-badge">
+              <text class="font-numeric">{{item.isReturn ? '终' : item.stepIndex}}</text>
+            </view>
+            <view wx:if="{{index < routeSteps.length - 1}}" class="step-line"></view>
+          </view>
+
+          <!-- 右侧卡片内容 -->
+          <view class="step-card-body">
+            <view class="step-header">
+              <view class="step-name">
+                {{item.isReturn ? '返程出口：' : ''}}{{item.spotName}}
+                <text wx:if="{{item.performanceName}}" class="tag-performance">
+                  {{item.performanceName}}
+                </text>
+              </view>
+              <view class="step-times font-numeric">
+                {{item.start}} - {{item.end}}
+              </view>
+            </view>
+
+            <view class="step-metrics font-numeric">
+              <text>步行 {{item.walkMinutes}} 分钟 ({{item.distanceMeters || 0}}米)</text>
+              <text> · 停留 {{item.visitMinutes}} 分钟</text>
+              <text wx:if="{{item.waitingMinutes}}"> · 候场 {{item.waitingMinutes}} 分钟</text>
+            </view>
+
+            <view class="step-accessibility">
+              <text>{{item.accessibleDesc}}</text>
+            </view>
+
+            <view class="step-actions">
+              <button
+                class="step-action-btn btn-nav"
+                size="mini"
+                bindtap="openStepNav"
+                data-step="{{item}}"
+              >
+                实景导航
+              </button>
+              <button
+                class="step-action-btn"
+                size="mini"
+                bindtap="askStepDetail"
+                data-name="{{item.spotName}}"
+              >
+                讲解
+              </button>
+              <button
+                wx:if="{{!item.isReturn && completedSpotIds.indexOf(item.spotId) < 0}}"
+                class="step-action-btn btn-check"
+                size="mini"
+                bindtap="confirmProgressStep"
+                data-id="{{item.spotId}}"
+              >
+                打卡
+              </button>
+              <text wx:elif="{{!item.isReturn}}" class="check-done-tag">
+                已打卡
               </text>
             </view>
-            <view class="step-times">
-              {{item.start}} - {{item.end}}
-            </view>
-          </view>
-
-          <view class="step-metrics">
-            <text>步行 {{item.walkMinutes}} 分钟 ({{item.distanceMeters || 0}}米)</text>
-            <text>· 停留 {{item.visitMinutes}} 分钟</text>
-            <text wx:if="{{item.waitingMinutes}}">· 提前排队 {{item.waitingMinutes}} 分钟</text>
-          </view>
-
-          <view class="step-accessibility">
-            <text>♿ {{item.accessibleDesc}}</text>
-          </view>
-
-          <view class="step-actions">
-            <button
-              class="mini-btn-accent"
-              size="mini"
-              bindtap="openStepNav"
-              data-step="{{item}}"
-            >
-              🗺️ 实景导航
-            </button>
-            <button
-              class="mini-btn"
-              size="mini"
-              bindtap="askStepDetail"
-              data-name="{{item.spotName}}"
-            >
-              📖 景点讲解
-            </button>
-            <button
-              wx:if="{{!item.isReturn && completedSpotIds.indexOf(item.spotId) < 0}}"
-              class="mini-btn"
-              size="mini"
-              bindtap="confirmProgressStep"
-              data-id="{{item.spotId}}"
-            >
-              ✓ 打卡完成
-            </button>
-            <text wx:elif="{{!item.isReturn}}" class="check-done-tag">
-              ✓ 已打卡
-            </text>
           </view>
         </view>
       </view>
@@ -325,7 +339,7 @@
   <!-- 离线应急规划兜底按钮 -->
   <view class="offline-bar">
     <button class="btn-secondary" bindtap="handleOfflinePlan">
-      📴 离线应急路线规划（无需联网）
+      离线应急路线规划（无需联网）
     </button>
   </view>
 </view>

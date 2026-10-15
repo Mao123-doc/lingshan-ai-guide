@@ -4,24 +4,24 @@
   "packOptions": {
     "ignore": [
       {
-        "type": "folder",
-        "value": "node_modules"
+        "value": "node_modules",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "backend"
+        "value": "backend",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "frontend"
+        "value": "frontend",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "data"
+        "value": "data",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "docs"
+        "value": "docs",
+        "type": "folder"
       }
     ],
     "include": []
@@ -64,7 +64,10 @@
     "showES6CompileOption": false,
     "useCompilerPlugins": [
       "typescript"
-    ]
+    ],
+    "compileWorklet": false,
+    "localPlugins": false,
+    "condition": false
   },
   "compileType": "miniprogram",
   "libVersion": "3.3.4",
@@ -74,5 +77,6 @@
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
-  }
+  },
+  "simulatorPluginLibVersion": {}
 }

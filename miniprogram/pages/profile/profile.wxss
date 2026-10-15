@@ -1,44 +1,53 @@
 /** pages/profile/profile.wxss **/
 
 .profile-container {
-  padding-bottom: 60rpx;
+  padding-top: 16rpx;
+}
+
+.title-accent {
+  color: var(--primary);
+  font-size: 22rpx;
 }
 
 .dh-preview-wrap {
-  padding: 30rpx 0;
   display: flex;
   justify-content: center;
+  align-items: center;
+  padding: 30rpx 0;
+  background: radial-gradient(circle, rgba(157, 23, 77, 0.06) 0%, transparent 70%);
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
 }
 
 .styles-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16rpx;
-  margin-top: 20rpx;
 }
 
 .style-item {
-  background: #f9fafb;
-  border: 1rpx solid #e5e7eb;
-  border-radius: 16rpx;
+  background: #f8fafc;
+  border-radius: 18rpx;
   padding: 20rpx;
+  border: 1.5rpx solid #e2e8f0;
   display: flex;
   flex-direction: column;
   gap: 8rpx;
-  transition: all 0.2s;
+  transition: all 0.15s ease;
 }
 
-.style-item.style-active {
+.style-active {
   background: var(--primary-light);
-  border-color: var(--primary);
-  box-shadow: 0 4rpx 12rpx rgba(196, 29, 127, 0.15);
+  border-color: var(--primary-border);
+  box-shadow: 0 4rpx 12rpx rgba(157, 23, 77, 0.1);
 }
 
 .style-color-dot {
   width: 28rpx;
   height: 28rpx;
   border-radius: 50%;
-  margin-bottom: 4rpx;
+  border: 2rpx solid #ffffff;
+  box-shadow: var(--shadow-xs);
 }
 
 .style-name {
@@ -49,110 +58,134 @@
 
 .style-desc {
   font-size: 20rpx;
-  color: var(--text-muted);
-  line-height: 1.4;
+  color: var(--ink-muted);
+  line-height: 1.3;
+}
+
+/* API 地址配置 */
+.card-tip {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16rpx;
 }
 
 .api-input {
-  background: #f9fafb;
-  border: 1rpx solid #e5e7eb;
-  border-radius: 14rpx;
-  padding: 18rpx 20rpx;
-  font-size: 24rpx;
+  background: #f8fafc;
+  border: 1.5rpx solid #e2e8f0;
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  font-size: 26rpx;
+  color: var(--text-primary);
   margin-bottom: 16rpx;
 }
 
-.api-btn-row, .cache-btn-row {
+.api-btn-row {
   display: flex;
-  gap: 16rpx;
   justify-content: flex-end;
+  gap: 14rpx;
+  margin-bottom: 14rpx;
 }
 
 .ping-status-row {
-  margin-top: 18rpx;
-  background: #f9fafb;
-  padding: 12rpx 16rpx;
-  border-radius: 10rpx;
-  font-size: 22rpx;
   display: flex;
-  gap: 10rpx;
+  align-items: center;
+  font-size: 24rpx;
+  padding-top: 10rpx;
+  border-top: 1rpx solid #f1f5f9;
 }
 
 .ping-label {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .ping-val {
-  color: var(--text-primary);
-  flex: 1;
-  word-break: break-all;
+  color: var(--celadon);
+  font-weight: 600;
 }
 
+/* 缓存管理 */
 .cache-info-box {
-  background: #f9fafb;
-  border-radius: 14rpx;
-  padding: 20rpx;
-  margin-bottom: 16rpx;
+  background: #f8fafc;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+  margin-bottom: 18rpx;
   display: flex;
   flex-direction: column;
-  gap: 10rpx;
+  gap: 8rpx;
 }
 
 .cache-row {
   display: flex;
+  justify-content: space-between;
   font-size: 24rpx;
 }
 
 .cache-label {
-  color: var(--text-muted);
-  width: 180rpx;
+  color: var(--text-secondary);
 }
 
 .cache-val {
   color: var(--text-primary);
-  flex: 1;
+  font-weight: 600;
 }
 
+.cache-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14rpx;
+}
+
+/* 收藏列表 */
 .fav-list {
   display: flex;
   flex-direction: column;
-  gap: 12rpx;
 }
 
 .fav-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18rpx 20rpx;
-  background: #f9fafb;
-  border-radius: 14rpx;
-  font-size: 26rpx;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f8fafc;
+}
+
+.fav-item-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fav-item-sub {
+  font-size: 22rpx;
+  color: var(--ink-muted);
 }
 
 .fav-arrow {
-  color: #9ca3af;
-  font-size: 32rpx;
+  font-size: 28rpx;
+  color: var(--ink-muted);
 }
 
-/* 技术说明卡片 */
-.tech-card {
-  background: #fcfdfe;
-}
-
-.tech-row {
+/* 底部说明 */
+.footer-note {
+  text-align: center;
+  padding: 32rpx 0 16rpx;
   display: flex;
-  margin-bottom: 14rpx;
-  font-size: 24rpx;
-  line-height: 1.6;
+  flex-direction: column;
+  gap: 8rpx;
+  align-items: center;
 }
 
-.tech-key {
+.footer-badge {
+  font-size: 22rpx;
+  color: var(--ink-light);
+  font-weight: 600;
+  background: #f1f5f9;
+  padding: 6rpx 20rpx;
+  border-radius: 9999rpx;
+}
+
+.footer-sub {
+  font-size: 20rpx;
   color: var(--text-muted);
-  width: 170rpx;
-  flex-shrink: 0;
-}
-
-.tech-val {
-  color: var(--text-secondary);
-  flex: 1;
 }

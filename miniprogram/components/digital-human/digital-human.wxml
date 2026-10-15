@@ -23,13 +23,15 @@
     />
   </view>
 
-  <!-- 情绪徽标 -->
+  <!-- 情绪状态微徽标 -->
   <view wx:if="{{emotion !== 'idle'}}" class="dh-badge">
-    <text wx:if="{{emotion === 'greet'}}">🌸</text>
-    <text wx:elif="{{emotion === 'think'}}">💭</text>
-    <text wx:elif="{{emotion === 'explain'}}">🎙️</text>
-    <text wx:elif="{{emotion === 'happy'}}">✨</text>
-    <text wx:elif="{{emotion === 'sorry'}}">🙏</text>
+    <view class="dh-badge-inner">
+      <text wx:if="{{emotion === 'greet'}}">🌸</text>
+      <text wx:elif="{{emotion === 'think'}}">✦</text>
+      <text wx:elif="{{emotion === 'explain'}}">🎙</text>
+      <text wx:elif="{{emotion === 'happy'}}">✧</text>
+      <text wx:elif="{{emotion === 'sorry'}}">☯</text>
+    </view>
   </view>
 
   <!-- 状态提示文字 -->

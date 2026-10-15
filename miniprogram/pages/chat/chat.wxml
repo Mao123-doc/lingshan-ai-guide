@@ -1,6 +1,6 @@
 <!-- pages/chat/chat.wxml -->
 <view class="chat-container">
-  <!-- 顶部状态与数字人栏 -->
+  <!-- 顶部状态与数字人伴随栏 -->
   <view class="chat-header">
     <view class="header-companion">
       <digital-human
@@ -16,11 +16,11 @@
       </view>
     </view>
     <view class="header-actions">
-      <view class="mode-tag" bindtap="toggleQaMode">
-        <text>{{qaMode === 'stream' ? '🌊 流式生成' : '⚡ 快速模式'}}</text>
+      <view class="mode-tag {{qaMode === 'stream' ? 'mode-stream' : 'mode-fast'}}" bindtap="toggleQaMode">
+        <text>{{qaMode === 'stream' ? '流式生成' : '快速模式'}}</text>
       </view>
       <view class="reset-btn" bindtap="initNewSession">
-        <text>清空重置</text>
+        <text>重置会话</text>
       </view>
     </view>
   </view>
@@ -52,39 +52,48 @@
             <!-- 回答元信息与操作栏 -->
             <view wx:if="{{item.answer}}" class="answer-actions">
               <view class="answer-meta">
-                <text class="zen-tag {{item.answer.used_llm ? '' : 'zen-tag-celadon'}}">
+                <text class="meta-tag {{item.answer.used_llm ? 'tag-llm' : 'tag-doc'}}">
                   {{item.answer.used_llm ? '大模型增强' : '知识库摘录'}}
                 </text>
                 <text class="meta-time" wx:if="{{item.answer.response_time_ms}}">
                   {{item.answer.response_time_ms}}ms
                 </text>
               </view>
-              <view class="btn-group">
+              <view class="action-btn-group">
                 <button
-                  class="action-btn"
+                  class="bubble-btn"
                   size="mini"
                   bindtap="viewEvidence"
                   data-answer="{{item.answer}}"
                 >
-                  🔍 查看依据
+                  <svg class="btn-svg" viewBox="0 0 24 24" width="13" height="13">
+                    <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                  </svg>
+                  <text>依据</text>
                 </button>
                 <button
-                  class="action-btn {{speakingMsgId === item.id ? 'action-btn-active' : ''}}"
+                  class="bubble-btn {{speakingMsgId === item.id ? 'bubble-btn-active' : ''}}"
                   size="mini"
                   bindtap="toggleSpeakMessage"
                   data-id="{{item.id}}"
                   data-text="{{item.content}}"
                 >
-                  {{speakingMsgId === item.id ? '⏹️ 停止' : '🔊 播报'}}
+                  <svg class="btn-svg" viewBox="0 0 24 24" width="13" height="13">
+                    <path fill="currentColor" d="{{speakingMsgId === item.id ? 'M6 6h12v12H6z' : 'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'}}"/>
+                  </svg>
+                  <text>{{speakingMsgId === item.id ? '停止' : '播报'}}</text>
                 </button>
                 <button
                   wx:if="{{item.answer.conversation_id && !ratedIds.includes(item.answer.conversation_id)}}"
-                  class="action-btn"
+                  class="bubble-btn"
                   size="mini"
                   bindtap="openFeedback"
                   data-id="{{item.answer.conversation_id}}"
                 >
-                  ⭐ 评价
+                  <svg class="btn-svg" viewBox="0 0 24 24" width="13" height="13">
+                    <path fill="currentColor" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                  <text>评价</text>
                 </button>
                 <text wx:elif="{{ratedIds.includes(item.answer.conversation_id)}}" class="rated-text">
                   已评价
@@ -100,61 +109,98 @@
         <view class="msg-avatar">
           <image src="/assets/images/avatar-default.png" mode="aspectFill" class="avatar-mini-img" />
         </view>
-        <view class="msg-bubble assistant-bubble">
-          <text class="msg-text">{{partialAnswer}}</text>
-          <text class="typing-cursor">|</text>
-          <view class="streaming-note">
-            <text>灵小禅正在根据官方知识库组织回答…</text>
-          </view>
+        <view class="msg-bubble assistant-bubble streaming-bubble">
+          <text class="msg-text">{{streamingText}}</text>
+          <text class="typing-cursor"></text>
         </view>
       </view>
 
-      <view id="msg-bottom" style="height: 20rpx;"></view>
+      <!-- 思考中等待提示 -->
+      <view wx:if="{{isBusy && !isStreaming}}" id="msg-thinking" class="msg-row msg-assistant">
+        <view class="msg-avatar">
+          <image src="/assets/images/avatar-default.png" mode="aspectFill" class="avatar-mini-img" />
+        </view>
+        <view class="msg-bubble assistant-bubble thinking-bubble">
+          <view class="thinking-dots">
+            <text class="dot dot-1"></text>
+            <text class="dot dot-2"></text>
+            <text class="dot dot-3"></text>
+          </view>
+          <text class="thinking-text">灵小禅正在多路检索验证中…</text>
+        </view>
+      </view>
+
+      <view id="scroll-bottom-anchor" style="height: 20rpx;"></view>
     </view>
   </scroll-view>
 
-  <!-- 底部快捷工具栏 -->
-  <view class="tools-bar">
-    <view class="tool-btn" bindtap="handleVision">
-      <text class="tool-icon">📷</text>
-      <text class="tool-label">识景</text>
-    </view>
-    <view class="tool-btn" bindtap="handleNearby">
-      <text class="tool-icon">📍</text>
-      <text class="tool-label">附近</text>
-    </view>
-    <view class="tool-btn {{isRecording ? 'recording' : ''}}" bindtap="toggleVoiceRecord">
-      <text class="tool-icon">{{isRecording ? '⏹️' : '🎤'}}</text>
-      <text class="tool-label">{{isRecording ? recordSeconds + 's' : '语音'}}</text>
-    </view>
+  <!-- 底部快捷追问推荐气泡 -->
+  <view wx:if="{{!isBusy && messages.length <= 2}}" class="suggest-chips-wrap">
+    <scroll-view scroll-x class="suggest-scroll" enable-flex="{{true}}">
+      <view
+        wx:for="{{['九龙灌浴演出时间', '轮椅无障碍坡道', '灵山大佛门票政策', '梵宫地涌宝塔在哪']}}"
+        wx:key="index"
+        class="suggest-chip"
+        bindtap="onSuggestTap"
+        data-text="{{item}}"
+      >
+        <text>{{item}}</text>
+      </view>
+    </scroll-view>
   </view>
 
-  <!-- 底部输入框 -->
-  <view class="input-bar">
+  <!-- 底部多模态工具栏与输入区 -->
+  <view class="chat-input-bar">
+    <view class="input-tools-left">
+      <!-- 语音录制按钮 -->
+      <view
+        class="tool-btn {{isRecording ? 'recording-active' : ''}}"
+        bindtouchstart="startVoiceRecord"
+        bindtouchend="stopVoiceRecord"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path fill="currentColor" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+        </svg>
+      </view>
+      <!-- 拍照识景按钮 -->
+      <view class="tool-btn" bindtap="takePhotoToRecognize">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path fill="currentColor" d="M12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4zm7-4.8h-3.1l-1.8-2h-4.2l-1.8 2H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-7 13c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>
+        </svg>
+      </view>
+      <!-- 附近设施查询 -->
+      <view class="tool-btn" bindtap="queryNearby">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path fill="currentColor" d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5z"/>
+        </svg>
+      </view>
+    </view>
+
     <textarea
       class="chat-input"
       value="{{inputText}}"
-      bindinput="onInput"
-      placeholder="请输入您想咨询的景区问题…"
-      maxlength="500"
+      bindinput="onTextInput"
+      placeholder="{{isRecording ? '正在倾听您的提问…松手发送' : '向灵小禅咨询景点、时间、门票…'}}"
       auto-height
       cursor-spacing="20"
       confirm-type="send"
       bindconfirm="onSendTap"
     />
     <button
-      class="btn-send {{(!inputText || isBusy) ? 'disabled' : ''}}"
+      class="btn-send {{(!inputText || isBusy) ? 'btn-send-disabled' : ''}}"
       bindtap="onSendTap"
       disabled="{{!inputText || isBusy}}"
     >
-      {{isBusy ? '…' : '发送'}}
+      <svg class="send-svg" viewBox="0 0 24 24" width="16" height="16">
+        <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+      </svg>
     </button>
   </view>
 
   <!-- 评价弹窗 -->
   <view wx:if="{{feedbackModalVisible}}" class="modal-mask" bindtap="closeFeedback">
     <view class="modal-card" catchtap="noop">
-      <view class="modal-title">🌟 评价本次回答</view>
+      <view class="modal-title">评价本次回答</view>
       <view class="rating-stars">
         <text
           wx:for="{{[1, 2, 3, 4, 5]}}"
@@ -166,15 +212,15 @@
       </view>
       <input
         class="feedback-input"
-        placeholder="写下您的建议或体验（可选）"
+        placeholder="写下您的宝贵建议或体验感受（选填）"
         value="{{feedbackComment}}"
         bindinput="onFeedbackCommentInput"
         maxlength="200"
       />
       <view class="modal-actions">
-        <button class="btn-secondary" bindtap="closeFeedback">取消</button>
+        <button class="btn-secondary flex-1" bindtap="closeFeedback">取消</button>
         <button
-          class="btn-primary"
+          class="btn-primary flex-1"
           bindtap="submitFeedback"
           loading="{{feedbackSubmitting}}"
         >提交评价</button>
@@ -186,7 +232,7 @@
   <view wx:if="{{nearbyModalVisible}}" class="modal-mask" bindtap="closeNearbyModal">
     <view class="modal-card modal-large" catchtap="noop">
       <view class="modal-title-row">
-        <text class="modal-title">📍 周边景点与设施</text>
+        <text class="modal-title">周边景点与设施</text>
         <view class="modal-close" bindtap="closeNearbyModal">✕</view>
       </view>
       <view class="modal-notice">{{nearbyNotice}}</view>
@@ -194,13 +240,13 @@
         <view wx:for="{{nearbyList}}" wx:key="index" class="nearby-item">
           <view class="nearby-left">
             <view class="nearby-name">{{item.name || '设施地点'}}</view>
-            <view class="nearby-sub">
+            <view class="nearby-sub font-numeric">
               直线距离: {{item.distance_m || 0}} 米 · {{item.coordinate_source || '登记节点'}}
               <text wx:if="{{item.requires_on_site_verification}}" class="tag-warn">待现场核验</text>
             </view>
           </view>
           <view class="nearby-right">
-            <button class="mini-btn" size="mini" bindtap="navigateLocation" data-item="{{item}}">
+            <button class="mini-btn-secondary" size="mini" bindtap="navigateLocation" data-item="{{item}}">
               导航
             </button>
             <button class="mini-btn-accent" size="mini" bindtap="askAboutSpot" data-name="{{item.name}}">

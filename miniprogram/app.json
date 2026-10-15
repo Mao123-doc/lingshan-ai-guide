@@ -9,16 +9,16 @@
   ],
   "window": {
     "backgroundTextStyle": "dark",
-    "navigationBarBackgroundColor": "#c41d7f",
+    "navigationBarBackgroundColor": "#9d174d",
     "navigationBarTitleText": "灵小禅 · 灵山胜境",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#f8f9fa"
+    "backgroundColor": "#faf8f5"
   },
   "tabBar": {
-    "color": "#8a8a8a",
-    "selectedColor": "#c41d7f",
+    "color": "#64748b",
+    "selectedColor": "#9d174d",
     "backgroundColor": "#ffffff",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/home/home",

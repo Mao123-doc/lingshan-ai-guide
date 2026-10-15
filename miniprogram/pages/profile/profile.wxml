@@ -3,7 +3,8 @@
   <!-- 数字人形象与风格定制 -->
   <view class="zen-card">
     <view class="zen-card-title">
-      <text>🌸 灵小禅形象风格定制</text>
+      <text class="title-accent">◆</text>
+      <text>数字人形象风格定制</text>
     </view>
     <view class="dh-preview-wrap">
       <digital-human
@@ -32,13 +33,14 @@
   <!-- 后端服务地址与连接测试（支持本地与真机调试） -->
   <view class="zen-card">
     <view class="zen-card-title">
-      <text>🔗 后端服务地址配置</text>
+      <text class="title-accent">◆</text>
+      <text>后端服务地址配置</text>
     </view>
     <view class="card-tip">
-      本地微信开发者工具默认为 http://127.0.0.1:8010/api/v1。手机真机预览时，请输入电脑的局域网 IP（如 http://192.168.1.100:8010/api/v1）。
+      微信开发者工具默认连接 http://127.0.0.1:8010/api/v1。手机真机预览时，请输入局域网 IP（例如 http://192.168.1.108:8010/api/v1）。
     </view>
     <input
-      class="api-input"
+      class="api-input font-numeric"
       value="{{apiBaseUrl}}"
       bindinput="onApiUrlInput"
       placeholder="请输入后端 API Base URL"
@@ -60,20 +62,21 @@
   <!-- 离线应急数据缓存管理 -->
   <view class="zen-card">
     <view class="zen-card-title">
-      <text>📴 离线路网与缓存管理</text>
+      <text class="title-accent">◆</text>
+      <text>离线路网与缓存管理</text>
     </view>
     <view class="cache-info-box">
       <view class="cache-row">
         <text class="cache-label">缓存状态：</text>
-        <text class="cache-val">{{cachedGraphInfo ? '已就绪（含23景点30拓扑道路）' : '未缓存'}}</text>
+        <text class="cache-val">{{cachedGraphInfo ? '已就绪（含23景点30拓扑边）' : '未缓存'}}</text>
       </view>
-      <view class="cache-row" wx:if="{{cachedGraphInfo}}">
+      <view class="cache-row font-numeric" wx:if="{{cachedGraphInfo}}">
         <text class="cache-label">缓存时间：</text>
         <text class="cache-val">{{cachedGraphInfo.cachedAt}}</text>
       </view>
-      <view class="cache-row">
+      <view class="cache-row font-numeric">
         <text class="cache-label">离线景点库：</text>
-        <text class="cache-val">{{cachedSpotsCount}} 个景点数据</text>
+        <text class="cache-val">{{cachedSpotsCount}} 个景点数字档案</text>
       </view>
     </view>
 
@@ -82,7 +85,7 @@
         清空缓存
       </button>
       <button class="btn-primary" size="mini" bindtap="cacheAllData">
-        立即更新全景区路网
+        更新全景区路网
       </button>
     </view>
   </view>
@@ -90,7 +93,8 @@
   <!-- 我的收藏景点 -->
   <view wx:if="{{favoriteSpots.length > 0}}" class="zen-card">
     <view class="zen-card-title">
-      <text>❤️ 我的常用收藏</text>
+      <text class="title-accent">◆</text>
+      <text>常用收藏景点</text>
     </view>
     <view class="fav-list">
       <view
@@ -100,36 +104,18 @@
         bindtap="goToSpotDetail"
         data-id="{{item.id}}"
       >
-        <text class="fav-name">{{item.name}}</text>
-        <text class="fav-arrow">›</text>
+        <view class="fav-item-left">
+          <view class="fav-item-name">{{item.name}}</view>
+          <view class="fav-item-sub font-numeric">{{item.id}} · 建议 {{item.visit_minutes}} 分钟</view>
+        </view>
+        <view class="fav-arrow">›</view>
       </view>
     </view>
   </view>
 
-  <!-- 系统权威架构与参赛说明 -->
-  <view class="zen-card tech-card">
-    <view class="zen-card-title">
-      <text>🏛️ 灵小禅技术架构与透明度声明</text>
-    </view>
-    <view class="tech-row">
-      <text class="tech-key">参赛赛道：</text>
-      <text class="tech-val">第八届全球校园人工智能算法精英大赛（AIC）· 算法创新赛</text>
-    </view>
-    <view class="tech-row">
-      <text class="tech-key">核心范式：</text>
-      <text class="tech-val">双引擎软硬解耦（语义理解大模型 + 物理时空运筹引擎）</text>
-    </view>
-    <view class="tech-row">
-      <text class="tech-key">检索机制：</text>
-      <text class="tech-val">Promise.all 三路并行检索 + RRF 融合 (k=60) + 官方指南置顶</text>
-    </view>
-    <view class="tech-row">
-      <text class="tech-key">路网基准：</text>
-      <text class="tech-val">23 核心实体景点 · 30 拓扑连接边数字孪生拓扑</text>
-    </view>
-    <view class="tech-row">
-      <text class="tech-key">真实性边界：</text>
-      <text class="tech-val">GPS与附近距离为坐标直线几何距离；离线规划不含实时演出；动态模型为测试示例，定制汉服为高保真静态立绘。</text>
-    </view>
+  <!-- 关于与版本信息 -->
+  <view class="footer-note">
+    <view class="footer-badge">灵山胜境 · 灵小禅 v2.2.0</view>
+    <view class="footer-sub">第八届全球校园人工智能算法精英大赛（AIC）参赛作品</view>
   </view>
 </view>

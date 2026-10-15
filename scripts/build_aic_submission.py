@@ -25,7 +25,7 @@ def digest(data):
 
 def prepare():
     files = set()
-    for directory in ['backend/src', 'backend/tests', 'backend/python', 'frontend/src', 'frontend/tests', 'frontend/e2e', 'data/route', 'evaluation/retrieval', 'evaluation/scene', 'evaluation/route', 'evaluation/manifests']:
+    for directory in ['backend/src', 'backend/tests', 'backend/python', 'frontend/src', 'frontend/tests', 'frontend/e2e', 'miniprogram', 'data/route', 'evaluation/retrieval', 'evaluation/scene', 'evaluation/route', 'evaluation/manifests']:
         for path in (ROOT / directory).rglob('*'):
             if path.is_file() and not any(part in BLOCKED for part in path.relative_to(ROOT).parts):
                 files.add(path.relative_to(ROOT).as_posix())
@@ -42,8 +42,9 @@ def prepare():
         files.add(path.relative_to(ROOT).as_posix())
     files.update(path.relative_to(ROOT).as_posix() for path in (ROOT / 'frontend/public').rglob('*') if path.is_file())
     files.update(['AGENTS.md', 'docs/core-version.md', 'docs/competition/feature-contract.md', 'docs/testing/competition-alignment-20261015.md'])
+    files.update(['project.config.json', 'docs/wechat-miniprogram-guide.md', 'docs/项目文件导航.md'])
     files.update(['package.json', 'package-lock.json', 'LICENSE', 'data/raw/knowledge_guide.txt', 'data/raw/knowledge_dataset.txt', 'docs/ablation_report.md', 'docs/knowledge-corpus.md', 'docs/testing/runtime-smoke.md', 'docs/third-party-resources.md', 'scripts/start.bat', 'scripts/stop.bat', 'scripts/run_ablation.py', 'scripts/verify-release.ps1', 'scripts/build_aic_submission.py', 'scripts/verify-competition-runtime.cjs'])
-    files = {name for name in files if name not in LEGACY and Path(name).suffix not in {'.zip', '.pyc', '.log', '.tsbuildinfo'} and not Path(name).name.startswith('.env')}
+    files = {name for name in files if name not in LEGACY and Path(name).suffix not in {'.zip', '.pyc', '.log', '.tsbuildinfo'} and not Path(name).name.startswith('.env') and Path(name).name != 'project.private.config.json'}
     content = {name: (ROOT / name).read_bytes() for name in sorted(files)}
     content['.env.example'] = b'DEEPSEEK_API_KEY=\nDEEPSEEK_MODEL=deepseek-chat\nAGNES_API_KEY=\nAGNES_MODEL=agnes-2.0-flash\nAGNES_BASE_URL=https://apihub.agnes-ai.com/v1\nSECRET_KEY=\nADMIN_USERNAME=admin\nADMIN_PASSWORD=\nPORT=8010\nVECTOR_SERVICE_URL=http://127.0.0.1:8002\nVISION_BASE_URL=\nVISION_MODEL=\nVISION_API_KEY=\nCORS_ORIGINS=http://localhost:5173,http://localhost:8010\n'
     content['README.md'] = (ROOT / 'README.md').read_bytes()

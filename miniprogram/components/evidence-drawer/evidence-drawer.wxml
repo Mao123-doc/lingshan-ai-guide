@@ -4,14 +4,18 @@
     <!-- 头部栏 -->
     <view class="drawer-header">
       <view class="drawer-title-row">
-        <text class="drawer-title">🔍 可信回答依据追溯</text>
-        <view class="drawer-close" bindtap="handleClose">✕</view>
+        <text class="drawer-title">可信回答依据追溯</text>
+        <view class="drawer-close" bindtap="handleClose">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </view>
       </view>
       <view class="drawer-meta">
         <text class="meta-tag {{answer.used_llm ? 'tag-model' : 'tag-kb'}}">
           {{answer.used_llm ? '大模型增强' : '知识库权威摘录'}}
         </text>
-        <text class="meta-text" wx:if="{{answer.response_time_ms}}">
+        <text class="meta-text font-numeric" wx:if="{{answer.response_time_ms}}">
           耗时 {{answer.response_time_ms}}ms
         </text>
         <text class="meta-text" wx:if="{{answer.model}}">
@@ -32,8 +36,8 @@
           class="evidence-card"
         >
           <view class="evidence-header">
-            <text class="evidence-source">📄 {{item.source || '景区官方指南/知识库'}}</text>
-            <text class="evidence-score" wx:if="{{item.score !== undefined}}">
+            <text class="evidence-source">{{item.source || '景区官方指南/知识库'}}</text>
+            <text class="evidence-score font-numeric" wx:if="{{item.score !== undefined}}">
               相关度: {{item.score}}
             </text>
           </view>
@@ -49,7 +53,7 @@
           class="evidence-card"
         >
           <view class="evidence-header">
-            <text class="evidence-source">📄 知识库片段 #{{index + 1}}</text>
+            <text class="evidence-source">知识库切片 #{{index + 1}}</text>
           </view>
           <view class="evidence-body">
             <text>{{item}}</text>

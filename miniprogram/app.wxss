@@ -1,31 +1,57 @@
-/** app.wxss — 灵小禅微信小程序全局样式表 **/
+/** app.wxss — 灵小禅微信小程序全局样式表（Cyber-Guofeng 东方禅意与硬核数智视觉系统） **/
 
 page {
-  --primary: #c41d7f;
-  --primary-gradient: linear-gradient(135deg, #c41d7f 0%, #e91e63 100%);
-  --primary-light: #fdf2f8;
-  --primary-border: #fbcfe8;
-  --accent: #e91e63;
-  --gold: #b8860b;
+  /* 东方禅意与数智色彩系统 */
+  --primary: #9d174d;
+  --primary-dark: #831843;
+  --primary-light: #fff1f2;
+  --primary-border: #fecdd3;
+  --primary-gradient: linear-gradient(135deg, #831843 0%, #9d174d 55%, #be185d 100%);
+  --primary-glow: rgba(157, 23, 77, 0.22);
+
+  /* 琉璃暖金（文化强调 / 灵山胜境高光） */
+  --gold: #b45309;
+  --gold-dark: #92400e;
   --gold-light: #fefce8;
-  --celadon: #2e7d5b;
-  --celadon-light: #f0fdf4;
-  --ink: #455a7b;
-  --text-primary: #1f2937;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
-  --bg-page: #f8f9fa;
+  --gold-border: #fef08a;
+  --gold-gradient: linear-gradient(135deg, #b45309 0%, #d97706 60%, #f59e0b 100%);
+
+  /* 松柏数智绿 / 青碧（算法、无障碍通道、已核验信源） */
+  --celadon: #0f766e;
+  --celadon-dark: #115e59;
+  --celadon-light: #f0fdfa;
+  --celadon-border: #99f6e4;
+  --celadon-gradient: linear-gradient(135deg, #0f766e 0%, #0d9488 60%, #14b8a6 100%);
+
+  /* 黛青与水墨基调 */
+  --ink: #1e293b;
+  --ink-light: #334155;
+  --ink-muted: #64748b;
+
+  /* 文字层级（严格遵循 WCAG 4.5:1 对比度） */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-white: #ffffff;
+
+  /* 背景系统（温润宣纸白底与卡片底） */
+  --bg-page: #faf8f5;
   --bg-card: #ffffff;
-  --border-color: #f0f0f0;
-  --shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8rpx 32rpx rgba(196, 29, 127, 0.15);
+  --bg-subtle: #f8fafc;
+  --border-card: rgba(148, 163, 184, 0.16);
+  --border-focus: rgba(157, 23, 77, 0.35);
+
+  /* 多层柔和物理投影（抵制单层生硬发光） */
+  --shadow-xs: 0 1rpx 3rpx rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2rpx 6rpx -1rpx rgba(15, 23, 42, 0.06), 0 1rpx 3rpx -1rpx rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 8rpx 20rpx -3rpx rgba(15, 23, 42, 0.07), 0 3rpx 8rpx -2rpx rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 16rpx 32rpx -6rpx rgba(157, 23, 77, 0.18), 0 4rpx 10rpx -2rpx rgba(15, 23, 42, 0.04);
 
   background-color: var(--bg-page);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   font-size: 28rpx;
-  line-height: 1.5;
+  line-height: 1.6;
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
 }
@@ -38,122 +64,133 @@ view, text, button, input, textarea, scroll-view {
 .container {
   min-height: 100vh;
   padding: 24rpx;
-  padding-bottom: 40rpx;
+  padding-bottom: 48rpx;
 }
 
-/* 禅意卡片 */
+/* 禅意卡片容器 */
 .zen-card {
   background: var(--bg-card);
-  border-radius: 20rpx;
-  padding: 28rpx;
+  border-radius: 24rpx;
+  padding: 30rpx 28rpx;
   margin-bottom: 24rpx;
   box-shadow: var(--shadow-sm);
-  border: 1rpx solid rgba(0, 0, 0, 0.04);
+  border: 1rpx solid var(--border-card);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .zen-card-title {
   font-size: 32rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 16rpx;
   display: flex;
   align-items: center;
   gap: 12rpx;
+  letter-spacing: 0.5rpx;
 }
 
-/* 渐变主按钮 */
+/* 渐变主按钮（带微妙内高光与按压阻尼） */
 .btn-primary {
   background: var(--primary-gradient);
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;
-  border-radius: 40rpx;
-  padding: 20rpx 40rpx;
+  border-radius: 9999rpx;
+  padding: 22rpx 44rpx;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  box-shadow: var(--shadow-lg);
-  transition: opacity 0.2s;
+  box-shadow: inset 0 1rpx 2rpx rgba(255, 255, 255, 0.28), var(--shadow-lg);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  cursor: pointer;
 }
 
 .btn-primary:active {
-  opacity: 0.85;
+  transform: scale(0.985);
+  opacity: 0.92;
 }
 
 .btn-primary[disabled] {
-  background: #e5e7eb !important;
-  color: #9ca3af !important;
+  background: #e2e8f0 !important;
+  color: #94a3b8 !important;
   box-shadow: none !important;
+  transform: none !important;
 }
 
-/* 次要空心按钮 */
+/* 次要轮廓按钮 */
 .btn-secondary {
   background: #ffffff;
   color: var(--primary);
   font-size: 28rpx;
-  font-weight: 500;
-  border-radius: 36rpx;
-  padding: 16rpx 32rpx;
-  border: 2rpx solid var(--primary);
+  font-weight: 600;
+  border-radius: 9999rpx;
+  padding: 18rpx 36rpx;
+  border: 1.5rpx solid var(--primary-border);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8rpx;
+  box-shadow: var(--shadow-xs);
+  transition: all 0.15s ease;
 }
 
 .btn-secondary:active {
   background: var(--primary-light);
+  transform: scale(0.985);
 }
 
-/* 禅意标签 */
+/* 禅意胶囊标签系统 */
 .zen-tag {
   display: inline-flex;
   align-items: center;
-  padding: 6rpx 16rpx;
-  border-radius: 24rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 9999rpx;
   font-size: 22rpx;
-  font-weight: 500;
+  font-weight: 600;
   background: var(--primary-light);
   color: var(--primary);
   border: 1rpx solid var(--primary-border);
+  line-height: 1.4;
+  letter-spacing: 0.2rpx;
 }
 
 .zen-tag-gold {
   background: var(--gold-light);
   color: var(--gold);
-  border-color: #fef08a;
+  border-color: var(--gold-border);
 }
 
 .zen-tag-celadon {
   background: var(--celadon-light);
   color: var(--celadon);
-  border-color: #bbf7d0;
+  border-color: var(--celadon-border);
 }
 
 .zen-tag-gray {
-  background: #f3f4f6;
+  background: #f1f5f9;
   color: var(--text-secondary);
-  border-color: #e5e7eb;
+  border-color: #e2e8f0;
 }
 
-/* 状态提示框 */
+/* 状态提示框（柔和内边距与清晰语义） */
 .alert-box {
-  padding: 20rpx 24rpx;
-  border-radius: 16rpx;
+  padding: 22rpx 28rpx;
+  border-radius: 20rpx;
   font-size: 24rpx;
   line-height: 1.6;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
   display: flex;
   align-items: flex-start;
   gap: 16rpx;
+  box-shadow: var(--shadow-xs);
 }
 
 .alert-info {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1rpx solid #bfdbfe;
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1rpx solid #bae6fd;
 }
 
 .alert-warning {
@@ -163,9 +200,9 @@ view, text, button, input, textarea, scroll-view {
 }
 
 .alert-error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1rpx solid #fecaca;
+  background: #fff1f2;
+  color: #be123c;
+  border: 1rpx solid #fecdd3;
 }
 
 .alert-success {
@@ -174,12 +211,13 @@ view, text, button, input, textarea, scroll-view {
   border: 1rpx solid #bbf7d0;
 }
 
-/* 辅助排版 */
+/* 辅助排版与弹性对齐 */
 .text-center { text-align: center; }
 .text-muted { color: var(--text-muted); }
 .text-sm { font-size: 24rpx; }
 .text-xs { font-size: 20rpx; }
-.font-bold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.font-numeric { font-variant-numeric: tabular-nums; }
 .flex-row { display: flex; flex-direction: row; align-items: center; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .flex-1 { flex: 1; }
