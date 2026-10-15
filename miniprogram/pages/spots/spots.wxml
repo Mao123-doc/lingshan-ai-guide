@@ -1,0 +1,93 @@
+<!-- pages/spots/spots.wxml -->
+<view class="container spots-container">
+  <!-- 顶部搜索框 -->
+  <view class="search-bar">
+    <view class="search-input-wrap">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索景点名称、佛教文化、无障碍…"
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+      />
+      <text wx:if="{{searchKeyword}}" class="clear-icon" bindtap="clearSearch">✕</text>
+    </view>
+  </view>
+
+  <!-- 分类胶囊标签 -->
+  <view class="category-scroll-wrap">
+    <scroll-view scroll-x class="category-scroll" enable-flex="{{true}}">
+      <view
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="cat-pill {{selectedCategory === item.key ? 'active' : ''}}"
+        bindtap="onCategorySelect"
+        data-key="{{item.key}}"
+      >
+        <text>{{item.label}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 景点卡片列表 -->
+  <view class="spots-list">
+    <view
+      wx:for="{{filteredSpots}}"
+      wx:key="id"
+      class="spot-card"
+      bindtap="goToDetail"
+      data-id="{{item.id}}"
+    >
+      <view class="spot-card-main">
+        <view class="spot-header">
+          <view class="spot-name-row">
+            <text class="spot-name">{{item.name}}</text>
+            <text class="spot-id-badge">{{item.id}}</text>
+          </view>
+          <text class="zen-tag" wx:if="{{item.mobility.wheelchair_accessible}}">
+            ♿ 无障碍
+          </text>
+        </view>
+
+        <view class="spot-desc">
+          <text>{{item.description || item.fields.description || '灵山胜境核心历史文化景观。'}}</text>
+        </view>
+
+        <view class="spot-meta-row">
+          <text class="meta-item">⏱️ 建议 {{item.visit_minutes}} 分钟</text>
+          <text class="meta-item" wx:if="{{item.opening_windows && item.opening_windows.length > 0}}">
+            🕒 {{item.opening_windows[0]}}
+          </text>
+          <text class="meta-item" wx:if="{{item.confidence === 'verified'}}">
+            ✓ 已现场核验
+          </text>
+        </view>
+      </view>
+
+      <view class="spot-card-footer" catchtap="noop">
+        <button
+          class="btn-detail"
+          size="mini"
+          catchtap="goToDetail"
+          data-id="{{item.id}}"
+        >
+          查看详情
+        </button>
+        <button
+          class="btn-ask"
+          size="mini"
+          catchtap="askAboutSpot"
+          data-name="{{item.name}}"
+        >
+          💬 AI讲解
+        </button>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{!isLoading && filteredSpots.length === 0}}" class="empty-wrap">
+      <text class="empty-icon">🍃</text>
+      <text class="empty-text">未检索到匹配景点，换个关键词试试吧</text>
+    </view>
+  </view>
+</view>

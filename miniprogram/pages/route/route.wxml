@@ -1,0 +1,331 @@
+<!-- pages/route/route.wxml -->
+<view class="container route-container">
+  <!-- 离线或警告提示 -->
+  <view wx:if="{{isOfflineView}}" class="alert-box alert-warning">
+    <text>正在使用本地离线路网与确定性规划器。开放时间及路网可能过期；离线模式不包含实时演出排期或大模型。</text>
+  </view>
+  <view wx:if="{{errorMessage}}" class="alert-box alert-error">
+    <text>{{errorMessage}}</text>
+  </view>
+
+  <!-- 顶部规划方式 Tab 切换 -->
+  <view class="route-tabs">
+    <view
+      class="tab-item {{activeTab === 'natural' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="natural"
+    >
+      💬 游客口语智能规划
+    </view>
+    <view
+      class="tab-item {{activeTab === 'structured' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="structured"
+    >
+      ⚙️ 多约束精准定制
+    </view>
+  </view>
+
+  <!-- 选项卡 1：自然语言对话式规划 -->
+  <view wx:if="{{activeTab === 'natural'}}" class="zen-card">
+    <view class="zen-card-title">
+      <text>🧭 告诉我您的游览情况</text>
+    </view>
+    <view class="card-tip">
+      大模型提取13维状态画像，运筹引擎负责时空推演与无障碍过滤。
+    </view>
+    <textarea
+      class="query-textarea"
+      value="{{sceneQuery}}"
+      bindinput="onQueryInput"
+      placeholder="例如：我带腿脚不方便的妈妈，现在在景区入口，只有三小时，还想看两点的《吉祥颂》，应该怎么走？"
+      maxlength="300"
+    />
+    <button
+      class="btn-primary"
+      style="margin-top: 24rpx;"
+      bindtap="handleNaturalPlan"
+      loading="{{isLoading}}"
+      disabled="{{isLoading || !sceneQuery}}"
+    >
+      ✨ 运筹推演推荐路线
+    </button>
+  </view>
+
+  <!-- 选项卡 2：多约束精准表单规划 -->
+  <view wx:if="{{activeTab === 'structured'}}" class="zen-card">
+    <view class="zen-card-title">
+      <text>⚙️ 刚性时空硬约束定制</text>
+    </view>
+
+    <!-- 起点与时间 -->
+    <view class="form-row">
+      <view class="form-col">
+        <text class="form-label">出发地点</text>
+        <picker
+          mode="selector"
+          range="{{spots}}"
+          range-key="name"
+          bindchange="onStartSpotChange"
+        >
+          <view class="picker-value">
+            {{spots[0] ? (startSpotId === 'south_gate' ? '景区南门入口' : startSpotId) : '选择起点'}} ›
+          </view>
+        </picker>
+      </view>
+      <view class="form-col">
+        <text class="form-label">当前时间</text>
+        <picker mode="time" value="{{currentTimeStr}}" bindchange="onTimeChange">
+          <view class="picker-value">{{currentTimeStr}} ›</view>
+        </picker>
+      </view>
+    </view>
+
+    <!-- 游览时长 -->
+    <view class="form-section">
+      <text class="form-label">预计游玩时间</text>
+      <view class="tag-selector">
+        <view
+          wx:for="{{[2, 3, 4, 5, 6]}}"
+          wx:key="*this"
+          class="select-tag {{durationHours === item ? 'selected' : ''}}"
+          bindtap="onDurationChange"
+          data-hours="{{item}}"
+        >
+          {{item}} 小时
+        </view>
+      </view>
+    </view>
+
+    <!-- 行动能力（无障碍过滤） -->
+    <view class="form-section">
+      <text class="form-label">行动能力（刚性无障碍过滤）</text>
+      <view class="tag-selector">
+        <view
+          class="select-tag {{mobility === 'normal' ? 'selected' : ''}}"
+          bindtap="onMobilityChange"
+          data-val="normal"
+        >
+          🚶 行动自如
+        </view>
+        <view
+          class="select-tag {{mobility === 'limited' ? 'selected' : ''}}"
+          bindtap="onMobilityChange"
+          data-val="limited"
+        >
+          🧓 腿脚慢/带长辈
+        </view>
+        <view
+          class="select-tag {{mobility === 'wheelchair' ? 'selected' : ''}}"
+          bindtap="onMobilityChange"
+          data-val="wheelchair"
+        >
+          ♿ 轮椅/避开阶梯坡道
+        </view>
+      </view>
+    </view>
+
+    <!-- 出行人群 -->
+    <view class="form-section">
+      <text class="form-label">同行类型</text>
+      <view class="tag-selector">
+        <view
+          wx:for="{{['带长辈', '亲子', '情侣', '朋友', '独自一人']}}"
+          wx:key="*this"
+          class="select-tag {{travelType === item ? 'selected' : ''}}"
+          bindtap="onTravelTypeChange"
+          data-val="{{item}}"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 兴趣偏好 -->
+    <view class="form-section">
+      <text class="form-label">游览偏好（可多选）</text>
+      <view class="interests-grid">
+        <view
+          wx:for="{{interestsList}}"
+          wx:key="key"
+          class="interest-card {{selectedInterests.indexOf(item.key) >= 0 ? 'interest-selected' : ''}}"
+          bindtap="toggleInterest"
+          data-key="{{item.key}}"
+        >
+          <text class="int-icon">{{item.icon}}</text>
+          <text class="int-label">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <button
+      class="btn-primary"
+      style="margin-top: 24rpx;"
+      bindtap="handleStructuredPlan"
+      loading="{{isLoading}}"
+    >
+      🧭 求解多目标最优路线
+    </button>
+  </view>
+
+  <!-- 路线规划结果展区 -->
+  <block wx:if="{{routePlan}}">
+    <!-- 规划结论卡片 -->
+    <view class="zen-card outcome-card">
+      <view class="outcome-header">
+        <text class="zen-tag {{routeOutcome === 'feasible' ? 'zen-tag-celadon' : (routeOutcome === 'feasible_with_rejected_preferences' ? 'zen-tag-gold' : 'zen-tag')}}">
+          {{routeOutcomeLabel}}
+        </text>
+        <text class="outcome-total">总耗时 {{routePlan.route.totalMinutes || 0}} 分钟</text>
+      </view>
+
+      <view class="outcome-stats">
+        <view class="stat-item">
+          <text class="stat-num">{{routePlan.route.walkingMinutes || 0}}</text>
+          <text class="stat-unit">分钟步行</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-num">{{routePlan.route.visitingMinutes || 0}}</text>
+          <text class="stat-unit">分钟游览</text>
+        </view>
+        <view class="stat-item" wx:if="{{routePlan.route.waitingMinutes}}">
+          <text class="stat-num">{{routePlan.route.waitingMinutes}}</text>
+          <text class="stat-unit">分钟候场</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-num">{{routeSteps.length}}</text>
+          <text class="stat-unit">个游览点</text>
+        </view>
+      </view>
+
+      <!-- 信息缺失澄清提示 -->
+      <view wx:if="{{clarificationPrompt}}" class="alert-box alert-warning">
+        <view class="clarify-wrap">
+          <text class="clarify-text">{{clarificationPrompt}}</text>
+          <view class="clarify-input-row">
+            <input
+              class="clarify-input"
+              value="{{clarificationInput}}"
+              bindinput="onClarificationInput"
+              placeholder="例如：现在是上午10:00"
+            />
+            <button class="mini-btn-accent" size="mini" bindtap="submitClarification">
+              补充重算
+            </button>
+          </view>
+        </view>
+      </view>
+
+      <!-- 偏好诚实放弃说明 -->
+      <view wx:if="{{rejectedList.length > 0}}" class="alert-box alert-info">
+        <view>
+          <view style="font-weight: 600; margin-bottom: 6rpx;">📋 部分偏好调整说明：</view>
+          <view wx:for="{{rejectedList}}" wx:key="index">
+            · {{item.item}}：{{item.reason}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 动态进度监控与自动纠偏卡片 -->
+    <view class="zen-card progress-card">
+      <view class="zen-card-title">
+        <text>⏱️ 游览进度打卡与纠偏</text>
+      </view>
+      <view class="card-tip">
+        确认各站打卡时间。若晚于计划超过10分钟且开启自动纠偏，系统将以剩余时间与当前位置自动重排后续动线。
+      </view>
+
+      <view class="progress-switch-row">
+        <text class="switch-label">超时10分钟自动增量纠偏</text>
+        <switch checked="{{autoCorrect}}" bindchange="onAutoCorrectToggle" color="#c41d7f" />
+      </view>
+
+      <view wx:if="{{progressNotice}}" class="alert-box alert-info">
+        <text>{{progressNotice}}</text>
+      </view>
+
+      <view class="progress-actions">
+        <button class="btn-secondary" size="mini" bindtap="replanFromProgress">
+          🔄 按当前打卡进度重新规划
+        </button>
+      </view>
+    </view>
+
+    <!-- 路线时间轴明细 -->
+    <view class="timeline-wrap">
+      <view class="timeline-title">📍 完整时空游览动线</view>
+
+      <view
+        wx:for="{{routeSteps}}"
+        wx:key="stepIndex"
+        class="step-card {{completedSpotIds.indexOf(item.spotId) >= 0 ? 'step-completed' : ''}} {{item.isReturn ? 'step-return' : ''}}"
+      >
+        <view class="step-badge">
+          <text>{{item.isReturn ? '🏁' : item.stepIndex}}</text>
+        </view>
+        <view class="step-main">
+          <view class="step-header">
+            <view class="step-name">
+              {{item.isReturn ? '返回出口：' : ''}}{{item.spotName}}
+              <text wx:if="{{item.performanceName}}" class="tag-performance">
+                🎬 {{item.performanceName}}
+              </text>
+            </view>
+            <view class="step-times">
+              {{item.start}} - {{item.end}}
+            </view>
+          </view>
+
+          <view class="step-metrics">
+            <text>步行 {{item.walkMinutes}} 分钟 ({{item.distanceMeters || 0}}米)</text>
+            <text>· 停留 {{item.visitMinutes}} 分钟</text>
+            <text wx:if="{{item.waitingMinutes}}">· 提前排队 {{item.waitingMinutes}} 分钟</text>
+          </view>
+
+          <view class="step-accessibility">
+            <text>♿ {{item.accessibleDesc}}</text>
+          </view>
+
+          <view class="step-actions">
+            <button
+              class="mini-btn-accent"
+              size="mini"
+              bindtap="openStepNav"
+              data-step="{{item}}"
+            >
+              🗺️ 实景导航
+            </button>
+            <button
+              class="mini-btn"
+              size="mini"
+              bindtap="askStepDetail"
+              data-name="{{item.spotName}}"
+            >
+              📖 景点讲解
+            </button>
+            <button
+              wx:if="{{!item.isReturn && completedSpotIds.indexOf(item.spotId) < 0}}"
+              class="mini-btn"
+              size="mini"
+              bindtap="confirmProgressStep"
+              data-id="{{item.spotId}}"
+            >
+              ✓ 打卡完成
+            </button>
+            <text wx:elif="{{!item.isReturn}}" class="check-done-tag">
+              ✓ 已打卡
+            </text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 离线应急规划兜底按钮 -->
+  <view class="offline-bar">
+    <button class="btn-secondary" bindtap="handleOfflinePlan">
+      📴 离线应急路线规划（无需联网）
+    </button>
+  </view>
+</view>

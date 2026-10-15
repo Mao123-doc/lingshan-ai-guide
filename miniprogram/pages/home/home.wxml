@@ -1,0 +1,103 @@
+<!-- pages/home/home.wxml -->
+<view class="container home-container">
+  <!-- 网络异常 / 离线提示 -->
+  <view wx:if="{{isOffline}}" class="alert-box alert-warning">
+    <text>⚠️ 当前设备处于离线状态。已自动启用本地缓存，您仍可进行离线景点查看与应急路线规划。</text>
+  </view>
+  <view wx:elif="{{!serverConnected && !isLoading}}" class="alert-box alert-info">
+    <text>💡 后端本地服务暂未连接（默认 http://127.0.0.1:8010）。请确认服务已启动，或在【设置】中切换网络地址。</text>
+  </view>
+
+  <!-- 顶部禅意东方 Hero 展区 -->
+  <view class="hero-card">
+    <view class="hero-bg-accent"></view>
+    <view class="hero-content">
+      <view class="hero-text-wrap">
+        <view class="hero-badge">
+          <text class="badge-dot {{serverConnected ? 'dot-online' : 'dot-offline'}}"></text>
+          <text>{{serverConnected ? llmName : '离线应急就绪'}}</text>
+        </view>
+        <view class="hero-title">灵山胜境 · 灵小禅</view>
+        <view class="hero-subtitle">可信文旅决策智能体</view>
+        <view class="hero-desc">从单点事实问答，到物理时空多约束运筹规划。回答有依据，路线算得准。</view>
+      </view>
+      <view class="hero-avatar-wrap">
+        <digital-human
+          stylePreset="{{dhStyle}}"
+          emotion="{{dhEmotion}}"
+          isSpeaking="{{isSpeaking}}"
+          size="large"
+          showStatusText="{{false}}"
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 核心入口矩阵 -->
+  <view class="modules-grid">
+    <!-- 智能问答卡片 -->
+    <view class="module-card card-qa" bindtap="goToChat">
+      <view class="module-icon-wrap icon-qa">💬</view>
+      <view class="module-info">
+        <view class="module-title">AI 智能问答</view>
+        <view class="module-desc">官方权威知识库与 RAG 三路融合检索，支持证据追溯抽屉与回答耗时。</view>
+      </view>
+      <view class="module-action">进入问答 →</view>
+    </view>
+
+    <!-- 路线规划卡片 -->
+    <view class="module-card card-route" bindtap="goToRoute">
+      <view class="module-icon-wrap icon-route">🧭</view>
+      <view class="module-info">
+        <view class="module-title">时空多约束规划</view>
+        <view class="module-desc">23节点真实数字路网，根据体力、轮椅坡道、演出时间窗与离园死线运筹规划。</view>
+      </view>
+      <view class="module-action">规划路线 →</view>
+    </view>
+  </view>
+
+  <!-- 次级能力入口行 -->
+  <view class="sub-modules-row">
+    <view class="sub-card" bindtap="goToSpots">
+      <view class="sub-icon">🏛️</view>
+      <view class="sub-title">景点导览</view>
+      <view class="sub-desc">23景点文化与无障碍</view>
+    </view>
+    <view class="sub-card" bindtap="goToChat">
+      <view class="sub-icon">📷</view>
+      <view class="sub-title">拍照识景</view>
+      <view class="sub-desc">拍照识别殿堂造像</view>
+    </view>
+    <view class="sub-card" bindtap="goToProfile">
+      <view class="sub-icon">⚙️</view>
+      <view class="sub-title">离线与设置</view>
+      <view class="sub-desc">路网缓存与形象切换</view>
+    </view>
+  </view>
+
+  <!-- 常见问题快捷入口 -->
+  <view class="zen-card questions-card">
+    <view class="zen-card-title">
+      <text>❓ 热门常见问题</text>
+    </view>
+    <view class="questions-list">
+      <view
+        wx:for="{{hotQuestions}}"
+        wx:key="index"
+        class="question-item"
+        bindtap="goToChat"
+        data-question="{{item}}"
+      >
+        <text class="q-icon">💬</text>
+        <text class="q-text">{{item}}</text>
+        <text class="q-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部权威提示与数据底座 -->
+  <view class="footer-note">
+    <text>灵山胜境数字孪生底座 · 23核心景点 · 30道路拓扑</text>
+    <text class="footer-sub">第八届全球校园人工智能算法精英大赛（AIC）参赛作品</text>
+  </view>
+</view>

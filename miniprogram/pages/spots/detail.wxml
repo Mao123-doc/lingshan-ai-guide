@@ -1,0 +1,96 @@
+<!-- pages/spots/detail.wxml -->
+<view class="container detail-container">
+  <block wx:if="{{spot}}">
+    <!-- 顶部概览卡片 -->
+    <view class="zen-card spot-hero-card">
+      <view class="hero-top">
+        <view>
+          <view class="spot-title">{{spot.name}}</view>
+          <view class="spot-area-tag">{{spot.area || '灵山胜境风景区'}} · {{spot.id}}</view>
+        </view>
+        <view class="fav-btn" bindtap="toggleFavorite">
+          <text>{{isFavorite ? '❤️ 已收藏' : '🤍 收藏'}}</text>
+        </view>
+      </view>
+
+      <view class="tags-row">
+        <text class="zen-tag {{spot.mobility.wheelchair_accessible ? 'zen-tag-celadon' : 'zen-tag-gray'}}">
+          {{spot.mobility.wheelchair_accessible ? '♿ 支持无障碍通行' : '⚠️ 含台阶陡坡'}}
+        </text>
+        <text class="zen-tag zen-tag-gold" wx:if="{{spot.visit_minutes}}">
+          ⏱️ 建议游玩 {{spot.visit_minutes}} 分钟
+        </text>
+        <text class="zen-tag" wx:if="{{spot.confidence === 'verified'}}">
+          ✓ 已现场测绘核验
+        </text>
+      </view>
+    </view>
+
+    <!-- 开放时间与门票信息 -->
+    <view class="zen-card">
+      <view class="zen-card-title">
+        <text>🕒 开放时间与票务信息</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">开放窗口：</text>
+        <text class="info-val">{{spot.opening_windows ? spot.opening_windows[0] : '08:00-17:00'}}</text>
+      </view>
+      <view class="info-row" wx:if="{{spot.fields.ticket}}">
+        <text class="info-label">门票参考：</text>
+        <text class="info-val">{{spot.fields.ticket}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">数据信源：</text>
+        <text class="info-val text-muted">{{spot.source || '景区官方数字档案'}}</text>
+      </view>
+    </view>
+
+    <!-- 深度文化背景 -->
+    <view class="zen-card">
+      <view class="zen-card-title">
+        <text>📖 历史文化与景观内涵</text>
+      </view>
+      <view class="culture-text">
+        <text>{{spot.description || spot.fields.description || '灵山胜境核心标志性佛教文化景观。建筑融合汉唐神韵与东方造像艺术，展现庄严祥和之意境。'}}</text>
+      </view>
+      <view wx:if="{{spot.fields.highlights}}" class="highlights-box">
+        <view class="highlights-title">✨ 核心看点：</view>
+        <text>{{spot.fields.highlights}}</text>
+      </view>
+      <view wx:if="{{spot.fields.tips}}" class="tips-box">
+        <view class="tips-title">💡 游览建议：</view>
+        <text>{{spot.fields.tips}}</text>
+      </view>
+    </view>
+
+    <!-- 地图导航与位置信息 -->
+    <view class="zen-card">
+      <view class="zen-card-title">
+        <text>🗺️ 地理坐标与导航</text>
+      </view>
+      <view class="coords-text">
+        经纬度：{{spot.lat}}, {{spot.lng}}（GCJ-02 坐标系）
+      </view>
+      <view class="coords-note">
+        点击下方按钮直接调起微信原生实景地图导航。
+      </view>
+      <button class="btn-primary" style="margin-top: 16rpx;" bindtap="handleNavigate">
+        🧭 调起微信地图步行导航
+      </button>
+    </view>
+
+    <!-- 底部操作栏 -->
+    <view class="detail-bottom-bar">
+      <button class="btn-secondary flex-1" bindtap="askAbout">
+        💬 灵小禅深度讲解
+      </button>
+      <button class="btn-primary flex-1" bindtap="planRouteWithSpot">
+        🧭 加入路线规划
+      </button>
+    </view>
+  </block>
+
+  <view wx:elif="{{isLoading}}" class="loading-wrap">
+    <text>正在读取景点档案…</text>
+  </view>
+</view>

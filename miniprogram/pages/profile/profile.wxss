@@ -1,0 +1,158 @@
+/** pages/profile/profile.wxss **/
+
+.profile-container {
+  padding-bottom: 60rpx;
+}
+
+.dh-preview-wrap {
+  padding: 30rpx 0;
+  display: flex;
+  justify-content: center;
+}
+
+.styles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.style-item {
+  background: #f9fafb;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  transition: all 0.2s;
+}
+
+.style-item.style-active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  box-shadow: 0 4rpx 12rpx rgba(196, 29, 127, 0.15);
+}
+
+.style-color-dot {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  margin-bottom: 4rpx;
+}
+
+.style-name {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.style-desc {
+  font-size: 20rpx;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.api-input {
+  background: #f9fafb;
+  border: 1rpx solid #e5e7eb;
+  border-radius: 14rpx;
+  padding: 18rpx 20rpx;
+  font-size: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+.api-btn-row, .cache-btn-row {
+  display: flex;
+  gap: 16rpx;
+  justify-content: flex-end;
+}
+
+.ping-status-row {
+  margin-top: 18rpx;
+  background: #f9fafb;
+  padding: 12rpx 16rpx;
+  border-radius: 10rpx;
+  font-size: 22rpx;
+  display: flex;
+  gap: 10rpx;
+}
+
+.ping-label {
+  color: var(--text-muted);
+}
+
+.ping-val {
+  color: var(--text-primary);
+  flex: 1;
+  word-break: break-all;
+}
+
+.cache-info-box {
+  background: #f9fafb;
+  border-radius: 14rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.cache-row {
+  display: flex;
+  font-size: 24rpx;
+}
+
+.cache-label {
+  color: var(--text-muted);
+  width: 180rpx;
+}
+
+.cache-val {
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.fav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.fav-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18rpx 20rpx;
+  background: #f9fafb;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+}
+
+.fav-arrow {
+  color: #9ca3af;
+  font-size: 32rpx;
+}
+
+/* 技术说明卡片 */
+.tech-card {
+  background: #fcfdfe;
+}
+
+.tech-row {
+  display: flex;
+  margin-bottom: 14rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.tech-key {
+  color: var(--text-muted);
+  width: 170rpx;
+  flex-shrink: 0;
+}
+
+.tech-val {
+  color: var(--text-secondary);
+  flex: 1;
+}

@@ -1,0 +1,149 @@
+/** evidence-drawer.wxss **/
+
+.drawer-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.drawer-content {
+  background: #ffffff;
+  border-top-left-radius: 32rpx;
+  border-top-right-radius: 32rpx;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.drawer-header {
+  padding: 32rpx 32rpx 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.drawer-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.drawer-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.drawer-close {
+  font-size: 36rpx;
+  color: #9ca3af;
+  padding: 8rpx 16rpx;
+  cursor: pointer;
+}
+
+.drawer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.meta-tag {
+  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 12rpx;
+  font-weight: 500;
+}
+
+.tag-model {
+  background: #fdf2f8;
+  color: #c41d7f;
+  border: 1rpx solid #fbcfe8;
+}
+
+.tag-kb {
+  background: #f0fdf4;
+  color: #167858;
+  border: 1rpx solid #bbf7d0;
+}
+
+.meta-text {
+  font-size: 22rpx;
+  color: #6b7280;
+}
+
+.drawer-note {
+  font-size: 22rpx;
+  color: #9ca3af;
+  line-height: 1.4;
+  background: #f9fafb;
+  padding: 12rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+.drawer-scroll {
+  padding: 24rpx 32rpx;
+  max-height: 55vh;
+  box-sizing: border-box;
+}
+
+.evidence-card {
+  background: #fafafa;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.evidence-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.evidence-source {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #374151;
+}
+
+.evidence-score {
+  font-size: 22rpx;
+  color: #c41d7f;
+  background: #fdf2f8;
+  padding: 2rpx 12rpx;
+  border-radius: 10rpx;
+}
+
+.evidence-body {
+  font-size: 26rpx;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.evidence-empty {
+  text-align: center;
+  padding: 60rpx 20rpx;
+  color: #9ca3af;
+  font-size: 26rpx;
+}

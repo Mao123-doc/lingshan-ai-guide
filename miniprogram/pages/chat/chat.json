@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "灵小禅 · 智能问答",
+  "usingComponents": {
+    "digital-human": "/components/digital-human/digital-human",
+    "evidence-drawer": "/components/evidence-drawer/evidence-drawer"
+  }
+}

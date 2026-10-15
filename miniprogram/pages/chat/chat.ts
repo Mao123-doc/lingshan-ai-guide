@@ -1,0 +1,482 @@
+/**
+ * chat.ts — 灵小禅移动端智能问答核心页面
+ */
+
+import { visitorApi } from '../../services/api';
+import { storageService } from '../../services/storage-service';
+import { voiceService } from '../../services/voice-service';
+import { visionService } from '../../services/vision-service';
+import { locationService } from '../../services/location-service';
+import { ChatMessage, QaResponse } from '../../types/chat';
+
+let activeStreamAbort: (() => void) | null = null;
+
+Page({
+  data: {
+    messages: [] as ChatMessage[],
+    inputText: '',
+    sessionId: '',
+    isBusy: false,
+    isStreaming: false,
+    partialAnswer: '',
+    dhStyle: 'zen_red_gold',
+    dhEmotion: 'idle',
+    isSpeaking: false,
+    selectedEvidenceAnswer: null as QaResponse | null,
+    showEvidenceDrawer: false,
+    ratedIds: [] as string[],
+    feedbackModalVisible: false,
+    feedbackConversationId: '',
+    feedbackRating: 5,
+    feedbackComment: '',
+    feedbackSubmitting: false,
+    nearbyModalVisible: false,
+    nearbyList: [] as any[],
+    nearbyNotice: '',
+    qaMode: 'stream' as 'stream' | 'json',
+    scrollToViewId: 'msg-bottom',
+    isRecording: false,
+    recordTimer: null as any,
+    recordSeconds: 0,
+    toolsOpen: false,
+  },
+
+  onLoad(options: { q?: string }) {
+    const mode = storageService.getQaMode();
+    const style = storageService.getDhStyle();
+    this.setData({
+      qaMode: mode,
+      dhStyle: style,
+    });
+
+    this.initNewSession().then(() => {
+      if (options.q) {
+        const decoded = decodeURIComponent(options.q);
+        this.setData({ inputText: decoded });
+        this.sendMessage(decoded);
+      }
+    });
+  },
+
+  onShow() {
+    const style = storageService.getDhStyle();
+    if (style !== this.data.dhStyle) {
+      this.setData({ dhStyle: style });
+    }
+  },
+
+  onUnload() {
+    if (activeStreamAbort) {
+      activeStreamAbort();
+      activeStreamAbort = null;
+    }
+    voiceService.destroy();
+  },
+
+  async initNewSession() {
+    if (activeStreamAbort) {
+      activeStreamAbort();
+      activeStreamAbort = null;
+    }
+
+    this.setData({
+      isBusy: true,
+      dhEmotion: 'greet',
+      partialAnswer: '',
+      messages: [],
+    });
+
+    try {
+      const res = await visitorApi.initSession();
+      const welcomeMsg: ChatMessage = {
+        id: 'msg-welcome',
+        role: 'assistant',
+        content: res.welcome_message,
+        timestamp: Date.now(),
+        status: 'success',
+      };
+
+      this.setData({
+        sessionId: res.session_id,
+        messages: [welcomeMsg],
+        isBusy: false,
+        dhEmotion: 'idle',
+        scrollToViewId: 'msg-welcome',
+      });
+    } catch (e: any) {
+      console.error('Session init error', e);
+      wx.showToast({
+        title: e.error || '连接服务异常，请重试',
+        icon: 'none',
+      });
+      this.setData({
+        isBusy: false,
+        dhEmotion: 'sorry',
+      });
+    }
+  },
+
+  onInput(e: WechatMiniprogram.Input) {
+    this.setData({ inputText: e.detail.value });
+  },
+
+  toggleQaMode() {
+    const nextMode = this.data.qaMode === 'stream' ? 'json' : 'stream';
+    this.setData({ qaMode: nextMode });
+    storageService.setQaMode(nextMode);
+    wx.showToast({
+      title: nextMode === 'stream' ? '已切换为流式打字模式' : '已切换为极速完整模式',
+      icon: 'none',
+    });
+  },
+
+  toggleTools() {
+    this.setData({ toolsOpen: !this.data.toolsOpen });
+  },
+
+  onSendTap() {
+    const q = this.data.inputText.trim();
+    if (!q || this.data.isBusy || !this.data.sessionId) return;
+    this.sendMessage(q);
+  },
+
+  async sendMessage(query: string) {
+    const { sessionId, messages, qaMode } = this.data;
+    if (!query.trim() || !sessionId) return;
+
+    const userMsgId = `msg-user-${Date.now()}`;
+    const userMsg: ChatMessage = {
+      id: userMsgId,
+      role: 'user',
+      content: query,
+      timestamp: Date.now(),
+      status: 'success',
+    };
+
+    const newMessages = [...messages, userMsg];
+    this.setData({
+      messages: newMessages,
+      inputText: '',
+      isBusy: true,
+      dhEmotion: 'think',
+      scrollToViewId: userMsgId,
+    });
+
+    if (qaMode === 'stream') {
+      this.executeStreamQa(query, sessionId);
+    } else {
+      this.executeStandardQa(query, sessionId);
+    }
+  },
+
+  executeStreamQa(query: string, sessionId: string) {
+    this.setData({
+      isStreaming: true,
+      partialAnswer: '',
+      dhEmotion: 'explain',
+      isSpeaking: true,
+    });
+
+    const streamTask = visitorApi.askQuestionStream(query, sessionId, {
+      onToken: (token: string) => {
+        this.setData({
+          partialAnswer: this.data.partialAnswer + token,
+          scrollToViewId: 'msg-streaming',
+        });
+      },
+      onDone: (answer: QaResponse) => {
+        activeStreamAbort = null;
+        const assistantMsgId = `msg-ai-${Date.now()}`;
+        const assistantMsg: ChatMessage = {
+          id: assistantMsgId,
+          role: 'assistant',
+          content: answer.answer,
+          timestamp: Date.now(),
+          answer,
+          status: 'success',
+        };
+
+        const updated = [...this.data.messages, assistantMsg];
+        this.setData({
+          messages: updated,
+          partialAnswer: '',
+          isStreaming: false,
+          isBusy: false,
+          dhEmotion: (answer.emotion as any) || 'happy',
+          isSpeaking: false,
+          scrollToViewId: assistantMsgId,
+        });
+
+        storageService.saveChatHistory(updated);
+      },
+      onError: (err) => {
+        activeStreamAbort = null;
+        console.error('Stream error:', err);
+        wx.showToast({
+          title: err.error || '问答流中断，请重试',
+          icon: 'none',
+        });
+        this.setData({
+          partialAnswer: '',
+          isStreaming: false,
+          isBusy: false,
+          dhEmotion: 'sorry',
+          isSpeaking: false,
+        });
+      },
+    });
+
+    activeStreamAbort = streamTask.abort;
+  },
+
+  async executeStandardQa(query: string, sessionId: string) {
+    this.setData({
+      dhEmotion: 'think',
+      isSpeaking: false,
+    });
+
+    try {
+      const answer = await visitorApi.askQuestion(query, sessionId);
+      const assistantMsgId = `msg-ai-${Date.now()}`;
+      const assistantMsg: ChatMessage = {
+        id: assistantMsgId,
+        role: 'assistant',
+        content: answer.answer,
+        timestamp: Date.now(),
+        answer,
+        status: 'success',
+      };
+
+      const updated = [...this.data.messages, assistantMsg];
+      this.setData({
+        messages: updated,
+        isBusy: false,
+        dhEmotion: (answer.emotion as any) || 'happy',
+        scrollToViewId: assistantMsgId,
+      });
+
+      storageService.saveChatHistory(updated);
+    } catch (e: any) {
+      console.error('Standard QA failed:', e);
+      wx.showToast({
+        title: e.error || '请求失败，请稍后重试',
+        icon: 'none',
+      });
+      this.setData({
+        isBusy: false,
+        dhEmotion: 'sorry',
+      });
+    }
+  },
+
+  // 查看依据抽屉
+  viewEvidence(e: WechatMiniprogram.CustomEvent) {
+    const answer = e.currentTarget.dataset.answer as QaResponse;
+    if (!answer) return;
+    this.setData({
+      selectedEvidenceAnswer: answer,
+      showEvidenceDrawer: true,
+    });
+  },
+
+  closeEvidenceDrawer() {
+    this.setData({
+      showEvidenceDrawer: false,
+      selectedEvidenceAnswer: null,
+    });
+  },
+
+  // 评价反馈
+  openFeedback(e: WechatMiniprogram.CustomEvent) {
+    const conversationId = e.currentTarget.dataset.id as string;
+    this.setData({
+      feedbackModalVisible: true,
+      feedbackConversationId: conversationId,
+      feedbackRating: 5,
+      feedbackComment: '',
+    });
+  },
+
+  closeFeedback() {
+    this.setData({ feedbackModalVisible: false });
+  },
+
+  setRating(e: WechatMiniprogram.CustomEvent) {
+    const score = Number(e.currentTarget.dataset.score);
+    this.setData({ feedbackRating: score });
+  },
+
+  onFeedbackCommentInput(e: WechatMiniprogram.Input) {
+    this.setData({ feedbackComment: e.detail.value });
+  },
+
+  async submitFeedback() {
+    const { sessionId, feedbackConversationId, feedbackRating, feedbackComment } = this.data;
+    if (!feedbackConversationId || this.data.feedbackSubmitting) return;
+
+    this.setData({ feedbackSubmitting: true });
+    try {
+      await visitorApi.submitFeedback({
+        session_id: sessionId,
+        conversation_id: feedbackConversationId,
+        rating: feedbackRating,
+        comment: feedbackComment,
+      });
+
+      wx.showToast({
+        title: '感谢您的真实评价',
+        icon: 'success',
+      });
+
+      this.setData({
+        ratedIds: [...this.data.ratedIds, feedbackConversationId],
+        feedbackModalVisible: false,
+        feedbackSubmitting: false,
+      });
+    } catch (e: any) {
+      wx.showToast({
+        title: e.error || '反馈提交失败',
+        icon: 'none',
+      });
+      this.setData({ feedbackSubmitting: false });
+    }
+  },
+
+  // 多模态工具：语音录制
+  async toggleVoiceRecord() {
+    if (this.data.isRecording) {
+      voiceService.stopRecording();
+      clearInterval(this.data.recordTimer);
+      this.setData({ isRecording: false, recordSeconds: 0 });
+      return;
+    }
+
+    const started = await voiceService.startRecording(
+      (res) => {
+        clearInterval(this.data.recordTimer);
+        this.setData({ isRecording: false, recordSeconds: 0 });
+        // 诚实反馈：提示语音已捕获
+        wx.showModal({
+          title: '语音录制完成',
+          content: `已成功录制语音（${res.duration}秒）。当前端到端语音转文字服务（ASR）在参赛环境需配置第三方引擎；是否将录音作为提问？`,
+          confirmText: '转换为文字',
+          cancelText: '取消',
+          success: (mRes) => {
+            if (mRes.confirm) {
+              wx.showToast({
+                title: '请在输入框直接输入或使用测试问题',
+                icon: 'none',
+              });
+            }
+          },
+        });
+      },
+      (err) => {
+        clearInterval(this.data.recordTimer);
+        this.setData({ isRecording: false, recordSeconds: 0 });
+        wx.showToast({
+          title: err.message || '录音启动失败',
+          icon: 'none',
+        });
+      }
+    );
+
+    if (started) {
+      const timer = setInterval(() => {
+        this.setData({ recordSeconds: this.data.recordSeconds + 1 });
+      }, 1000);
+      this.setData({
+        isRecording: true,
+        recordTimer: timer,
+        recordSeconds: 0,
+      });
+    }
+  },
+
+  // 多模态工具：拍照识景
+  async handleVision() {
+    wx.showLoading({ title: '正在识别景点…' });
+    const result = await visionService.captureAndRecognize(['camera', 'album']);
+    wx.hideLoading();
+
+    if (!result.success) {
+      wx.showModal({
+        title: '识景提示',
+        content: result.errorMessage || '识景未成功',
+        showCancel: false,
+      });
+      return;
+    }
+
+    const data = result.data;
+    if (data?.matched && data.spot_name) {
+      wx.showModal({
+        title: '识别成功',
+        content: `画面匹配到灵山胜境景点：【${data.spot_name}】（置信度: ${Math.round(data.confidence * 100)}%）。是否立即由灵小禅为您详细讲解？`,
+        confirmText: '立即讲解',
+        cancelText: '取消',
+        success: (mRes) => {
+          if (mRes.confirm) {
+            this.sendMessage(`请介绍${data.spot_name}`);
+          }
+        },
+      });
+    } else {
+      wx.showModal({
+        title: '未明确匹配景点',
+        content: data?.description || '画面未能高置信度匹配到景区登记实体。建议拍摄殿堂正面或标志性景观。',
+        showCancel: false,
+      });
+    }
+  },
+
+  // 多模态工具：查看附近
+  async handleNearby() {
+    wx.showLoading({ title: '正在定位与检索…' });
+    try {
+      const locRes = await locationService.getCurrentLocationAndNearby();
+      wx.hideLoading();
+
+      const combined = [
+        ...locRes.nearbySpots.slice(0, 5),
+        ...locRes.nearbyFacilities.slice(0, 5),
+      ];
+
+      this.setData({
+        nearbyList: combined,
+        nearbyNotice: locRes.notice,
+        nearbyModalVisible: true,
+      });
+    } catch (e: any) {
+      wx.hideLoading();
+      wx.showToast({
+        title: e.message || '获取定位失败',
+        icon: 'none',
+      });
+    }
+  },
+
+  closeNearbyModal() {
+    this.setData({ nearbyModalVisible: false });
+  },
+
+  navigateLocation(e: WechatMiniprogram.CustomEvent) {
+    const item = e.currentTarget.dataset.item;
+    if (item && item.lat && item.lng) {
+      locationService.openNavigation({
+        name: item.name,
+        lat: item.lat,
+        lng: item.lng,
+        description: item.description || item.type,
+      });
+    }
+  },
+
+  askAboutSpot(e: WechatMiniprogram.CustomEvent) {
+    const name = e.currentTarget.dataset.name;
+    this.closeNearbyModal();
+    if (name) {
+      this.sendMessage(`请介绍${name}`);
+    }
+  },
+});

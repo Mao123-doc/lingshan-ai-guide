@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "设置与关于",
+  "usingComponents": {
+    "digital-human": "/components/digital-human/digital-human"
+  }
+}

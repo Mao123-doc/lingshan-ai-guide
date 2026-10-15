@@ -1,0 +1,212 @@
+<!-- pages/chat/chat.wxml -->
+<view class="chat-container">
+  <!-- 顶部状态与数字人栏 -->
+  <view class="chat-header">
+    <view class="header-companion">
+      <digital-human
+        stylePreset="{{dhStyle}}"
+        emotion="{{dhEmotion}}"
+        isSpeaking="{{isSpeaking}}"
+        size="mini"
+        showStatusText="{{false}}"
+      />
+      <view class="companion-info">
+        <text class="companion-name">灵小禅 · 胜境智友</text>
+        <text class="companion-status">{{isBusy ? (isStreaming ? '正在为您讲解…' : '正在思考推演…') : '随时为您答疑解惑'}}</text>
+      </view>
+    </view>
+    <view class="header-actions">
+      <view class="mode-tag" bindtap="toggleQaMode">
+        <text>{{qaMode === 'stream' ? '🌊 流式生成' : '⚡ 快速模式'}}</text>
+      </view>
+      <view class="reset-btn" bindtap="initNewSession">
+        <text>清空重置</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 消息滚动列表 -->
+  <scroll-view
+    scroll-y
+    class="messages-scroll"
+    scroll-into-view="{{scrollToViewId}}"
+    scroll-with-animation="{{true}}"
+  >
+    <view class="messages-inner">
+      <block wx:for="{{messages}}" wx:key="id">
+        <!-- 用户气泡 -->
+        <view wx:if="{{item.role === 'user'}}" id="{{item.id}}" class="msg-row msg-user">
+          <view class="msg-bubble user-bubble">
+            <text class="msg-text">{{item.content}}</text>
+          </view>
+        </view>
+
+        <!-- 灵小禅助手气泡 -->
+        <view wx:else id="{{item.id}}" class="msg-row msg-assistant">
+          <view class="msg-avatar">
+            <image src="/assets/images/avatar-default.png" mode="aspectFill" class="avatar-mini-img" />
+          </view>
+          <view class="msg-bubble assistant-bubble">
+            <text class="msg-text">{{item.content}}</text>
+
+            <!-- 回答元信息与操作栏 -->
+            <view wx:if="{{item.answer}}" class="answer-actions">
+              <view class="answer-meta">
+                <text class="zen-tag {{item.answer.used_llm ? '' : 'zen-tag-celadon'}}">
+                  {{item.answer.used_llm ? '大模型增强' : '知识库摘录'}}
+                </text>
+                <text class="meta-time" wx:if="{{item.answer.response_time_ms}}">
+                  {{item.answer.response_time_ms}}ms
+                </text>
+              </view>
+              <view class="btn-group">
+                <button
+                  class="action-btn"
+                  size="mini"
+                  bindtap="viewEvidence"
+                  data-answer="{{item.answer}}"
+                >
+                  🔍 查看依据
+                </button>
+                <button
+                  wx:if="{{item.answer.conversation_id && !ratedIds.includes(item.answer.conversation_id)}}"
+                  class="action-btn"
+                  size="mini"
+                  bindtap="openFeedback"
+                  data-id="{{item.answer.conversation_id}}"
+                >
+                  ⭐ 评价
+                </button>
+                <text wx:elif="{{ratedIds.includes(item.answer.conversation_id)}}" class="rated-text">
+                  已评价
+                </text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 流式打字中气泡 -->
+      <view wx:if="{{isStreaming}}" id="msg-streaming" class="msg-row msg-assistant">
+        <view class="msg-avatar">
+          <image src="/assets/images/avatar-default.png" mode="aspectFill" class="avatar-mini-img" />
+        </view>
+        <view class="msg-bubble assistant-bubble">
+          <text class="msg-text">{{partialAnswer}}</text>
+          <text class="typing-cursor">|</text>
+          <view class="streaming-note">
+            <text>灵小禅正在根据官方知识库组织回答…</text>
+          </view>
+        </view>
+      </view>
+
+      <view id="msg-bottom" style="height: 20rpx;"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部快捷工具栏 -->
+  <view class="tools-bar">
+    <view class="tool-btn" bindtap="handleVision">
+      <text class="tool-icon">📷</text>
+      <text class="tool-label">识景</text>
+    </view>
+    <view class="tool-btn" bindtap="handleNearby">
+      <text class="tool-icon">📍</text>
+      <text class="tool-label">附近</text>
+    </view>
+    <view class="tool-btn {{isRecording ? 'recording' : ''}}" bindtap="toggleVoiceRecord">
+      <text class="tool-icon">{{isRecording ? '⏹️' : '🎤'}}</text>
+      <text class="tool-label">{{isRecording ? recordSeconds + 's' : '语音'}}</text>
+    </view>
+  </view>
+
+  <!-- 底部输入框 -->
+  <view class="input-bar">
+    <textarea
+      class="chat-input"
+      value="{{inputText}}"
+      bindinput="onInput"
+      placeholder="请输入您想咨询的景区问题…"
+      maxlength="500"
+      auto-height
+      cursor-spacing="20"
+      confirm-type="send"
+      bindconfirm="onSendTap"
+    />
+    <button
+      class="btn-send {{(!inputText || isBusy) ? 'disabled' : ''}}"
+      bindtap="onSendTap"
+      disabled="{{!inputText || isBusy}}"
+    >
+      {{isBusy ? '…' : '发送'}}
+    </button>
+  </view>
+
+  <!-- 评价弹窗 -->
+  <view wx:if="{{feedbackModalVisible}}" class="modal-mask" bindtap="closeFeedback">
+    <view class="modal-card" catchtap="noop">
+      <view class="modal-title">🌟 评价本次回答</view>
+      <view class="rating-stars">
+        <text
+          wx:for="{{[1, 2, 3, 4, 5]}}"
+          wx:key="*this"
+          class="star {{item <= feedbackRating ? 'star-filled' : ''}}"
+          bindtap="setRating"
+          data-score="{{item}}"
+        >★</text>
+      </view>
+      <input
+        class="feedback-input"
+        placeholder="写下您的建议或体验（可选）"
+        value="{{feedbackComment}}"
+        bindinput="onFeedbackCommentInput"
+        maxlength="200"
+      />
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="closeFeedback">取消</button>
+        <button
+          class="btn-primary"
+          bindtap="submitFeedback"
+          loading="{{feedbackSubmitting}}"
+        >提交评价</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 附近景点/设施弹窗 -->
+  <view wx:if="{{nearbyModalVisible}}" class="modal-mask" bindtap="closeNearbyModal">
+    <view class="modal-card modal-large" catchtap="noop">
+      <view class="modal-title-row">
+        <text class="modal-title">📍 周边景点与设施</text>
+        <view class="modal-close" bindtap="closeNearbyModal">✕</view>
+      </view>
+      <view class="modal-notice">{{nearbyNotice}}</view>
+      <scroll-view scroll-y style="max-height: 48vh;">
+        <view wx:for="{{nearbyList}}" wx:key="index" class="nearby-item">
+          <view class="nearby-left">
+            <view class="nearby-name">{{item.name || '设施地点'}}</view>
+            <view class="nearby-sub">
+              直线距离: {{item.distance_m || 0}} 米 · {{item.coordinate_source || '登记节点'}}
+              <text wx:if="{{item.requires_on_site_verification}}" class="tag-warn">待现场核验</text>
+            </view>
+          </view>
+          <view class="nearby-right">
+            <button class="mini-btn" size="mini" bindtap="navigateLocation" data-item="{{item}}">
+              导航
+            </button>
+            <button class="mini-btn-accent" size="mini" bindtap="askAboutSpot" data-name="{{item.name}}">
+              咨询
+            </button>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 证据追溯抽屉 -->
+  <evidence-drawer
+    visible="{{showEvidenceDrawer}}"
+    answer="{{selectedEvidenceAnswer}}"
+    bind:close="closeEvidenceDrawer"
+  />
+</view>

@@ -1,0 +1,39 @@
+<!-- digital-human.wxml -->
+<view class="dh-container dh-{{size}} dh-{{stylePreset}} {{isSpeaking ? 'dh-speaking' : ''}} dh-emotion-{{emotion}}">
+  <!-- 脉冲音波或情绪氛围光环 -->
+  <view class="dh-aura"></view>
+  <view class="dh-ring"></view>
+
+  <!-- 播报中音浪跳动柱条 -->
+  <view wx:if="{{isSpeaking}}" class="dh-sound-bars">
+    <view class="dh-bar bar-1"></view>
+    <view class="dh-bar bar-2"></view>
+    <view class="dh-bar bar-3"></view>
+    <view class="dh-bar bar-4"></view>
+    <view class="dh-bar bar-5"></view>
+  </view>
+
+  <!-- 数字人高保真汉服立绘肖像 -->
+  <view class="dh-avatar-wrap">
+    <image
+      class="dh-avatar-img"
+      src="{{portraitSrc}}"
+      mode="aspectFill"
+      lazy-load="{{true}}"
+    />
+  </view>
+
+  <!-- 情绪徽标 -->
+  <view wx:if="{{emotion !== 'idle'}}" class="dh-badge">
+    <text wx:if="{{emotion === 'greet'}}">🌸</text>
+    <text wx:elif="{{emotion === 'think'}}">💭</text>
+    <text wx:elif="{{emotion === 'explain'}}">🎙️</text>
+    <text wx:elif="{{emotion === 'happy'}}">✨</text>
+    <text wx:elif="{{emotion === 'sorry'}}">🙏</text>
+  </view>
+
+  <!-- 状态提示文字 -->
+  <view wx:if="{{showStatusText}}" class="dh-status-text">
+    <text>{{statusText}}</text>
+  </view>
+</view>

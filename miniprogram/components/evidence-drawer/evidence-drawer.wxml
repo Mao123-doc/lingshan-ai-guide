@@ -1,0 +1,64 @@
+<!-- evidence-drawer.wxml -->
+<view wx:if="{{visible}}" class="drawer-mask" bindtap="handleClose" catchtouchmove="noop">
+  <view class="drawer-content" catchtap="noop">
+    <!-- 头部栏 -->
+    <view class="drawer-header">
+      <view class="drawer-title-row">
+        <text class="drawer-title">🔍 可信回答依据追溯</text>
+        <view class="drawer-close" bindtap="handleClose">✕</view>
+      </view>
+      <view class="drawer-meta">
+        <text class="meta-tag {{answer.used_llm ? 'tag-model' : 'tag-kb'}}">
+          {{answer.used_llm ? '大模型增强' : '知识库权威摘录'}}
+        </text>
+        <text class="meta-text" wx:if="{{answer.response_time_ms}}">
+          耗时 {{answer.response_time_ms}}ms
+        </text>
+        <text class="meta-text" wx:if="{{answer.model}}">
+          模型: {{answer.model}}
+        </text>
+      </view>
+      <view class="drawer-note">
+        <text>相关度为 RRF 多路召回与列表重排分值；依据来自官方知识库，不等于人工审核准确率。</text>
+      </view>
+    </view>
+
+    <!-- 证据列表滚动区 -->
+    <scroll-view scroll-y class="drawer-scroll">
+      <block wx:if="{{answer.evaluation_trace.retrievedDocuments && answer.evaluation_trace.retrievedDocuments.length > 0}}">
+        <view
+          wx:for="{{answer.evaluation_trace.retrievedDocuments}}"
+          wx:key="index"
+          class="evidence-card"
+        >
+          <view class="evidence-header">
+            <text class="evidence-source">📄 {{item.source || '景区官方指南/知识库'}}</text>
+            <text class="evidence-score" wx:if="{{item.score !== undefined}}">
+              相关度: {{item.score}}
+            </text>
+          </view>
+          <view class="evidence-body">
+            <text>{{item.text}}</text>
+          </view>
+        </view>
+      </block>
+      <block wx:elif="{{answer.retrieved_chunks && answer.retrieved_chunks.length > 0}}">
+        <view
+          wx:for="{{answer.retrieved_chunks}}"
+          wx:key="index"
+          class="evidence-card"
+        >
+          <view class="evidence-header">
+            <text class="evidence-source">📄 知识库片段 #{{index + 1}}</text>
+          </view>
+          <view class="evidence-body">
+            <text>{{item}}</text>
+          </view>
+        </view>
+      </block>
+      <view wx:else class="evidence-empty">
+        <text>本次回答由常识或问候规则生成，未直接引用外部知识库切片。</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>
