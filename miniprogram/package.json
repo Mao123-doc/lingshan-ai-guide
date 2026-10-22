@@ -1,0 +1,23 @@
+{
+  "name": "lingxiaochan-miniprogram",
+  "version": "1.0.0",
+  "description": "灵小禅 · 灵山胜境AI文旅智能体微信小程序",
+  "main": "app.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "compile": "tsc",
+    "test": "npx --prefix ../backend tsx --test test/miniprogram-client.test.ts"
+  },
+  "keywords": [
+    "wechat-miniprogram",
+    "lingxiaochan",
+    "ai-guide",
+    "cultural-tourism"
+  ],
+  "author": "Lingshan AI Guide Team",
+  "license": "MIT",
+  "devDependencies": {
+    "miniprogram-api-typings": "^5.2.3",
+    "typescript": "^5.4.5"
+  }
+}

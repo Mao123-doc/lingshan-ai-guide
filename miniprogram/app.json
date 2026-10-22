@@ -1,0 +1,68 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/chat/chat",
+    "pages/route/route",
+    "pages/spots/spots",
+    "pages/spots/detail",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#8f202e",
+    "navigationBarTitleText": "灵小禅 · 灵山胜境",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#fbf9f5"
+  },
+  "tabBar": {
+    "color": "#78716c",
+    "selectedColor": "#8f202e",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/chat/chat",
+        "text": "问答",
+        "iconPath": "assets/icons/chat.png",
+        "selectedIconPath": "assets/icons/chat-active.png"
+      },
+      {
+        "pagePath": "pages/route/route",
+        "text": "路线",
+        "iconPath": "assets/icons/route.png",
+        "selectedIconPath": "assets/icons/route-active.png"
+      },
+      {
+        "pagePath": "pages/spots/spots",
+        "text": "导览",
+        "iconPath": "assets/icons/spots.png",
+        "selectedIconPath": "assets/icons/spots-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "设置",
+        "iconPath": "assets/icons/profile.png",
+        "selectedIconPath": "assets/icons/profile-active.png"
+      }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于计算到附近景点与服务设施的距离"
+    },
+    "scope.record": {
+      "desc": "需要使用麦克风进行语音输入与AI问答"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

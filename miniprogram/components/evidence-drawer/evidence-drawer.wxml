@@ -1,0 +1,60 @@
+<!-- evidence-drawer.wxml -->
+<view wx:if="{{visible}}" class="drawer-mask" bindtap="handleClose" catchtouchmove="noop">
+  <view class="drawer-content" catchtap="noop">
+    <!-- 头部栏 -->
+    <view class="drawer-header">
+      <view class="drawer-title-row">
+        <text class="drawer-title">官方资料出处与参考</text>
+        <view class="drawer-close" bindtap="handleClose">
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </view>
+      </view>
+      <view class="drawer-meta">
+        <text class="meta-tag tag-kb">灵山胜境官方知识库</text>
+        <text class="meta-text">经景区官方导览手册与公告核验</text>
+      </view>
+      <view class="drawer-note">
+        <text>以上内容严格引自灵山胜境官方导览手册、胜境文化志及当日最新景区服务公告，确保文化典故与导览信息真实可信。</text>
+      </view>
+    </view>
+
+    <!-- 证据列表滚动区 -->
+    <scroll-view scroll-y class="drawer-scroll">
+      <block wx:if="{{answer.evaluation_trace.retrievedDocuments && answer.evaluation_trace.retrievedDocuments.length > 0}}">
+        <view
+          wx:for="{{answer.evaluation_trace.retrievedDocuments}}"
+          wx:key="index"
+          class="evidence-card"
+        >
+          <view class="evidence-header">
+            <text class="evidence-source">{{item.source || '灵山胜境官方资料'}}</text>
+            <text class="evidence-score">官方出处</text>
+          </view>
+          <view class="evidence-body">
+            <text>{{item.text}}</text>
+          </view>
+        </view>
+      </block>
+      <block wx:elif="{{answer.retrieved_chunks && answer.retrieved_chunks.length > 0}}">
+        <view
+          wx:for="{{answer.retrieved_chunks}}"
+          wx:key="index"
+          class="evidence-card"
+        >
+          <view class="evidence-header">
+            <text class="evidence-source">胜境官方参考资料 #{{index + 1}}</text>
+            <text class="evidence-score">官方出处</text>
+          </view>
+          <view class="evidence-body">
+            <text>{{item}}</text>
+          </view>
+        </view>
+      </block>
+      <view wx:else class="evidence-empty">
+        <text>本次回答为常规礼貌指引，未特定引用景区文献片段。</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>

@@ -1,0 +1,192 @@
+/** pages/profile/profile.wxss — 灵小禅移动端设置中心样式 **/
+
+.profile-container {
+  padding-top: 16rpx;
+}
+
+.title-accent {
+  color: var(--primary);
+  font-size: 22rpx;
+}
+
+.dh-preview-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30rpx 0;
+  background: radial-gradient(circle, rgba(143, 32, 46, 0.06) 0%, transparent 70%);
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.styles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.style-item {
+  background: var(--bg-page);
+  border-radius: 18rpx;
+  padding: 20rpx;
+  border: 1rpx solid var(--border-card);
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  transition: all 0.15s ease;
+}
+
+.style-active {
+  background: var(--primary-light);
+  border-color: var(--primary-border);
+  box-shadow: 0 4rpx 12rpx rgba(143, 32, 46, 0.08);
+}
+
+.style-color-dot {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  border: 2rpx solid #ffffff;
+  box-shadow: var(--shadow-xs);
+}
+
+.style-name {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.style-desc {
+  font-size: 20rpx;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+/* API 地址配置 */
+.card-tip {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 16rpx;
+}
+
+.api-input {
+  background: var(--bg-page);
+  border: 1rpx solid var(--border-card);
+  border-radius: 16rpx;
+  padding: 16rpx 20rpx;
+  font-size: 26rpx;
+  color: var(--text-primary);
+  margin-bottom: 16rpx;
+}
+
+.api-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14rpx;
+  margin-bottom: 14rpx;
+}
+
+.ping-status-row {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  padding-top: 12rpx;
+  border-top: 1rpx solid var(--bg-subtle);
+}
+
+.ping-label {
+  color: var(--text-secondary);
+}
+
+.ping-val {
+  color: var(--celadon);
+  font-weight: 600;
+}
+
+/* 缓存管理 */
+.cache-info-box {
+  background: var(--bg-page);
+  border-radius: 16rpx;
+  padding: 20rpx 22rpx;
+  margin-bottom: 18rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  border: 1rpx solid var(--border-card);
+}
+
+.cache-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24rpx;
+}
+
+.cache-label {
+  color: var(--text-secondary);
+}
+
+.cache-val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.cache-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14rpx;
+}
+
+/* 收藏列表 */
+.fav-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.fav-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--bg-subtle);
+}
+
+.fav-item-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.fav-item-sub {
+  font-size: 22rpx;
+  color: var(--text-muted);
+}
+
+.fav-arrow {
+  font-size: 28rpx;
+  color: var(--ink-muted);
+}
+
+/* 底部说明 */
+.footer-note {
+  text-align: center;
+  padding: 32rpx 0 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  align-items: center;
+}
+
+.footer-badge {
+  font-size: 22rpx;
+  color: var(--ink-light);
+  font-weight: 600;
+  background: #f1ebd8;
+  padding: 6rpx 22rpx;
+  border-radius: 9999rpx;
+}
+
+.footer-sub {
+  font-size: 20rpx;
+  color: var(--text-muted);
+}

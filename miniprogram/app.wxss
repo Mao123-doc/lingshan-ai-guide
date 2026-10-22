@@ -1,0 +1,225 @@
+/** app.wxss — 灵小禅微信小程序全局样式表（东方禅意与灵山胜境官方文旅视觉系统） **/
+
+page {
+  /* 东方禅意色彩系统（以灵山梵宫与大佛之硃砂、琉璃金、松烟青、沉香墨为骨） */
+  --primary: #8f202e;
+  --primary-dark: #731824;
+  --primary-light: #fcf4f4;
+  --primary-border: #f2d5d8;
+  --primary-gradient: linear-gradient(135deg, #781926 0%, #8f202e 55%, #a42c3b 100%);
+  --primary-glow: rgba(143, 32, 46, 0.16);
+
+  /* 琉璃暖金（胜境庄严 / 核心殿堂高光） */
+  --gold: #b88636;
+  --gold-dark: #926723;
+  --gold-light: #fcf8ee;
+  --gold-border: #eedebf;
+  --gold-gradient: linear-gradient(135deg, #a47731 0%, #ba893b 60%, #ce9f4f 100%);
+
+  /* 松烟竹青（山水幽寂、平缓无障碍、官方核验通道） */
+  --celadon: #2d5a4c;
+  --celadon-dark: #204136;
+  --celadon-light: #f2f7f4;
+  --celadon-border: #cee0d6;
+  --celadon-gradient: linear-gradient(135deg, #22483d 0%, #2d5a4c 60%, #3e7361 100%);
+
+  /* 沉香水墨基调 */
+  --ink: #292524;
+  --ink-light: #44403c;
+  --ink-muted: #78716c;
+
+  /* 文字层级（严格遵循 WCAG 对比度，温润沉稳） */
+  --text-primary: #262322;
+  --text-secondary: #57534e;
+  --text-muted: #8c827a;
+  --text-white: #ffffff;
+
+  /* 背景系统（温润竹纸、宣纸白底与卡片底） */
+  --bg-page: #fbf9f5;
+  --bg-card: #ffffff;
+  --bg-subtle: #f6f3ec;
+  --border-card: #ece6dc;
+  --border-focus: rgba(143, 32, 46, 0.35);
+
+  /* 柔和物理宣纸微投影 */
+  --shadow-xs: 0 1rpx 3rpx rgba(44, 38, 34, 0.03);
+  --shadow-sm: 0 2rpx 8rpx rgba(44, 38, 34, 0.04), 0 1rpx 2rpx rgba(44, 38, 34, 0.02);
+  --shadow-md: 0 6rpx 16rpx rgba(44, 38, 34, 0.06), 0 2rpx 6rpx rgba(44, 38, 34, 0.03);
+  --shadow-lg: 0 12rpx 28rpx -4rpx rgba(143, 32, 46, 0.16);
+
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 28rpx;
+  line-height: 1.6;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+view, text, button, input, textarea, scroll-view {
+  box-sizing: border-box;
+}
+
+/* 全局容器 */
+.container {
+  min-height: 100vh;
+  padding: 24rpx;
+  padding-bottom: 48rpx;
+}
+
+/* 禅意卡片容器（宣纸质感、温和倒角、素雅细线） */
+.zen-card {
+  background: var(--bg-card);
+  border-radius: 24rpx;
+  padding: 30rpx 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border-card);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.zen-card-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  letter-spacing: 0.5rpx;
+}
+
+/* 经典硃砂主按钮 */
+.btn-primary {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 9999rpx;
+  padding: 22rpx 44rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: inset 0 1rpx 2rpx rgba(255, 255, 255, 0.22), var(--shadow-lg);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-primary:active {
+  transform: scale(0.985);
+  opacity: 0.92;
+}
+
+.btn-primary[disabled] {
+  background: #e7e3dc !important;
+  color: #9c958d !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* 次要素雅按钮 */
+.btn-secondary {
+  background: #ffffff;
+  color: var(--primary);
+  font-size: 28rpx;
+  font-weight: 600;
+  border-radius: 9999rpx;
+  padding: 18rpx 36rpx;
+  border: 1.5rpx solid var(--primary-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  box-shadow: var(--shadow-xs);
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:active {
+  background: var(--primary-light);
+  transform: scale(0.985);
+}
+
+/* 禅意胶囊标签系统 */
+.zen-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 18rpx;
+  border-radius: 9999rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1rpx solid var(--primary-border);
+  line-height: 1.4;
+  letter-spacing: 0.2rpx;
+}
+
+.zen-tag-gold {
+  background: var(--gold-light);
+  color: var(--gold);
+  border-color: var(--gold-border);
+}
+
+.zen-tag-celadon {
+  background: var(--celadon-light);
+  color: var(--celadon);
+  border-color: var(--celadon-border);
+}
+
+.zen-tag-gray {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border-color: var(--border-card);
+}
+
+/* 状态提示框（温和自然） */
+.alert-box {
+  padding: 22rpx 28rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  box-shadow: var(--shadow-xs);
+}
+
+.alert-info {
+  background: #f4f8fb;
+  color: #1e5571;
+  border: 1rpx solid #cbe0ee;
+}
+
+.alert-warning {
+  background: #fdf9ee;
+  color: #926723;
+  border: 1rpx solid #eedebf;
+}
+
+.alert-error {
+  background: #fdf3f3;
+  color: #a82737;
+  border: 1rpx solid #f6d1d5;
+}
+
+.alert-success {
+  background: #f2f7f4;
+  color: #265545;
+  border: 1rpx solid #cee0d6;
+}
+
+/* 辅助排版与弹性对齐 */
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }
+.text-sm { font-size: 24rpx; }
+.text-xs { font-size: 20rpx; }
+.font-bold { font-weight: 700; }
+.font-numeric { font-variant-numeric: tabular-nums; }
+.flex-row { display: flex; flex-direction: row; align-items: center; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-1 { flex: 1; }
+.gap-8 { gap: 16rpx; }
+.gap-12 { gap: 24rpx; }

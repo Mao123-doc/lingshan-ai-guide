@@ -1,0 +1,103 @@
+<!-- pages/spots/spots.wxml -->
+<view class="container spots-container">
+  <!-- 顶部搜索框 -->
+  <view class="search-bar">
+    <view class="search-input-wrap">
+      <svg class="search-svg" viewBox="0 0 24 24" width="16" height="16">
+        <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      <input
+        class="search-input"
+        placeholder="搜索景点、殿堂造像、佛教文化…"
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+      />
+      <view wx:if="{{searchKeyword}}" class="clear-icon" bindtap="clearSearch">
+        <svg viewBox="0 0 24 24" width="14" height="14">
+          <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类胶囊标签 -->
+  <view class="category-scroll-wrap">
+    <scroll-view scroll-x class="category-scroll" enable-flex="{{true}}">
+      <view
+        wx:for="{{categories}}"
+        wx:key="key"
+        class="cat-pill {{selectedCategory === item.key ? 'cat-active' : ''}}"
+        bindtap="onCategorySelect"
+        data-key="{{item.key}}"
+      >
+        <text>{{item.label}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 景点卡片列表 -->
+  <view class="spots-list">
+    <view
+      wx:for="{{filteredSpots}}"
+      wx:key="id"
+      class="spot-card"
+      bindtap="goToDetail"
+      data-id="{{item.id}}"
+    >
+      <view class="spot-card-main">
+        <view class="spot-header">
+          <view class="spot-name-row">
+            <text class="spot-seal">景</text>
+            <text class="spot-name">{{item.name}}</text>
+          </view>
+          <text class="zen-tag zen-tag-celadon" wx:if="{{item.mobility.wheelchair_accessible}}">
+            无障碍通行
+          </text>
+        </view>
+
+        <view class="spot-desc">
+          <text>{{item.description || item.fields.description || '灵山胜境核心历史文化景观。'}}</text>
+        </view>
+
+        <view class="spot-meta-row font-numeric">
+          <text class="meta-item">建议游览 {{item.visit_minutes}} 分钟</text>
+          <text class="meta-item" wx:if="{{item.opening_windows && item.opening_windows.length > 0}}">
+            开放 {{item.opening_windows[0]}}
+          </text>
+          <text class="meta-item tag-area" wx:if="{{item.area}}">
+            {{item.area}}
+          </text>
+        </view>
+      </view>
+
+      <view class="spot-card-footer" catchtap="noop">
+        <button
+          class="btn-spot-detail"
+          size="mini"
+          catchtap="goToDetail"
+          data-id="{{item.id}}"
+        >
+          查看详情
+        </button>
+        <button
+          class="btn-spot-ask"
+          size="mini"
+          catchtap="askAboutSpot"
+          data-name="{{item.name}}"
+        >
+          随身讲解
+        </button>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{!isLoading && filteredSpots.length === 0}}" class="empty-wrap">
+      <view class="empty-icon-box">
+        <svg viewBox="0 0 24 24" width="36" height="36">
+          <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+      </view>
+      <text class="empty-text">未找到相关景点，换个词试试吧</text>
+    </view>
+  </view>
+</view>

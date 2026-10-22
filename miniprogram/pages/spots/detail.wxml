@@ -1,0 +1,99 @@
+<!-- pages/spots/detail.wxml -->
+<view class="container detail-container">
+  <block wx:if="{{spot}}">
+    <!-- 顶部概览卡片 -->
+    <view class="zen-card spot-hero-card">
+      <view class="hero-top">
+        <view>
+          <view class="spot-title">{{spot.name}}</view>
+          <view class="spot-area-tag">{{spot.area || '灵山胜境风景区'}}</view>
+        </view>
+        <view class="fav-btn {{isFavorite ? 'fav-active' : ''}}" bindtap="toggleFavorite">
+          <svg class="fav-svg" viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          <text>{{isFavorite ? '已收藏' : '收藏'}}</text>
+        </view>
+      </view>
+
+      <view class="tags-row">
+        <text class="zen-tag {{spot.mobility.wheelchair_accessible ? 'zen-tag-celadon' : 'zen-tag-gray'}}">
+          {{spot.mobility.wheelchair_accessible ? '无障碍通行' : '含台阶步道'}}
+        </text>
+        <text class="zen-tag zen-tag-gold font-numeric" wx:if="{{spot.visit_minutes}}">
+          建议游览 {{spot.visit_minutes}} 分钟
+        </text>
+      </view>
+    </view>
+
+    <!-- 开放时间与门票信息 -->
+    <view class="zen-card">
+      <view class="zen-card-title">
+        <text class="title-accent">◆</text>
+        <text>开放与门票参考</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">开放时间：</text>
+        <text class="info-val font-numeric">{{spot.opening_windows ? spot.opening_windows[0] : '08:00-17:00'}}</text>
+      </view>
+      <view class="info-row" wx:if="{{spot.fields.ticket}}">
+        <text class="info-label">门票参考：</text>
+        <text class="info-val">{{spot.fields.ticket}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">资料出处：</text>
+        <text class="info-val text-muted">{{spot.source || '灵山胜境官方导览资料'}}</text>
+      </view>
+    </view>
+
+    <!-- 深度文化背景 -->
+    <view class="zen-card">
+      <view class="zen-card-title">
+        <text class="title-accent">◆</text>
+        <text>历史文化与景观内涵</text>
+      </view>
+      <view class="culture-text">
+        <text>{{spot.description || spot.fields.description || '灵山胜境核心标志性佛教文化景观。建筑融合汉唐神韵与东方造像艺术，展现庄严祥和之意境。'}}</text>
+      </view>
+      <view wx:if="{{spot.fields.highlights}}" class="highlights-box">
+        <view class="highlights-title">核心看点</view>
+        <text>{{spot.fields.highlights}}</text>
+      </view>
+      <view wx:if="{{spot.fields.tips}}" class="tips-box">
+        <view class="tips-title">游览建议</view>
+        <text>{{spot.fields.tips}}</text>
+      </view>
+    </view>
+
+    <!-- 地图导航与位置信息 -->
+    <view class="zen-card">
+      <view class="zen-card-title">
+        <text class="title-accent">◆</text>
+        <text>景区位置与步行导航</text>
+      </view>
+      <view class="coords-text">
+        位置：灵山胜境内 · 步行可达
+      </view>
+      <view class="coords-note">
+        点击下方按钮可调起地图步行实景导引与外部导航支持。
+      </view>
+      <button class="btn-primary" style="margin-top: 20rpx;" bindtap="handleNavigate">
+        前往该景点（实景导航）
+      </button>
+    </view>
+
+    <!-- 底部操作栏 -->
+    <view class="detail-bottom-bar">
+      <button class="btn-secondary flex-1" bindtap="askAbout">
+        随身语音讲解
+      </button>
+      <button class="btn-primary flex-1" bindtap="planRouteWithSpot">
+        加入定制游程
+      </button>
+    </view>
+  </block>
+
+  <view wx:elif="{{isLoading}}" class="loading-wrap">
+    <text>正在加载景点信息…</text>
+  </view>
+</view>
