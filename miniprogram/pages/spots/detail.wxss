@@ -1,12 +1,13 @@
-/** pages/spots/detail.wxss **/
+/** pages/spots/detail.wxss — 灵小禅移动端景点详情样式 **/
 
 .detail-container {
   padding-bottom: 140rpx;
+  padding-top: 16rpx;
 }
 
 .spot-hero-card {
-  background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%);
-  border-color: #fecdd3;
+  background: #ffffff;
+  border-color: var(--gold-border);
 }
 
 .hero-top {
@@ -21,11 +22,12 @@
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 6rpx;
+  letter-spacing: 0.5rpx;
 }
 
 .spot-area-tag {
   font-size: 24rpx;
-  color: var(--ink-muted);
+  color: var(--gold-dark);
 }
 
 .fav-btn {
@@ -38,13 +40,13 @@
   font-weight: 600;
   background: #ffffff;
   color: var(--text-secondary);
-  border: 1rpx solid #e2e8f0;
+  border: 1rpx solid var(--border-card);
   box-shadow: var(--shadow-xs);
   transition: all 0.15s ease;
 }
 
 .fav-svg {
-  color: #cbd5e1;
+  color: #d1c8bd;
 }
 
 .fav-active {
@@ -70,8 +72,8 @@
 
 .info-row {
   display: flex;
-  padding: 12rpx 0;
-  border-bottom: 1rpx solid #f8fafc;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid var(--bg-subtle);
   font-size: 26rpx;
 }
 
@@ -90,19 +92,19 @@
 .culture-text {
   font-size: 26rpx;
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: 1.75;
   margin-bottom: 20rpx;
 }
 
 .highlights-box {
-  background: #fdf2f8;
+  background: var(--gold-light);
   border-radius: 16rpx;
   padding: 20rpx;
   margin-bottom: 16rpx;
   font-size: 24rpx;
-  color: #831843;
+  color: var(--gold-dark);
   line-height: 1.6;
-  border: 1rpx solid #fbcfe8;
+  border: 1rpx solid var(--gold-border);
 }
 
 .highlights-title {
@@ -111,13 +113,13 @@
 }
 
 .tips-box {
-  background: #fefce8;
+  background: var(--celadon-light);
   border-radius: 16rpx;
   padding: 20rpx;
   font-size: 24rpx;
-  color: #78350f;
+  color: var(--celadon-dark);
   line-height: 1.6;
-  border: 1rpx solid #fef08a;
+  border: 1rpx solid var(--celadon-border);
 }
 
 .tips-title {
@@ -126,14 +128,14 @@
 }
 
 .coords-text {
-  font-size: 24rpx;
+  font-size: 25rpx;
   color: var(--text-secondary);
   margin-bottom: 8rpx;
 }
 
 .coords-note {
   font-size: 22rpx;
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }
 
 /* 底部吸底操作栏 */
@@ -142,18 +144,18 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
   display: flex;
   gap: 20rpx;
-  box-shadow: 0 -4rpx 16rpx rgba(15, 23, 42, 0.06);
-  border-top: 1rpx solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 -4rpx 16rpx rgba(44, 38, 34, 0.05);
+  border-top: 1rpx solid var(--border-card);
   z-index: 50;
 }
 
 .loading-wrap {
   text-align: center;
   padding: 100rpx 0;
-  color: var(--ink-muted);
+  color: var(--text-muted);
 }

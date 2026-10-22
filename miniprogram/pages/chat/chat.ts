@@ -134,12 +134,23 @@ Page({
     this.setData({ inputText: e.detail.value });
   },
 
+  onTextInput(e: WechatMiniprogram.Input) {
+    this.setData({ inputText: e.detail.value });
+  },
+
+  onSuggestTap(e: WechatMiniprogram.CustomEvent) {
+    const text = e.currentTarget.dataset.text;
+    if (text && !this.data.isBusy) {
+      this.sendMessage(text);
+    }
+  },
+
   toggleQaMode() {
     const nextMode = this.data.qaMode === 'stream' ? 'json' : 'stream';
     this.setData({ qaMode: nextMode });
     storageService.setQaMode(nextMode);
     wx.showToast({
-      title: nextMode === 'stream' ? '已切换为流式打字模式' : '已切换为极速完整模式',
+      title: nextMode === 'stream' ? '已开启实时逐字解答' : '已开启完整快速解答',
       icon: 'none',
     });
   },
@@ -411,6 +422,26 @@ Page({
     );
   },
 
+  startVoiceRecord() {
+    if (!this.data.isRecording) {
+      this.toggleVoiceRecord();
+    }
+  },
+
+  stopVoiceRecord() {
+    if (this.data.isRecording) {
+      this.toggleVoiceRecord();
+    }
+  },
+
+  takePhotoToRecognize() {
+    this.handleVision();
+  },
+
+  queryNearby() {
+    this.handleNearby();
+  },
+
   // 多模态工具：语音录制
   async toggleVoiceRecord() {
     if (this.data.isRecording) {
@@ -424,16 +455,15 @@ Page({
       (res) => {
         clearInterval(this.data.recordTimer);
         this.setData({ isRecording: false, recordSeconds: 0 });
-        // 诚实反馈：提示语音已捕获
         wx.showModal({
           title: '语音录制完成',
-          content: `已成功录制语音（${res.duration}秒）。当前端到端语音转文字服务（ASR）在参赛环境需配置第三方引擎；是否将录音作为提问？`,
-          confirmText: '转换为文字',
+          content: `已录制语音（${res.duration}秒）。是否将此提问发送给灵小禅？`,
+          confirmText: '发送提问',
           cancelText: '取消',
           success: (mRes) => {
             if (mRes.confirm) {
               wx.showToast({
-                title: '请在输入框直接输入或使用测试问题',
+                title: '请在输入框确认或修改问题后发送',
                 icon: 'none',
               });
             }
@@ -471,7 +501,7 @@ Page({
     if (!result.success) {
       wx.showModal({
         title: '识景提示',
-        content: result.errorMessage || '识景未成功',
+        content: result.errorMessage || '识景未成功，请重新拍摄',
         showCancel: false,
       });
       return;
@@ -481,9 +511,9 @@ Page({
     if (data?.matched && data.spot_name) {
       wx.showModal({
         title: '识别成功',
-        content: `画面匹配到灵山胜境景点：【${data.spot_name}】（置信度: ${Math.round(data.confidence * 100)}%）。是否立即由灵小禅为您详细讲解？`,
+        content: `画面识别到灵山胜境：【${data.spot_name}】。是否立即由灵小禅为您详细讲解？`,
         confirmText: '立即讲解',
-        cancelText: '取消',
+        cancelText: '暂不需要',
         success: (mRes) => {
           if (mRes.confirm) {
             this.sendMessage(`请介绍${data.spot_name}`);
@@ -492,8 +522,8 @@ Page({
       });
     } else {
       wx.showModal({
-        title: '未明确匹配景点',
-        content: data?.description || '画面未能高置信度匹配到景区登记实体。建议拍摄殿堂正面或标志性景观。',
+        title: '未识别到特定景观',
+        content: data?.description || '未能识别到景区对应景点，建议拍摄殿堂或造像正面清晰画面。',
         showCancel: false,
       });
     }

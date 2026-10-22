@@ -8,7 +8,7 @@
       </svg>
       <input
         class="search-input"
-        placeholder="搜索景点名称、佛教文化、无障碍通道…"
+        placeholder="搜索景点、殿堂造像、佛教文化…"
         value="{{searchKeyword}}"
         bindinput="onSearchInput"
       />
@@ -47,8 +47,8 @@
       <view class="spot-card-main">
         <view class="spot-header">
           <view class="spot-name-row">
+            <text class="spot-seal">景</text>
             <text class="spot-name">{{item.name}}</text>
-            <text class="spot-id-badge font-numeric">{{item.id}}</text>
           </view>
           <text class="zen-tag zen-tag-celadon" wx:if="{{item.mobility.wheelchair_accessible}}">
             无障碍通行
@@ -60,12 +60,12 @@
         </view>
 
         <view class="spot-meta-row font-numeric">
-          <text class="meta-item">建议 {{item.visit_minutes}} 分钟</text>
+          <text class="meta-item">建议游览 {{item.visit_minutes}} 分钟</text>
           <text class="meta-item" wx:if="{{item.opening_windows && item.opening_windows.length > 0}}">
-            {{item.opening_windows[0]}}
+            开放 {{item.opening_windows[0]}}
           </text>
-          <text class="meta-item tag-verified" wx:if="{{item.confidence === 'verified'}}">
-            已现场核验
+          <text class="meta-item tag-area" wx:if="{{item.area}}">
+            {{item.area}}
           </text>
         </view>
       </view>
@@ -85,7 +85,7 @@
           catchtap="askAboutSpot"
           data-name="{{item.name}}"
         >
-          AI 讲解
+          随身讲解
         </button>
       </view>
     </view>
@@ -97,7 +97,7 @@
           <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
         </svg>
       </view>
-      <text class="empty-text">未检索到匹配景点，换个关键词试试吧</text>
+      <text class="empty-text">未找到相关景点，换个词试试吧</text>
     </view>
   </view>
 </view>

@@ -1,10 +1,10 @@
 <!-- pages/profile/profile.wxml -->
 <view class="container profile-container">
-  <!-- 数字人形象与风格定制 -->
+  <!-- 导游形象与服饰定制 -->
   <view class="zen-card">
     <view class="zen-card-title">
       <text class="title-accent">◆</text>
-      <text>数字人形象风格定制</text>
+      <text>随身导游形象与服饰</text>
     </view>
     <view class="dh-preview-wrap">
       <digital-human
@@ -30,53 +30,24 @@
     </view>
   </view>
 
-  <!-- 后端服务地址与连接测试（支持本地与真机调试） -->
-  <view class="zen-card">
-    <view class="zen-card-title">
-      <text class="title-accent">◆</text>
-      <text>后端服务地址配置</text>
-    </view>
-    <view class="card-tip">
-      微信开发者工具默认连接 http://127.0.0.1:8010/api/v1。手机真机预览时，请输入局域网 IP（例如 http://192.168.1.108:8010/api/v1）。
-    </view>
-    <input
-      class="api-input font-numeric"
-      value="{{apiBaseUrl}}"
-      bindinput="onApiUrlInput"
-      placeholder="请输入后端 API Base URL"
-    />
-    <view class="api-btn-row">
-      <button class="btn-secondary" size="mini" bindtap="resetDefaultApiUrl">
-        恢复默认
-      </button>
-      <button class="btn-primary" size="mini" bindtap="saveApiUrl">
-        保存并测试
-      </button>
-    </view>
-    <view class="ping-status-row">
-      <text class="ping-label">连接状态：</text>
-      <text class="ping-val">{{serverPingStatus}}</text>
-    </view>
-  </view>
-
   <!-- 离线应急数据缓存管理 -->
   <view class="zen-card">
     <view class="zen-card-title">
       <text class="title-accent">◆</text>
-      <text>离线路网与缓存管理</text>
+      <text>离线导览数据包</text>
     </view>
     <view class="cache-info-box">
       <view class="cache-row">
-        <text class="cache-label">缓存状态：</text>
-        <text class="cache-val">{{cachedGraphInfo ? '已就绪（含23景点30拓扑边）' : '未缓存'}}</text>
+        <text class="cache-label">导览包状态：</text>
+        <text class="cache-val">{{cachedGraphInfo ? '已就绪（含23处胜境景观与平缓步道）' : '未下载'}}</text>
       </view>
       <view class="cache-row font-numeric" wx:if="{{cachedGraphInfo}}">
-        <text class="cache-label">缓存时间：</text>
+        <text class="cache-label">更新时间：</text>
         <text class="cache-val">{{cachedGraphInfo.cachedAt}}</text>
       </view>
       <view class="cache-row font-numeric">
         <text class="cache-label">离线景点库：</text>
-        <text class="cache-val">{{cachedSpotsCount}} 个景点数字档案</text>
+        <text class="cache-val">{{cachedSpotsCount}} 处景点详述</text>
       </view>
     </view>
 
@@ -85,7 +56,7 @@
         清空缓存
       </button>
       <button class="btn-primary" size="mini" bindtap="cacheAllData">
-        更新全景区路网
+        更新离线导览包
       </button>
     </view>
   </view>
@@ -94,7 +65,7 @@
   <view wx:if="{{favoriteSpots.length > 0}}" class="zen-card">
     <view class="zen-card-title">
       <text class="title-accent">◆</text>
-      <text>常用收藏景点</text>
+      <text>我的收藏景点</text>
     </view>
     <view class="fav-list">
       <view
@@ -106,16 +77,45 @@
       >
         <view class="fav-item-left">
           <view class="fav-item-name">{{item.name}}</view>
-          <view class="fav-item-sub font-numeric">{{item.id}} · 建议 {{item.visit_minutes}} 分钟</view>
+          <view class="fav-item-sub font-numeric">建议游览 {{item.visit_minutes}} 分钟</view>
         </view>
         <view class="fav-arrow">›</view>
       </view>
     </view>
   </view>
 
+  <!-- 导览网络设置（高级选项） -->
+  <view class="zen-card">
+    <view class="zen-card-title">
+      <text class="title-accent">◆</text>
+      <text>导览服务连接设置（高级）</text>
+    </view>
+    <view class="card-tip">
+      小程序默认直连灵山胜境官方智慧导览服务。如您在局域网内进行调试或演示，可在下方自定义服务地址。
+    </view>
+    <input
+      class="api-input font-numeric"
+      value="{{apiBaseUrl}}"
+      bindinput="onApiUrlInput"
+      placeholder="请输入服务 API 基础地址"
+    />
+    <view class="api-btn-row">
+      <button class="btn-secondary" size="mini" bindtap="resetDefaultApiUrl">
+        恢复默认
+      </button>
+      <button class="btn-primary" size="mini" bindtap="saveApiUrl">
+        保存并测试
+      </button>
+    </view>
+    <view class="ping-status-row">
+      <text class="ping-label">服务状态：</text>
+      <text class="ping-val">{{serverPingStatus}}</text>
+    </view>
+  </view>
+
   <!-- 关于与版本信息 -->
   <view class="footer-note">
-    <view class="footer-badge">灵山胜境 · 灵小禅 v2.2.0</view>
-    <view class="footer-sub">第八届全球校园人工智能算法精英大赛（AIC）参赛作品</view>
+    <view class="footer-badge">灵山胜境 · 灵小禅智慧文旅导览</view>
+    <view class="footer-sub">无锡灵山文化旅游集团 版权所有</view>
   </view>
 </view>

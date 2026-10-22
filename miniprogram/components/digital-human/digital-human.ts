@@ -17,9 +17,9 @@ const PORTRAITS: Record<string, string> = {
 const EMOTION_TEXTS: Record<string, string> = {
   idle: '随时为您服务',
   greet: '阿弥陀佛，欢迎来到灵山胜境！',
-  think: '正在为您推演检索…',
+  think: '正在为您查阅胜境典故…',
   explain: '正在为您讲解…',
-  sorry: '抱歉，此项暂时受限',
+  sorry: '抱歉，稍候为您详细说明',
   happy: '愿您吉祥如意，法喜充满！',
 };
 

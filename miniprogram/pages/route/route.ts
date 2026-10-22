@@ -369,7 +369,7 @@ Page({
       if (this.data.autoCorrect && delay > 10 && this.data.lastAutoKey !== key) {
         this.setData({
           lastAutoKey: key,
-          progressNotice: `${notice} 已触发自动纠偏重规划。`,
+          progressNotice: `${notice} 已自动优化后续游览路线。`,
           completedSpotIds: currentCompleted,
           progressSpotId: spotId,
         });
@@ -395,8 +395,8 @@ Page({
 
     if (remaining <= 0) {
       wx.showModal({
-        title: '已到离园死线',
-        content: '距离设定的离园时间已不足或已到达，请直接沿主路前往南门出口出园。',
+        title: '已到计划离园时间',
+        content: '距离计划离园时间已不足，建议您沿主干平缓步道经由南门出口出园。',
         showCancel: false,
       });
       return;
@@ -427,7 +427,7 @@ Page({
       return;
     }
 
-    wx.showLoading({ title: '本地运筹计算中…' });
+    wx.showLoading({ title: '正在定制游览路线…' });
     try {
       const nowMin = parseMinutes(this.data.progressTimeStr);
       const deadlineMin = parseMinutes(this.data.deadlineTimeStr);

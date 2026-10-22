@@ -11,16 +11,14 @@
         showStatusText="{{false}}"
       />
       <view class="companion-info">
-        <text class="companion-name">灵小禅 · 胜境智友</text>
-        <text class="companion-status">{{isBusy ? (isStreaming ? '正在为您讲解…' : '正在思考推演…') : '随时为您答疑解惑'}}</text>
+        <text class="companion-name">灵小禅 · 胜境伴游</text>
+        <text class="companion-status">{{isBusy ? (isStreaming ? '正在为您讲解…' : '正在查阅胜境资料…') : '随时为您答疑解惑'}}</text>
       </view>
     </view>
     <view class="header-actions">
-      <view class="mode-tag {{qaMode === 'stream' ? 'mode-stream' : 'mode-fast'}}" bindtap="toggleQaMode">
-        <text>{{qaMode === 'stream' ? '流式生成' : '快速模式'}}</text>
-      </view>
       <view class="reset-btn" bindtap="initNewSession">
-        <text>重置会话</text>
+        <text class="reset-icon">↺</text>
+        <text>新对话</text>
       </view>
     </view>
   </view>
@@ -52,12 +50,7 @@
             <!-- 回答元信息与操作栏 -->
             <view wx:if="{{item.answer}}" class="answer-actions">
               <view class="answer-meta">
-                <text class="meta-tag {{item.answer.used_llm ? 'tag-llm' : 'tag-doc'}}">
-                  {{item.answer.used_llm ? '大模型增强' : '知识库摘录'}}
-                </text>
-                <text class="meta-time" wx:if="{{item.answer.response_time_ms}}">
-                  {{item.answer.response_time_ms}}ms
-                </text>
+                <text class="meta-tag tag-doc">官方资料核验</text>
               </view>
               <view class="action-btn-group">
                 <button
@@ -66,10 +59,8 @@
                   bindtap="viewEvidence"
                   data-answer="{{item.answer}}"
                 >
-                  <svg class="btn-svg" viewBox="0 0 24 24" width="13" height="13">
-                    <path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                  </svg>
-                  <text>依据</text>
+                  <text class="btn-symbol">📖</text>
+                  <text>出处依据</text>
                 </button>
                 <button
                   class="bubble-btn {{speakingMsgId === item.id ? 'bubble-btn-active' : ''}}"
@@ -78,10 +69,8 @@
                   data-id="{{item.id}}"
                   data-text="{{item.content}}"
                 >
-                  <svg class="btn-svg" viewBox="0 0 24 24" width="13" height="13">
-                    <path fill="currentColor" d="{{speakingMsgId === item.id ? 'M6 6h12v12H6z' : 'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'}}"/>
-                  </svg>
-                  <text>{{speakingMsgId === item.id ? '停止' : '播报'}}</text>
+                  <text class="btn-symbol">{{speakingMsgId === item.id ? '⏹' : '🔊'}}</text>
+                  <text>{{speakingMsgId === item.id ? '停止' : '朗读'}}</text>
                 </button>
                 <button
                   wx:if="{{item.answer.conversation_id && !ratedIds.includes(item.answer.conversation_id)}}"
@@ -90,10 +79,8 @@
                   bindtap="openFeedback"
                   data-id="{{item.answer.conversation_id}}"
                 >
-                  <svg class="btn-svg" viewBox="0 0 24 24" width="13" height="13">
-                    <path fill="currentColor" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                  </svg>
-                  <text>评价</text>
+                  <text class="btn-symbol">⭐</text>
+                  <text>满意度</text>
                 </button>
                 <text wx:elif="{{ratedIds.includes(item.answer.conversation_id)}}" class="rated-text">
                   已评价
@@ -104,7 +91,7 @@
         </view>
       </block>
 
-      <!-- 流式打字中气泡 -->
+      <!-- 流式生成中气泡 -->
       <view wx:if="{{isStreaming}}" id="msg-streaming" class="msg-row msg-assistant">
         <view class="msg-avatar">
           <image src="/assets/images/avatar-default.png" mode="aspectFill" class="avatar-mini-img" />
@@ -115,7 +102,7 @@
         </view>
       </view>
 
-      <!-- 思考中等待提示 -->
+      <!-- 查阅中等待提示 -->
       <view wx:if="{{isBusy && !isStreaming}}" id="msg-thinking" class="msg-row msg-assistant">
         <view class="msg-avatar">
           <image src="/assets/images/avatar-default.png" mode="aspectFill" class="avatar-mini-img" />
@@ -126,7 +113,7 @@
             <text class="dot dot-2"></text>
             <text class="dot dot-3"></text>
           </view>
-          <text class="thinking-text">灵小禅正在多路检索验证中…</text>
+          <text class="thinking-text">灵小禅正在为您查阅景区资料与典故…</text>
         </view>
       </view>
 
@@ -134,16 +121,17 @@
     </view>
   </scroll-view>
 
-  <!-- 底部快捷追问推荐气泡 -->
+  <!-- 底部快捷推荐气泡（宣纸微标签质感） -->
   <view wx:if="{{!isBusy && messages.length <= 2}}" class="suggest-chips-wrap">
     <scroll-view scroll-x class="suggest-scroll" enable-flex="{{true}}">
       <view
-        wx:for="{{['九龙灌浴演出时间', '轮椅无障碍坡道', '灵山大佛门票政策', '梵宫地涌宝塔在哪']}}"
+        wx:for="{{['九龙灌浴演出时间', '带长辈无障碍路线', '灵山大佛抱佛脚须知', '梵宫吉祥颂预约', '景区素斋推荐']}}"
         wx:key="index"
         class="suggest-chip"
         bindtap="onSuggestTap"
         data-text="{{item}}"
       >
+        <text class="chip-seal">✦</text>
         <text>{{item}}</text>
       </view>
     </scroll-view>
@@ -180,7 +168,7 @@
       class="chat-input"
       value="{{inputText}}"
       bindinput="onTextInput"
-      placeholder="{{isRecording ? '正在倾听您的提问…松手发送' : '向灵小禅咨询景点、时间、门票…'}}"
+      placeholder="{{isRecording ? '正在倾听…松开即可发送' : '向小禅咨询景点典故、演出时刻、游玩路线…'}}"
       auto-height
       cursor-spacing="20"
       confirm-type="send"
@@ -200,7 +188,7 @@
   <!-- 评价弹窗 -->
   <view wx:if="{{feedbackModalVisible}}" class="modal-mask" bindtap="closeFeedback">
     <view class="modal-card" catchtap="noop">
-      <view class="modal-title">评价本次回答</view>
+      <view class="modal-title">满意度评价</view>
       <view class="rating-stars">
         <text
           wx:for="{{[1, 2, 3, 4, 5]}}"
@@ -212,7 +200,7 @@
       </view>
       <input
         class="feedback-input"
-        placeholder="写下您的宝贵建议或体验感受（选填）"
+        placeholder="写下您的游园体验或建议（选填）"
         value="{{feedbackComment}}"
         bindinput="onFeedbackCommentInput"
         maxlength="200"
@@ -228,26 +216,25 @@
     </view>
   </view>
 
-  <!-- 附近景点/设施弹窗 -->
+  <!-- 附近景点/便民设施弹窗 -->
   <view wx:if="{{nearbyModalVisible}}" class="modal-mask" bindtap="closeNearbyModal">
     <view class="modal-card modal-large" catchtap="noop">
       <view class="modal-title-row">
-        <text class="modal-title">周边景点与设施</text>
+        <text class="modal-title">周边景点与便民设施</text>
         <view class="modal-close" bindtap="closeNearbyModal">✕</view>
       </view>
-      <view class="modal-notice">{{nearbyNotice}}</view>
+      <view class="modal-notice">{{nearbyNotice || '为您列出附近的景点与便民服务点'}}</view>
       <scroll-view scroll-y style="max-height: 48vh;">
         <view wx:for="{{nearbyList}}" wx:key="index" class="nearby-item">
           <view class="nearby-left">
-            <view class="nearby-name">{{item.name || '设施地点'}}</view>
+            <view class="nearby-name">{{item.name || '服务设施'}}</view>
             <view class="nearby-sub font-numeric">
-              直线距离: {{item.distance_m || 0}} 米 · {{item.coordinate_source || '登记节点'}}
-              <text wx:if="{{item.requires_on_site_verification}}" class="tag-warn">待现场核验</text>
+              距您约 {{item.distance_m || 0}} 米 · 景区服务点
             </view>
           </view>
           <view class="nearby-right">
             <button class="mini-btn-secondary" size="mini" bindtap="navigateLocation" data-item="{{item}}">
-              导航
+              导航前往
             </button>
             <button class="mini-btn-accent" size="mini" bindtap="askAboutSpot" data-name="{{item.name}}">
               咨询
@@ -258,7 +245,7 @@
     </view>
   </view>
 
-  <!-- 证据追溯抽屉 -->
+  <!-- 官方资料出处抽屉 -->
   <evidence-drawer
     visible="{{showEvidenceDrawer}}"
     answer="{{selectedEvidenceAnswer}}"

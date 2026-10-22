@@ -6,7 +6,7 @@
       <view class="hero-top">
         <view>
           <view class="spot-title">{{spot.name}}</view>
-          <view class="spot-area-tag font-numeric">{{spot.area || '灵山胜境风景区'}} · {{spot.id}}</view>
+          <view class="spot-area-tag">{{spot.area || '灵山胜境风景区'}}</view>
         </view>
         <view class="fav-btn {{isFavorite ? 'fav-active' : ''}}" bindtap="toggleFavorite">
           <svg class="fav-svg" viewBox="0 0 24 24" width="16" height="16">
@@ -18,13 +18,10 @@
 
       <view class="tags-row">
         <text class="zen-tag {{spot.mobility.wheelchair_accessible ? 'zen-tag-celadon' : 'zen-tag-gray'}}">
-          {{spot.mobility.wheelchair_accessible ? '无障碍通行' : '含台阶坡道'}}
+          {{spot.mobility.wheelchair_accessible ? '无障碍通行' : '含台阶步道'}}
         </text>
         <text class="zen-tag zen-tag-gold font-numeric" wx:if="{{spot.visit_minutes}}">
-          建议 {{spot.visit_minutes}} 分钟
-        </text>
-        <text class="zen-tag" wx:if="{{spot.confidence === 'verified'}}">
-          已现场核验
+          建议游览 {{spot.visit_minutes}} 分钟
         </text>
       </view>
     </view>
@@ -36,7 +33,7 @@
         <text>开放与门票参考</text>
       </view>
       <view class="info-row">
-        <text class="info-label">开放窗口：</text>
+        <text class="info-label">开放时间：</text>
         <text class="info-val font-numeric">{{spot.opening_windows ? spot.opening_windows[0] : '08:00-17:00'}}</text>
       </view>
       <view class="info-row" wx:if="{{spot.fields.ticket}}">
@@ -44,8 +41,8 @@
         <text class="info-val">{{spot.fields.ticket}}</text>
       </view>
       <view class="info-row">
-        <text class="info-label">数据信源：</text>
-        <text class="info-val text-muted">{{spot.source || '景区官方数字档案'}}</text>
+        <text class="info-label">资料出处：</text>
+        <text class="info-val text-muted">{{spot.source || '灵山胜境官方导览资料'}}</text>
       </view>
     </view>
 
@@ -72,31 +69,31 @@
     <view class="zen-card">
       <view class="zen-card-title">
         <text class="title-accent">◆</text>
-        <text>地理坐标与导航</text>
+        <text>景区位置与步行导航</text>
       </view>
-      <view class="coords-text font-numeric">
-        经纬度：{{spot.lat}}, {{spot.lng}}（GCJ-02 火星坐标系）
+      <view class="coords-text">
+        位置：灵山胜境内 · 步行可达
       </view>
       <view class="coords-note">
-        点击下方按钮直接调起微信原生腾讯地图，获取步行动线与外部导航支持。
+        点击下方按钮可调起地图步行实景导引与外部导航支持。
       </view>
       <button class="btn-primary" style="margin-top: 20rpx;" bindtap="handleNavigate">
-        调起微信地图步行导航
+        前往该景点（实景导航）
       </button>
     </view>
 
     <!-- 底部操作栏 -->
     <view class="detail-bottom-bar">
       <button class="btn-secondary flex-1" bindtap="askAbout">
-        灵小禅深度讲解
+        随身语音讲解
       </button>
       <button class="btn-primary flex-1" bindtap="planRouteWithSpot">
-        加入路线规划
+        加入定制游程
       </button>
     </view>
   </block>
 
   <view wx:elif="{{isLoading}}" class="loading-wrap">
-    <text>正在读取景点数字档案…</text>
+    <text>正在加载景点信息…</text>
   </view>
 </view>

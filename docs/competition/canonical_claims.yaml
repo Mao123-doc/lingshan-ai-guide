@@ -204,7 +204,7 @@ canonical_facts:
     claim: "英雄案例唯一权威时空动线"
     value: "11:00 出发 -> 13:40 梵宫检票口 -> 14:00~14:20 吉祥颂 -> 15:10 电瓶车 -> 16:00 返回正门 (总预算 300 分钟 / 5 小时)"
     metric_type: "hero_case_contract"
-    evidence: "backend/src/services/route-planner.ts; 竞赛汇报与文档材料包/01_汇报PPT与导出版/14页高保真分镜设计稿与排版指南_optimized.md"
+    evidence: "backend/src/services/route-planner.ts; 竞赛汇报与文档材料包/01_汇报PPT与导出版/lingxiaochan10-06.pptx"
     timeline_steps:
       - time: "11:00"
         location: "景区正门/南门"
@@ -244,7 +244,7 @@ frozen_submission_files:
   declaration_tex: "竞赛汇报与文档材料包/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.tex"
   declaration_md: "竞赛汇报与文档材料包/03_申报文档与技术报告/核心创新与项目展示报告(万字申报底稿)_optimized.md"
   declaration_pdf: "竞赛汇报与文档材料包/03_申报文档与技术报告/灵小禅_可信文旅决策智能体_技术报告与论文底稿_optimized.pdf"
-  ppt_storyboard_md: "竞赛汇报与文档材料包/01_汇报PPT与导出版/14页高保真分镜设计稿与排版指南_optimized.md"
+  ppt_storyboard_md: "竞赛汇报与文档材料包/01_汇报PPT与导出版/lingxiaochan10-06.pptx"
   ppt_editable_pptx: "竞赛汇报与文档材料包/01_汇报PPT与导出版/灵小禅_竞赛汇报PPT.pptx"
-  ppt_export_pdf: "竞赛汇报与文档材料包/01_汇报PPT与导出版/灵小禅_竞赛汇报PPT_导出版.pdf"
+  ppt_export_pdf: "竞赛汇报与文档材料包/01_汇报PPT与导出版/lingxiaochan10-06.pptx"
   ppt_script_md: "竞赛汇报与文档材料包/01_汇报PPT与导出版/竞赛汇报PPT制作说明与讲稿.md"

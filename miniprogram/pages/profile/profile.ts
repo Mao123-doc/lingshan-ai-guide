@@ -1,5 +1,5 @@
 /**
- * profile.ts — 设置中心、形象定制与离线缓存管理
+ * profile.ts — 设置中心、导游形象定制与离线导览包管理
  */
 
 import { getApiBaseUrl, setApiBaseUrl, DEFAULT_API_BASE } from '../../utils/request';
@@ -8,10 +8,10 @@ import { storageService } from '../../services/storage-service';
 import { Spot } from '../../types/spot';
 
 const STYLES = [
-  { key: 'zen_red_gold', name: '禅意红金', color: '#c41d7f', desc: '祥符禅韵与灵山法华之美' },
-  { key: 'celadon_elegance', name: '青瓷雅韵', color: '#2e7d5b', desc: '江南水乡青瓷淡雅温润' },
-  { key: 'tang_splendor', name: '盛唐华彩', color: '#b8860b', desc: '盛唐重彩佛国庄严气度' },
-  { key: 'ink_wash', name: '水墨丹青', color: '#455a7b', desc: '太湖山水墨色深远意境' },
+  { key: 'zen_red_gold', name: '禅意红金', color: '#8f202e', desc: '祥符禅韵与灵山胜境之庄严' },
+  { key: 'celadon_elegance', name: '青瓷雅韵', color: '#2d5a4c', desc: '江南太湖水乡之温润淡雅' },
+  { key: 'tang_splendor', name: '盛唐华彩', color: '#b88636', desc: '梵宫圣坛琉璃金碧与盛唐气象' },
+  { key: 'ink_wash', name: '水墨丹青', color: '#44403c', desc: '沉香水墨与江南烟雨意境' },
 ];
 
 Page({
@@ -65,26 +65,26 @@ Page({
       return;
     }
     setApiBaseUrl(url);
-    wx.showToast({ title: 'API地址已保存', icon: 'success' });
+    wx.showToast({ title: '服务地址已保存', icon: 'success' });
     this.testServerConnection();
   },
 
   resetDefaultApiUrl() {
     setApiBaseUrl(DEFAULT_API_BASE);
     this.setData({ apiBaseUrl: DEFAULT_API_BASE });
-    wx.showToast({ title: '已恢复默认地址', icon: 'success' });
+    wx.showToast({ title: '已恢复默认服务地址', icon: 'success' });
     this.testServerConnection();
   },
 
   async testServerConnection() {
-    this.setData({ isTestingServer: true, serverPingStatus: '正在探测…' });
+    this.setData({ isTestingServer: true, serverPingStatus: '正在连接…' });
     try {
       const res = await visitorApi.getServerStatus();
       this.setData({
-        serverPingStatus: `连接正常 (知识库: ${res.knowledge_chunks} 切片, LLM: ${res.llm_available ? res.model : '离线'})`,
+        serverPingStatus: `服务连接正常 · 景区知识库与路线就绪 (${res.knowledge_chunks || 0}条资料)`,
         isTestingServer: false,
       });
-      wx.showToast({ title: '连接后端成功', icon: 'success' });
+      wx.showToast({ title: '服务连接成功', icon: 'success' });
     } catch (e: any) {
       this.setData({
         serverPingStatus: `连接失败: ${e.error || '无法连通'}`,
@@ -95,7 +95,7 @@ Page({
   },
 
   async cacheAllData() {
-    wx.showLoading({ title: '正在缓存全景区路网…' });
+    wx.showLoading({ title: '正在下载离线导览包…' });
     try {
       const graph = await visitorApi.getRouteGraph();
       if (graph && graph.spots) {
@@ -106,18 +106,18 @@ Page({
           cachedSpotsCount: graph.spots.length,
         });
         wx.hideLoading();
-        wx.showToast({ title: '路网离线缓存成功', icon: 'success' });
+        wx.showToast({ title: '离线导览包已就绪', icon: 'success' });
       }
     } catch (e: any) {
       wx.hideLoading();
-      wx.showToast({ title: e.error || '缓存失败', icon: 'none' });
+      wx.showToast({ title: e.error || '下载失败', icon: 'none' });
     }
   },
 
   clearCache() {
     wx.showModal({
       title: '清空确认',
-      content: '确定清空已缓存的离线路网与历史规划路线吗？',
+      content: '确定清空已下载的离线导览包与本地路线记录吗？',
       success: (res) => {
         if (res.confirm) {
           storageService.clearSavedRoute();
@@ -127,7 +127,7 @@ Page({
             cachedGraphInfo: null,
             cachedSpotsCount: 0,
           });
-          wx.showToast({ title: '缓存已清空', icon: 'success' });
+          wx.showToast({ title: '离线缓存已清空', icon: 'success' });
         }
       },
     });

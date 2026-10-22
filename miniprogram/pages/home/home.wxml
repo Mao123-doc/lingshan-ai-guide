@@ -1,29 +1,29 @@
 <!-- pages/home/home.wxml -->
 <view class="container home-container">
-  <!-- 网络状态异常与离线提示 -->
+  <!-- 离线或服务状态提示 -->
   <view wx:if="{{isOffline}}" class="alert-box alert-warning">
-    <text class="alert-symbol">⚠️</text>
-    <text class="alert-content">当前处于离线状态。已自动激活本地离线数据，您仍可进行 23 景点导览与纯本地确定性应急路线规划。</text>
+    <text class="alert-symbol">🍃</text>
+    <text class="alert-content">当前处于离线离网状态。已为您启用本地离线导览，您仍可浏览 23 处核心景点与生成备用游览路线。</text>
   </view>
   <view wx:elif="{{!serverConnected && !isLoading}}" class="alert-box alert-info">
     <text class="alert-symbol">ℹ️</text>
-    <text class="alert-content">本地服务暂未连接（默认 http://127.0.0.1:8010）。请确认服务已启动，或在【设置】中配置网络地址。</text>
+    <text class="alert-content">正在连接景区智慧导览服务…您仍可使用本地离线导览，或在【设置】中配置服务地址。</text>
   </view>
 
-  <!-- 顶部禅意东方 Hero 展区 -->
+  <!-- 顶部东方禅意 Hero 展区 -->
   <view class="hero-card">
     <view class="hero-bg-pattern"></view>
     <view class="hero-content">
       <view class="hero-text-wrap">
         <view class="hero-header-row">
-          <view class="hero-title">灵小禅 · 灵山胜境</view>
+          <view class="hero-title">灵山胜境 · 胜境导览</view>
           <view class="status-pill {{serverConnected ? 'status-online' : 'status-offline'}}">
             <view class="status-pulse-dot"></view>
-            <text class="status-text">{{serverConnected ? llmName : '离线应急'}}</text>
+            <text class="status-text">{{serviceStatusText}}</text>
           </view>
         </view>
-        <view class="hero-tagline">可信文旅决策智能体</view>
-        <view class="hero-desc">大模型做语义软理解，运筹引擎做时空硬规划。回答皆有实据，动线真实可达。</view>
+        <view class="hero-tagline">静心祈福 · 漫游胜境</view>
+        <view class="hero-desc">灵小禅伴您同行。为您量身定制省力路线、提醒演艺时刻、讲解殿堂历史与文化典故。</view>
       </view>
       <view class="hero-avatar-wrap">
         <digital-human
@@ -37,95 +37,135 @@
     </view>
   </view>
 
-  <!-- 核心入口矩阵 -->
+  <!-- 今日核心服务入口 -->
   <view class="modules-grid">
-    <!-- 智能问答卡片 -->
-    <view class="module-card card-qa" bindtap="goToChat">
+    <!-- 专属路线定制卡片 -->
+    <view class="module-card card-route" bindtap="goToRoute">
       <view class="module-card-top">
-        <view class="module-icon-badge badge-qa">
-          <svg class="svg-icon" viewBox="0 0 24 24" width="22" height="22">
-            <path fill="currentColor" d="M12 3c-5.5 0-10 3.6-10 8 0 2.2 1.1 4.2 3 5.7-.3 1.3-1.1 2.8-2 3.8 1.8.1 3.8-.5 5.2-1.5.6.1 1.2.2 1.8.2 5.5 0 10-3.6 10-8s-4.5-8-10-8zm-3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
-          </svg>
+        <view class="module-badge badge-route">
+          <text class="badge-icon">⛩️</text>
+          <text class="badge-text">量身定制</text>
         </view>
-        <view class="module-action-pill">进入对话</view>
+        <view class="module-action-pill pill-route">开始定制 ›</view>
       </view>
       <view class="module-info">
-        <view class="module-title">AI 智能问答</view>
-        <view class="module-desc">官方权威知识库与 RAG 三路融合检索，支持来源依据溯源与毫秒级时延审计。</view>
+        <view class="module-title">专属游览路线定制</view>
+        <view class="module-desc">根据您的游玩时长、老人长辈随行、无障碍平缓通道与必看演出，量身生成顺畅舒适动线。</view>
       </view>
-      <view class="module-tags">
-        <text class="sub-tag">三路并行检索</text>
-        <text class="sub-tag">证据抽屉</text>
-        <text class="sub-tag">流式打字</text>
+      <view class="service-promise-row">
+        <text class="promise-item">平缓无障碍</text>
+        <text class="promise-dot">·</text>
+        <text class="promise-item">演艺时间对齐</text>
+        <text class="promise-dot">·</text>
+        <text class="promise-item">行程智能调整</text>
       </view>
     </view>
 
-    <!-- 路线规划卡片 -->
-    <view class="module-card card-route" bindtap="goToRoute">
+    <!-- 随身导游答疑卡片 -->
+    <view class="module-card card-qa" bindtap="goToChat">
       <view class="module-card-top">
-        <view class="module-icon-badge badge-route">
-          <svg class="svg-icon" viewBox="0 0 24 24" width="22" height="22">
-            <path fill="currentColor" d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5z"/>
-          </svg>
+        <view class="module-badge badge-qa">
+          <text class="badge-icon">🪷</text>
+          <text class="badge-text">随身伴游</text>
         </view>
-        <view class="module-action-pill pill-route">推演路线</view>
+        <view class="module-action-pill pill-qa">向小禅提问 ›</view>
       </view>
       <view class="module-info">
-        <view class="module-title">时空多约束规划</view>
-        <view class="module-desc">23景点30道路真实路网，严密运筹体力坡度、轮椅无障碍、演出排期与离园倒排。</view>
+        <view class="module-title">随身导游 · 胜境答疑</view>
+        <view class="module-desc">大佛抱佛脚礼佛须知、灵山梵宫建筑艺术、票务优待政策与景区便民服务，随时为您解惑。</view>
       </view>
-      <view class="module-tags">
-        <text class="sub-tag sub-tag-teal">无障碍过滤</text>
-        <text class="sub-tag sub-tag-teal">排队缓冲</text>
-        <text class="sub-tag sub-tag-teal">超时动态纠偏</text>
+      <view class="service-promise-row">
+        <text class="promise-item">深度文化讲解</text>
+        <text class="promise-dot">·</text>
+        <text class="promise-item">官方资料出处</text>
+        <text class="promise-dot">·</text>
+        <text class="promise-item">语音随身播报</text>
       </view>
     </view>
   </view>
 
-  <!-- 辅助功能行 -->
+  <!-- 今日精彩演艺排期 -->
+  <view class="zen-card performances-card">
+    <view class="section-title-row">
+      <view class="section-title-left">
+        <text class="title-seal">演</text>
+        <view>
+          <view class="section-main-title">今日精彩演艺</view>
+          <view class="section-sub-title">胜境标志性演出时刻表</view>
+        </view>
+      </view>
+      <view class="section-more-link" bindtap="goToChat" data-question="请介绍灵山胜境今日演出的具体时间与观赏建议">
+        咨询演出 ›
+      </view>
+    </view>
+
+    <view class="perf-list">
+      <view
+        wx:for="{{performances}}"
+        wx:key="id"
+        class="perf-item"
+        bindtap="onPerformanceTap"
+        data-name="{{item.name}}"
+      >
+        <view class="perf-left">
+          <view class="perf-name-row">
+            <text class="perf-name">{{item.name}}</text>
+            <text class="perf-tag">{{item.tag}}</text>
+          </view>
+          <view class="perf-desc">{{item.desc}}</view>
+          <view class="perf-loc">📍 {{item.location}}</view>
+        </view>
+        <view class="perf-right">
+          <view class="perf-times font-numeric">{{item.times}}</view>
+          <view class="perf-action-btn">查看详情</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 游园便民快捷服务行 -->
   <view class="sub-modules-row">
     <view class="sub-card" bindtap="goToSpots">
       <view class="sub-icon-wrap">
-        <svg viewBox="0 0 24 24" width="20" height="20">
+        <svg viewBox="0 0 24 24" width="22" height="22">
           <path fill="currentColor" d="M12 3L2 9v2h20V9L12 3zM4 13v6H2v2h20v-2h-2v-6H4zm3 0h2v6H7v-6zm4 0h2v6h-2v-6zm4 0h2v6h-2v-6z"/>
         </svg>
       </view>
-      <view class="sub-text">
-        <view class="sub-title">景点导览</view>
-        <view class="sub-desc">23景点数字档案</view>
-      </view>
+      <view class="sub-title">景点导览</view>
+      <view class="sub-desc">23处胜境景观</view>
     </view>
 
     <view class="sub-card" bindtap="goToChat">
       <view class="sub-icon-wrap">
-        <svg viewBox="0 0 24 24" width="20" height="20">
+        <svg viewBox="0 0 24 24" width="22" height="22">
           <path fill="currentColor" d="M12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4zm7-4.8h-3.1l-1.8-2h-4.2l-1.8 2H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-7 13c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/>
         </svg>
       </view>
-      <view class="sub-text">
-        <view class="sub-title">拍照识景</view>
-        <view class="sub-desc">智能识别殿堂造像</view>
-      </view>
+      <view class="sub-title">拍照识景</view>
+      <view class="sub-desc">古迹造像随手拍</view>
     </view>
 
     <view class="sub-card" bindtap="goToProfile">
       <view class="sub-icon-wrap">
-        <svg viewBox="0 0 24 24" width="20" height="20">
+        <svg viewBox="0 0 24 24" width="22" height="22">
           <path fill="currentColor" d="M19.1 12.9c.1-.3.1-.6.1-.9 0-.3 0-.6-.1-.9l2.1-1.6c.2-.2.2-.4.1-.7l-2-3.5c-.1-.2-.4-.3-.6-.2l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c0-.2-.3-.5-.6-.5h-4c-.3 0-.5.3-.6.5l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1c-.2-.1-.5 0-.6.2l-2 3.5c-.1.2-.1.5.1.7l2.1 1.6c-.1.3-.1.6-.1.9 0 .3 0 .6.1.9l-2.1 1.6c-.2.2-.2.4-.1.7l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.3.5.6.5h4c.3 0 .5-.3.6-.5l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.7l-2.1-1.6zM12 15.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
         </svg>
       </view>
-      <view class="sub-text">
-        <view class="sub-title">设置与离线</view>
-        <view class="sub-desc">路网缓存与形象</view>
-      </view>
+      <view class="sub-title">游园设置</view>
+      <view class="sub-desc">离线包与形象</view>
     </view>
   </view>
 
-  <!-- 常见问题快捷入口 -->
+  <!-- 游客常问快捷入口 -->
   <view class="zen-card questions-card">
-    <view class="zen-card-title">
-      <text class="title-accent">◆</text>
-      <text>游客高频咨询</text>
+    <view class="section-title-row">
+      <view class="section-title-left">
+        <text class="title-seal">问</text>
+        <view>
+          <view class="section-main-title">游客常见咨询</view>
+          <view class="section-sub-title">游园行前必看实用指南</view>
+        </view>
+      </view>
     </view>
     <view class="questions-list">
       <view
@@ -135,20 +175,16 @@
         bindtap="goToChat"
         data-question="{{item}}"
       >
-        <view class="q-marker"></view>
+        <view class="q-marker">🪷</view>
         <text class="q-text">{{item}}</text>
-        <view class="q-arrow">
-          <svg viewBox="0 0 24 24" width="14" height="14">
-            <path fill="currentColor" d="M8.6 16.6l4.6-4.6-4.6-4.6L10 6l6 6-6 6z"/>
-          </svg>
-        </view>
+        <view class="q-arrow">›</view>
       </view>
     </view>
   </view>
 
-  <!-- 底部权威提示与数据底座 -->
+  <!-- 底部景区官方信息 -->
   <view class="footer-note">
-    <view class="footer-badge">灵山胜境数字孪生路网 · 23 景点 · 30 拓扑边</view>
-    <view class="footer-sub">第八届全球校园人工智能算法精英大赛（AIC）参赛作品</view>
+    <view class="footer-badge">无锡灵山胜境 · 官方智慧导览服务</view>
+    <view class="footer-sub">灵山大佛 · 灵山梵宫 · 九龙灌浴 · 祥符禅寺 · 五印坛城</view>
   </view>
 </view>

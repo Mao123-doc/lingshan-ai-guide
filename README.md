@@ -15,7 +15,7 @@
 
 ## 文件与材料入口
 
-[项目文件导航](docs/项目文件导航.md) · [微信小程序指南](docs/wechat-miniprogram-guide.md) · [竞赛材料](竞赛汇报与文档材料包/README.md) · [冻结发布包](release/competition_final/README.md) · [脚本入口](scripts/README.md)
+[项目文件导航](docs/项目文件导航.md) · [微信小程序指南](docs/wechat-miniprogram-guide.md) · [竞赛材料](竞赛汇报与文档材料包/README.md) · [当前参赛基准](竞赛汇报与文档材料包/01_汇报PPT与导出版/lingxiaochan10-06.pptx) · [脚本入口](scripts/README.md)
 
 ## 项目定位
 
@@ -38,7 +38,7 @@
 - 💬 **简洁游客端**：首页保留问答与路线两个入口；问答页展示来源片段、检索相关度和响应耗时。
 - 🛠️ **知识库维护**：JWT 登录、知识文档上传/删除、索引重建和结构化检索检查。
 
-2026-10-15 按指定 `lingxiaochan10-06.pptx` 与《项目方案2.0.pdf》恢复参赛原型。主服务与向量服务仍为两个服务，语音使用浏览器能力，视觉识别需另配提供方；当前验收与已知差异见[功能对齐台账](docs/competition/feature-contract.md)。旧 release/competition_final 与旧录屏保持历史版本，不代表本次重新验证。
+2026-10-15 按指定 `lingxiaochan10-06.pptx` 与《项目方案2.0.pdf》恢复参赛原型。主服务与向量服务仍为两个服务，语音使用浏览器能力，视觉识别需另配提供方；当前验收与已知差异见[功能对齐台账](docs/competition/feature-contract.md)。历史发布副本不作为当前启动入口。
 
 ## 系统架构
 
@@ -191,7 +191,7 @@ npm --prefix frontend run dev
 - [评测证据报告](docs/competition/evaluation-report.md)
 - [RAG 消融报告](docs/ablation_report.md)
 - [项目限制与下一阶段](docs/competition/limitations.md)
-- [最终交付包](release/competition_final/README.md)
+- [当前参赛基准](竞赛汇报与文档材料包/README.md)
 
 当前冻结证据包括：
 
@@ -238,7 +238,7 @@ lingshan-ai-guide/
 │   └── route/                      # 23 个节点、30 条道路边、设施与演出数据
 ├── docs/                           # 架构、评测、竞赛与限制说明
 ├── evaluation/                     # 版本化评测结果与证据清单
-├── release/competition_final/      # 当前竞赛交付包
+├── 竞赛汇报与文档材料包/        # 当前参赛材料与最新基准文件
 ├── scripts/                        # 启停、评测、审计和交付脚本
 └── .github/workflows/ci.yml        # CI：构建、测试、质量门禁与浏览器旅程
 ```
@@ -267,5 +267,5 @@ npm run build
 ## 项目链接
 
 - GitHub：[Mao123-doc/lingshan-ai-guide](https://github.com/OrdoAbChao7/lingshan-ai-guide-ablation)
-- 当前交付目录：[release/competition_final](release/competition_final/)
+- 当前参赛基准：[`竞赛汇报与文档材料包/01_汇报PPT与导出版/lingxiaochan10-06.pptx`](竞赛汇报与文档材料包/01_汇报PPT与导出版/lingxiaochan10-06.pptx) 与 [`竞赛汇报与文档材料包/03_申报文档与技术报告/项目方案2.0.pdf`](竞赛汇报与文档材料包/03_申报文档与技术报告/项目方案2.0.pdf)
 - 竞赛材料入口：[竞赛汇报与文档材料包](竞赛汇报与文档材料包/)
