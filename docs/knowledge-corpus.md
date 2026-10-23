@@ -14,4 +14,4 @@
 
 如需更换语料：替换 `knowledge_guide.txt` / `knowledge_dataset.txt` 后，
 在管理后台「知识库」页面点击 **重建索引**，或调用
-`POST /api/v1/admin/knowledge/refresh-index`。
+`POST /api/v1/admin/knowledge/reindex`。

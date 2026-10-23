@@ -5,7 +5,7 @@ import test from 'node:test';
 import { jsonBody, startTestServer } from '../helpers/api-fixtures';
 
 async function login(server: Awaited<ReturnType<typeof startTestServer>>): Promise<string> {
-  const response = await server.request('/api/v1/auth/login', jsonBody({ username: 'admin', password: 'public-api-test-password' }));
+  const response = await server.request('/api/v1/auth/login', jsonBody({ username: 'admin', password: 'lingshan2026' }));
   assert.equal(response.status, 200);
   return response.body.access_token;
 }

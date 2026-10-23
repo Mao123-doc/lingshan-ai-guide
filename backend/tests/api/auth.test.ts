@@ -8,7 +8,7 @@ test('auth rejects invalid credentials and protects admin routes', async () => {
     const badLogin = await server.request('/api/v1/auth/login', jsonBody({ username: 'admin', password: 'wrong' }));
     assert.equal(badLogin.status, 401);
 
-    const unauthenticated = await server.request('/api/v1/admin/knowledge/documents');
+    const unauthenticated = await server.request('/api/v1/admin/dashboard/summary');
     assert.equal(unauthenticated.status, 401);
   } finally {
     await server.close();
@@ -18,7 +18,7 @@ test('auth rejects invalid credentials and protects admin routes', async () => {
 test('auth issues and refreshes an admin token', async () => {
   const server = await startTestServer();
   try {
-    const login = await server.request('/api/v1/auth/login', jsonBody({ username: 'admin', password: 'public-api-test-password' }));
+    const login = await server.request('/api/v1/auth/login', jsonBody({ username: 'admin', password: 'lingshan2026' }));
     assert.equal(login.status, 200);
     assert.equal(login.body.role, 'admin');
     assert.equal(typeof login.body.access_token, 'string');
@@ -27,10 +27,10 @@ test('auth issues and refreshes an admin token', async () => {
     assert.equal(refresh.status, 200);
     assert.equal(typeof refresh.body.access_token, 'string');
 
-    const documents = await server.request('/api/v1/admin/knowledge/documents', {
+    const dashboard = await server.request('/api/v1/admin/dashboard/summary', {
       headers: { Authorization: `Bearer ${login.body.access_token}` },
     });
-    assert.equal(documents.status, 200);
+    assert.equal(dashboard.status, 200);
   } finally {
     await server.close();
   }

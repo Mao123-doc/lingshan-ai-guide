@@ -3,16 +3,13 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { resolveDataPath } from '../../config/paths';
 
 const authRouter = Router();
-const SECRET = process.env.SECRET_KEY || crypto.randomBytes(48).toString('hex');
+const SECRET = process.env.SECRET_KEY || 'ling_shan_default_secret';
 
 // Password hash storage
-const DEFAULT_ADMIN = {
-  username: process.env.ADMIN_USERNAME || 'admin',
-  password: process.env.ADMIN_PASSWORD || crypto.randomBytes(32).toString('hex'),
-};
+const ADMIN_CONFIG_FILE = path.resolve(__dirname, '../../../../data/admin_config.json');
+const DEFAULT_ADMIN = { username: 'admin', password: 'lingshan2026' };
 
 function hashPassword(password: string, salt?: string): { hash: string; salt: string } {
   const s = salt || crypto.randomBytes(16).toString('hex');
@@ -21,7 +18,6 @@ function hashPassword(password: string, salt?: string): { hash: string; salt: st
 }
 
 function getAdminCredentials(): { username: string; hash: string; salt: string } {
-  const ADMIN_CONFIG_FILE = resolveDataPath('admin_config.json');
   try {
     if (fs.existsSync(ADMIN_CONFIG_FILE)) {
       const raw = fs.readFileSync(ADMIN_CONFIG_FILE, 'utf-8');
@@ -48,14 +44,6 @@ function verifyPassword(password: string): boolean {
 }
 
 // JWT verification middleware
-export function isAdminToken(token: unknown): boolean {
-  if (typeof token !== 'string') return false;
-  try {
-    const decoded = jwt.verify(token, SECRET);
-    return typeof decoded !== 'string' && decoded.role === 'admin';
-  } catch { return false; }
-}
-
 export function verifyToken(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

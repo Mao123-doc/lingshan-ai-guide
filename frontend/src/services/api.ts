@@ -1,4 +1,3 @@
-import type { RouteGraph } from '../../../backend/src/services/route/route-types';
 import axios from 'axios';
 
 type JsonObject = Record<string, unknown>;
@@ -66,11 +65,6 @@ export interface SceneExtractionMetadata {
 }
 
 export interface RouteStep {
-  purpose?: 'visit' | 'performance' | 'return';
-  distanceMeters?: number;
-  pathEvidence?: Array<{ from: string; to: string; distance_m: number; walk_minutes: number; source: string; confidence: string; accessible: boolean }>;
-  reasonCode?: string;
-  pathSpotIds?: string[];
   start: string;
   end: string;
   spotId: string;
@@ -99,9 +93,6 @@ export type Mobility = 'normal' | 'limited' | 'wheelchair' | 'unknown';
 export type Pace = 'slow' | 'normal' | 'fast';
 
 export interface SceneStateInput {
-  returnToExit?: boolean;
-  exitSpotId?: string;
-  performanceBufferMinutes?: number;
   currentLocation?: string;
   currentTime?: string;
   remainingMinutes?: number;
@@ -140,12 +131,11 @@ export interface RoutePlanResponse {
   outcome?: RouteOutcome;
   feasibility?: boolean;
   clarification?: string;
-  scene_state?: SceneStateInput & {
+  scene_state?: {
     missingCriticalFields?: string[];
     [key: string]: unknown;
   };
   route?: {
-    distanceMeters?: number;
     steps?: RouteStep[];
     totalMinutes?: number;
     walkingMinutes?: number;
@@ -170,7 +160,6 @@ export interface RoutePlanResponse {
 
 // API methods
 export const visitorAPI = {
-  routeGraph: () => api.get<RouteGraph>('/visitor/route/graph'),
   initSession: () => api.post('/visitor/session/init'),
   askQuestion: (query: string, sessionId: string) =>
     api.post('/visitor/qa', { query, session_id: sessionId }),
@@ -190,6 +179,8 @@ export const visitorAPI = {
   getHotQuestions: () => api.get('/visitor/hot-questions'),
   recognizeImage: (imageBase64: string) =>
     api.post('/visitor/vision/recognize', { image_base64: imageBase64 }),
+  textToSpeech: (text: string) =>
+    api.post('/visitor/tts', { text }),
   getStatus: () => api.get('/visitor/status'),
 };
 
@@ -211,7 +202,6 @@ export const adminAPI = {
   },
   getDocuments: () => api.get('/admin/knowledge/documents'),
   deleteDocument: (id: string) => api.delete(`/admin/knowledge/documents/${id}`),
-  testKnowledge: (query: string) => api.get('/admin/knowledge/test-qa', { params: { query } }),
   refreshIndex: () => api.post('/admin/knowledge/refresh-index'),
   getKnowledgeStats: () => api.get('/admin/knowledge/stats'),
   analyzeSentiment: (text: string) =>
@@ -225,13 +215,16 @@ export const adminAPI = {
   getCategoryDistribution: () =>
     api.get('/admin/category-distribution'),
   exportConversations: async (params: QueryParams) => {
+    const token = localStorage.getItem('admin_token');
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) query.set(key, String(value));
     });
     const queryStr = query.toString();
-    const res = await api.get(`/admin/conversations/export?${queryStr}`, { responseType: 'blob' });
-    const blob = res.data as Blob;
+    const res = await fetch(`/api/v1/admin/conversations/export?${queryStr}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

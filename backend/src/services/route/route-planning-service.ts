@@ -1,6 +1,5 @@
 import { extractSceneState, extractSceneStateWithLLM, type SceneExtractionResult } from '../scene/scene-extractor';
 import {
-  hasExplicitCurrentTime,
   normalizeSceneStateInput,
   SceneStateSchema,
   type SceneState,
@@ -143,7 +142,6 @@ function clarificationFor(fields: string[]): string | undefined {
 
 function inputEffects(state: SceneState, advisory?: RoutePlanningRequest['advisory_profile']): InputEffect[] {
   const effects: InputEffect[] = [
-    { field: 'returnToExit', kind: 'hard_constraint', applied: state.returnToExit === true, summary: '完整预算包含游览、演出结束和沿登记路网返回指定出口的时间。' },
     { field: 'currentLocation', kind: 'hard_constraint', applied: Boolean(state.currentLocation), summary: '已将当前位置作为路线真实起点。' },
     { field: 'currentTime', kind: 'hard_constraint', applied: Boolean(state.currentTime), summary: '已将开始时间作为演出时间窗和路线时间轴基准。' },
     { field: 'remainingMinutes', kind: 'hard_constraint', applied: state.remainingMinutes !== undefined, summary: '已将可游览时长作为完整路线时间预算。' },
@@ -162,7 +160,6 @@ function routeRationale(state: SceneState, route: RoutePlanResult, preferences: 
   if (state.mobility === 'limited' || state.mobility === 'wheelchair') rationale.push('可达性约束优先，已过滤不适合当前行动能力的道路和景点。');
   if (state.mustVisitSpotIds.length > 0) rationale.push('必去景点优先于软偏好排序。');
   if (state.preferredPerformanceIds.length > 0) rationale.push('演出时间窗参与了路线排序和等待时间计算。');
-  if (state.returnToExit && state.preferredPerformanceIds.length > 0) rationale.push(`演出需提前${state.performanceBufferMinutes ?? 15}分钟到场；该规划缓冲计入等待一次，非现场停检时刻承诺。`);
   if (preferences.interests.length > 0) rationale.push(`${preferences.interests.join('、')}兴趣共同参与评分。`);
   if (route.steps.length > 0) rationale.push('最终路线按时间预算、步行成本和稳定景点 ID 顺序确定。');
   if (rationale.length === 0) rationale.push('当前路线由可达性、开放时间和剩余时间共同决定。');
@@ -204,9 +201,6 @@ export async function planRouteRequest(
     ...(extraction?.state || {}),
     ...(explicitState || {}),
   };
-  if (merged.returnToExit && request.query && explicitState?.currentTime === undefined && !hasExplicitCurrentTime(request.query)) {
-    merged.currentTime = undefined;
-  }
   const sceneState = SceneStateSchema.parse({
     ...merged,
     missingCriticalFields: missingCriticalFields(merged),
@@ -271,9 +265,9 @@ export async function planRouteRequest(
     route.outcome = 'infeasible';
     route.violations = validation.violations;
   }
-  const evidence = [...new Set(route.steps.flatMap(step => step.pathSpotIds || [step.spotId]))].map(id => {
-    const spot = graph.spots.find(item => item.id === id);
-    return { spot_id: id, name: spot?.name, source: spot?.source, confidence: spot?.confidence };
+  const evidence = route.steps.map(step => {
+    const spot = graph.spots.find(item => item.id === step.spotId);
+    return { spot_id: step.spotId, name: spot?.name, source: spot?.source, confidence: spot?.confidence };
   });
   const consumerAdvice = request.advisory_profile?.budget
     ? [`${request.advisory_profile.budget}预算只用于消费建议，不改变本次物理路线。`]

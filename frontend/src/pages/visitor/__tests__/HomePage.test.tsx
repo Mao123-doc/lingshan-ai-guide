@@ -33,9 +33,35 @@ describe('HomePage critical navigation and interactions', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/qa?q=%E7%81%B5%E5%B1%B1%E5%A4%A7%E4%BD%9B%E6%9C%89%E5%A4%9A%E9%AB%98%EF%BC%9F');
   });
 
-  it('exposes only the current core modules', () => {
-    render(<MemoryRouter><HomePage /></MemoryRouter>);
-    expect(screen.getByRole('button', { name: '规划路线，点击进入' })).toBeInTheDocument();
-    expect(screen.queryByText(/数字人|附近景点|多模态/)).not.toBeInTheDocument();
+  it('renders sticky nav and navigates to /qa when cta button is clicked', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <HomePage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    const stickyNav = screen.getByTestId('sticky-nav');
+    expect(stickyNav).toBeInTheDocument();
+
+    const ctaBtn = screen.getByRole('button', { name: '即刻与数字人对话' });
+    fireEvent.click(ctaBtn);
+    expect(screen.getByTestId('location')).toHaveTextContent('/qa');
+  });
+
+  it('renders floating digital human companion and triggers navigation on click', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <HomePage />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    const dhWidget = screen.getByTestId('dh-floating-widget');
+    expect(dhWidget).toBeInTheDocument();
+
+    const dhTriggerBtn = screen.getByRole('button', { name: '召唤 AI 数字人导游' });
+    fireEvent.click(dhTriggerBtn);
+    expect(screen.getByTestId('location')).toHaveTextContent('/qa');
   });
 });

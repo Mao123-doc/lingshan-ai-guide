@@ -18,7 +18,6 @@ export async function mockVisitorApis(page: Page) {
   await page.route('**/api/v1/visitor/**', async route => {
     const request = route.request();
     const url = new URL(request.url());
-    if (url.pathname.endsWith('/route/graph')) return route.fulfill({ json: { spots: [{ id: 'south_gate', name: '景区南门', lat: 31.42, lng: 120.09, visit_minutes: 0, mobility: {wheelchair_accessible: true}, opening_windows: ['00:00-24:00'], source: 'test', confidence: 'estimated' }], edges: [], performances: [], facilities: [] } });
     if (url.pathname.endsWith('/dh-config')) {
       return route.fulfill({ json: { style_preset: 'zen_red_gold', voice_id: 'test-voice' } });
     }
@@ -26,9 +25,11 @@ export async function mockVisitorApis(page: Page) {
       return route.fulfill({ json: { session_id: 'browser-session', welcome_message: '欢迎来到灵山胜境。' } });
     }
     if (url.pathname.endsWith('/qa')) {
-      return route.fulfill({ json: { answer: '灵山大佛高88米', used_llm: false, response_time_ms: 15,
-        evaluation_trace: { retrievedDocuments: [{ id: 'guide-1', text: '灵山大佛高88米。', source: 'knowledge_guide.txt', score: 0.8 }] },
-      } });
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        body: 'data: {"type":"chunk","content":"灵山大佛高88米"}\ndata: {"type":"done","emotion":"explain"}\n\n',
+      });
     }
     if (url.pathname.endsWith('/route/plan')) {
       const body = request.postDataJSON();
@@ -38,7 +39,7 @@ export async function mockVisitorApis(page: Page) {
         feasibility: true,
         route: { steps: [{ spotId: 'LS-011', start: '10:00', end: '11:00', arrive: '10:10', walkMinutes: 10, visitMinutes: 50 }], totalMinutes: 60, walkingMinutes: 10, visitingMinutes: 50 },
         scene_state: { missingCriticalFields: [], hardConstraints: [] },
-        evidence: [{ spot_id: 'LS-011', name: '灵山大佛', confidence: 'estimated' }],
+        evidence: [{ name: '灵山大佛', confidence: 'high' }],
       } });
     }
     if (url.pathname.endsWith('/feedback')) return route.fulfill({ json: { status: 'ok' } });
@@ -90,7 +91,7 @@ export async function loginAsAdmin(page: Page) {
   await mockAdminApis(page);
   await page.goto('/admin/login');
   await page.getByPlaceholder('用户名').fill('admin');
-  await page.getByPlaceholder('密码').fill('public-browser-test-password');
+  await page.getByPlaceholder('密码').fill('lingshan2026');
   await page.getByRole('button', { name: /登.*录/ }).click();
-  await expect(page).toHaveURL(/\/admin\/knowledge/);
+  await expect(page).toHaveURL(/\/admin\/dashboard/);
 }

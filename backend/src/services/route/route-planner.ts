@@ -1,5 +1,5 @@
 import type { SceneState } from '../scene/scene-state';
-import type { RouteGraph, RouteSpot } from './route-types';
+import type { RouteGraph, RouteSpot } from './route-contract';
 import { validateRoute, type RouteOutcome, type RoutePlan, type RouteStep, type RouteViolation } from './route-validator';
 import { findPath } from './pathfinding';
 import { getVisitMinutes, normalizeRoutePreferences, preferenceScore } from './route-preferences';
@@ -32,13 +32,13 @@ function openAt(spot: RouteSpot, time: number): boolean {
   });
 }
 
-function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string, earliestArrival: number): { id: string; name: string; time?: number; durationMinutes: number } | undefined {
+function requestedPerformance(scene: SceneState, graph: RouteGraph, spotId: string): { id: string; name: string; time?: number; durationMinutes: number } | undefined {
   const performance = graph.performances.find(item => item.location_id === spotId && scene.preferredPerformanceIds.includes(item.id));
   if (!performance) return undefined;
   const requested = scene.preferredPerformanceTimes?.[performance.id];
   if (requested) return { id: performance.id, name: performance.name, time: toMinutes(requested), durationMinutes: performance.duration_minutes };
-  const checkin = scene.returnToExit ? scene.performanceBufferMinutes ?? 15 : 0;
-  const next = performance.start_times.map(toMinutes).sort((a,b) => a-b).find(time => time >= earliestArrival + checkin);
+  const current = scene.currentTime ? toMinutes(scene.currentTime) : 0;
+  const next = performance.start_times.map(toMinutes).find(time => time >= current);
   return { id: performance.id, name: performance.name, time: next, durationMinutes: performance.duration_minutes };
 }
 
@@ -112,7 +112,7 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
   };
   let beam = [initial];
   const allStates: SearchState[] = [initial];
-  const candidates = graph.spots.filter(spot => (spot.id !== scene.currentLocation || scene.preferredPerformanceIds.some(id => graph.performances.some(p => p.id === id && p.location_id === spot.id))) && (!scene.returnToExit || spot.id !== (scene.exitSpotId || 'south_gate')));
+  const candidates = graph.spots.filter(spot => spot.id !== scene.currentLocation);
   const routeMaxStops = scene.mobility === 'limited' || scene.mobility === 'wheelchair'
     ? Math.min(maxStops, 5)
     : maxStops;
@@ -127,13 +127,13 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
         if ((scene.mobility === 'limited' || scene.mobility === 'wheelchair') && !spot.mobility.wheelchair_accessible) continue;
         const arrive = state.time + path.walkMinutes;
         if (!openAt(spot, arrive)) continue;
-        const preference = allowPerformancePreferences ? requestedPerformance(scene, graph, spot.id, arrive) : undefined;
+        const preference = allowPerformancePreferences ? requestedPerformance(scene, graph, spot.id) : undefined;
         let stepStart = arrive;
         let performanceId: string | undefined;
         let performanceName: string | undefined;
         let performanceStartTime: string | undefined;
         let performanceDurationMinutes: number | undefined;
-        if (preference?.time !== undefined && preference.time >= arrive + (scene.returnToExit ? scene.performanceBufferMinutes ?? 15 : 0)) {
+        if (preference?.time !== undefined && preference.time >= arrive) {
           stepStart = preference.time;
           performanceId = preference.id;
           performanceName = preference.name;
@@ -142,8 +142,7 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
         }
         const visitMinutes = performanceDurationMinutes ?? getVisitMinutes(spot.visit_minutes, scene.pace || 'normal');
         const end = stepStart + visitMinutes;
-        const returnPath = scene.returnToExit ? findPath(graph, spot.id, scene.exitSpotId || 'south_gate', scene.mobility) : undefined;
-        const withinBudget = scene.returnToExit ? Boolean(returnPath && end + returnPath.walkMinutes <= deadline) : performanceId ? stepStart <= deadline : end <= deadline;
+        const withinBudget = performanceId ? stepStart <= deadline : end <= deadline;
         if (!openAt(spot, end) || !withinBudget) continue;
         const nextVisited = new Set(state.visited);
         nextVisited.add(spot.id);
@@ -208,33 +207,10 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
     rejectedRequests.push({ item: 'meal', reasonCode: 'meal_data_unavailable' });
   }
   const satisfiedConstraints = scene.mustVisitSpotIds.filter(id => selected.visited.has(id)).map(id => `must_visit:${id}`);
-  if (scene.returnToExit) {
-    const exitId = scene.exitSpotId || 'south_gate';
-    const path = findPath(graph, selected.current, exitId, scene.mobility);
-    if (!path || selected.time + path.walkMinutes > deadline) {
-      rejectedRequests.push({ item: exitId, reasonCode: 'return_to_exit_unreachable' });
-    } else {
-      const end = selected.time + path.walkMinutes;
-      selected.steps = [...selected.steps, { spotId: exitId, arrive: clock(end), start: clock(end), end: clock(end), walkMinutes: path.walkMinutes, visitMinutes: 0, pathSpotIds: path.spotIds, reasonCode: 'return_to_exit' }];
-      selected.time = end;
-      selected.walking += path.walkMinutes;
-      satisfiedConstraints.push('return_to_exit');
-    }
-  }
   const plan = makePlan(startTime, selected, rejectedRequests, satisfiedConstraints);
-  plan.distanceMeters = 0;
-  for (const step of plan.steps) {
-    step.pathEvidence = (step.pathSpotIds || []).slice(1).flatMap((to, index) => {
-      const from = step.pathSpotIds![index];
-      const edge = graph.edges.find(item => (item.from === from && item.to === to) || (item.from === to && item.to === from));
-      return edge ? [{ ...edge }] : [];
-    });
-    step.distanceMeters = step.pathEvidence.reduce((sum, edge) => sum + edge.distance_m, 0);
-    plan.distanceMeters += step.distanceMeters;
-  }
   const validation = validateRoute(plan, scene, graph);
   const hardViolations = validation.violations.filter(violation => violation.code !== 'missing_preferred_performance');
-  const hardRequestRejected = rejectedRequests.some(request => ['must_visit_unreachable', 'return_to_exit_unreachable'].includes(request.reasonCode));
+  const hardRequestRejected = rejectedRequests.some(request => request.reasonCode === 'must_visit_unreachable');
   const hardPerformanceRejected = rejectedRequests.some(request => request.reasonCode === 'performance_outside_time_budget');
   const rejectedNonHardPreference = rejectedRequests.some(request => request.reasonCode === 'meal_data_unavailable');
 
@@ -253,7 +229,7 @@ function planRouteInternal(scene: SceneState, graph: RouteGraph, maxStops: numbe
     }
   }
 
-  const noSteps = selected.steps.length === 0 || (selected.steps.every(step => step.reasonCode === 'return_to_exit') && scene.currentLocation === (scene.exitSpotId || 'south_gate'));
+  const noSteps = selected.steps.length === 0;
   if (noSteps && rejectedPerformanceIds.length > 0 && !rejectedRequests.some(request => request.reasonCode === 'no_alternative_route')) {
     rejectedRequests.push({ item: 'route', reasonCode: 'no_alternative_route' });
   }

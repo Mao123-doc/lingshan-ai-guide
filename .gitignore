@@ -87,15 +87,3 @@ output/
 # Local results
 results/
 
-
-# Local submission and compressed-package archives
-/release/submission-*/
-/release/archives/
-
-# Restored operations runtime state
-data/dh_config.json
-data/admin_config.json
-data/*.tmp
-
-# Local packaged artifacts and old extracted submission copies
-/submission/

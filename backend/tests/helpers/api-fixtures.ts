@@ -13,7 +13,6 @@ export type TestServer = {
 export async function startTestServer(): Promise<TestServer> {
   const dataRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'lingshan-api-test-'));
   process.env.DATA_ROOT = dataRoot;
-  process.env.ADMIN_PASSWORD = 'public-api-test-password';
   const rawRoot = path.join(dataRoot, 'raw');
   fs.mkdirSync(rawRoot, { recursive: true });
   fs.writeFileSync(path.join(rawRoot, 'knowledge_guide.txt'), '灵山胜境测试知识库。灵山大佛位于无锡，测试内容用于隔离索引重建。');
