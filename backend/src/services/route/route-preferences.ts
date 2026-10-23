@@ -1,5 +1,5 @@
 import type { SceneState } from '../scene/scene-state';
-import type { RouteGraph } from './route-types';
+import type { RouteGraph } from './route-contract';
 
 export type NormalizedRoutePreferences = {
   interests: string[];

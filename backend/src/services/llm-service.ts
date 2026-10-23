@@ -10,6 +10,17 @@ interface ChatMessage {
   content: string;
 }
 
+interface MultimodalContent {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: { url: string; detail?: 'auto' | 'low' | 'high' };
+}
+
+interface MultimodalMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string | MultimodalContent[];
+}
+
 interface LLMConfig {
   apiKey: string;
   model: string;
@@ -93,8 +104,83 @@ function getFastConfig(): LLMConfig | null {
   return getFallbackConfig(); // DeepSeek for fast text
 }
 
+function getMultimodalConfig(): LLMConfig | null {
+  return getPrimaryConfig(); // Agnes for multimodal
+}
+
 export function isLLMAvailable(): boolean {
   return !!getLLMConfig();
+}
+
+export function isMultimodalAvailable(): boolean {
+  return !!getMultimodalConfig();
+}
+
+// ============================================================
+// Multimodal LLM Call (Vision)
+// ============================================================
+
+export async function callMultimodalLLM(
+  systemPrompt: string,
+  userText: string,
+  imageBase64: string,
+  options?: { temperature?: number; max_tokens?: number }
+): Promise<string> {
+  const config = getMultimodalConfig() || getLLMConfig();
+  if (!config) return '';
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+
+    const messages: MultimodalMessage[] = [
+      { role: 'system', content: systemPrompt },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: userText },
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:image/jpeg;base64,${imageBase64}`,
+              detail: 'auto',
+            },
+          },
+        ],
+      },
+    ];
+
+    try {
+      const response = await fetch(`${config.baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: config.model,
+          messages,
+          temperature: options?.temperature ?? 0.3,
+          max_tokens: options?.max_tokens ?? 300,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      const data = await response.json() as any;
+      if (data.error) {
+        console.error('[Vision] API error:', JSON.stringify(data.error).slice(0, 200));
+        return '';
+      }
+      return data?.choices?.[0]?.message?.content || '';
+    } catch (e) {
+      clearTimeout(timeout);
+      throw e;
+    }
+  } catch (error: any) {
+    console.error('[Vision] Multimodal call failed:', error.message?.slice(0, 100));
+    return '';
+  }
 }
 
 export function getActiveModelName(): string {
@@ -242,56 +328,80 @@ export async function* streamLLM(
   options?: { temperature?: number; max_tokens?: number }
 ): AsyncGenerator<string> {
   const config = getLLMConfig();
-  if (!config) return;
+  if (!config) {
+    // No LLM available — signal to caller
+    return;
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25000);
-  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+
   try {
     const response = await fetch(`${config.baseURL}/chat/completions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
-      body: JSON.stringify({ model: config.model, messages, temperature: options?.temperature ?? 0.3,
-        max_tokens: options?.max_tokens ?? 500, stream: true }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages,
+        temperature: options?.temperature ?? 0.3,
+        max_tokens: options?.max_tokens ?? 500,
+        stream: true,
+      }),
       signal: controller.signal,
     });
-    if (!response.ok || !response.body) throw new Error('LLM stream request failed');
-    if (!response.headers.get('content-type')?.includes('text/event-stream')) {
-      const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) throw new Error('LLM response has no content');
-      yield content;
+    clearTimeout(timeout);
+
+    if (!response.ok || !response.body) {
+      // Fallback to non-streaming
+      const text = await response.text();
+      try {
+        const data = JSON.parse(text);
+        if (data?.error) {
+          console.error('[LLM Stream] API error:', JSON.stringify(data.error).slice(0, 200));
+          return; // signal error to caller by returning nothing
+        }
+        const content = data?.choices?.[0]?.message?.content;
+        if (content) yield content;
+      } catch { /* no content available */ }
       return;
     }
-    reader = response.body.getReader();
+
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
-    let finished = false;
+
     while (true) {
       const { done, value } = await reader.read();
-      buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
-      buffer = done ? '' : lines.pop() || '';
+      buffer = lines.pop() || '';
+
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed.startsWith('data:')) continue;
-        const event = trimmed.slice(5).trim();
-        if (event === '[DONE]') return;
-        const parsed = JSON.parse(event);
-        if (parsed.error) throw new Error('LLM stream provider error');
-        const choice = parsed?.choices?.[0];
-        if (choice?.finish_reason === 'stop') finished = true;
-        else if (choice?.finish_reason) throw new Error('LLM stream incomplete: generation stopped early');
-        if (choice?.delta?.content) yield choice.delta.content;
-      }
-      if (done) {
-        if (!finished) throw new Error('LLM stream incomplete: missing completion marker');
-        return;
+        if (!trimmed || !trimmed.startsWith('data: ')) continue;
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') return;
+
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed?.choices?.[0]?.delta?.content;
+          if (content) yield content;
+        } catch { /* skip malformed chunk */ }
       }
     }
-  } finally {
+  } catch (error: any) {
     clearTimeout(timeout);
-    if (reader) { await reader.cancel().catch(() => {}); reader.releaseLock(); }
-    controller.abort();
+    if (error?.name === 'AbortError') {
+      console.error('[LLM Stream] Timed out after 25s');
+    } else {
+      console.error('[LLM Stream] Failed:', error?.message?.slice(0, 100));
+    }
+    // Return without yielding — caller will detect empty response and fall back
   }
 }
 

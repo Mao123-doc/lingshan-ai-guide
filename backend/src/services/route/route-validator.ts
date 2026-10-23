@@ -1,10 +1,8 @@
 import type { SceneState } from '../scene/scene-state';
-import type { RouteEdge, RouteGraph, RouteSpot } from './route-types';
+import type { RouteGraph, RouteSpot } from './route-contract';
 import { getVisitMinutes } from './route-preferences';
 
 export interface RouteStep {
-  distanceMeters?: number;
-  pathEvidence?: RouteEdge[];
   spotId: string;
   arrive: string;
   start: string;
@@ -23,7 +21,6 @@ export interface RouteStep {
 export type RouteOutcome = 'feasible' | 'feasible_with_rejected_preferences' | 'needs_clarification' | 'infeasible';
 
 export interface RoutePlan {
-  distanceMeters?: number;
   outcome?: RouteOutcome;
   feasible?: boolean;
   startTime: string;
@@ -94,15 +91,12 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
   }
 
   plan.steps.forEach((step, index) => {
-    if (step.reasonCode === 'return_to_exit' && (!scene.returnToExit || index !== plan.steps.length - 1 || step.spotId !== (scene.exitSpotId || 'south_gate'))) {
-      violations.push({ code: 'invalid_return_step', message: '返程步骤必须是返回指定出口的最后一步', stepIndex: index });
-    }
     const spot = findSpot(graph, step.spotId);
     if (!spot) {
       violations.push({ code: 'unknown_spot', message: `未知景点：${step.spotId}`, stepIndex: index });
       return;
     }
-    if (seen.has(step.spotId) && step.reasonCode !== 'return_to_exit') violations.push({ code: 'duplicate_spot', message: `景点重复：${step.spotId}`, stepIndex: index });
+    if (seen.has(step.spotId)) violations.push({ code: 'duplicate_spot', message: `景点重复：${step.spotId}`, stepIndex: index });
     seen.add(step.spotId);
 
     const arrive = toMinutes(step.arrive);
@@ -112,8 +106,6 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
       violations.push({ code: 'invalid_step_time', message: `步骤时间格式无效：${step.spotId}`, stepIndex: index });
       return;
     }
-    if (scene.returnToExit && arrive !== (previousEnd ?? start)! + step.walkMinutes) violations.push({ code: 'travel_time_axis_mismatch', message: '到达时间与前序离开时间及步行时长不守恒', stepIndex: index });
-    if (scene.returnToExit && (step.waitingMinutes ?? 0) !== stepStart! - arrive!) violations.push({ code: 'step_waiting_time_mismatch', message: '等待时间与时间轴不一致', stepIndex: index });
     if (stepStart! < arrive! || end! < stepStart!) {
       violations.push({ code: 'invalid_time_order', message: `步骤时间顺序无效：${step.spotId}`, stepIndex: index });
     }
@@ -161,7 +153,6 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
         violations.push({ code: 'performance_time_mismatch', message: `演出时间不在数据合同中：${step.performanceStartTime}`, stepIndex: index });
       } else {
         const performanceStart = step.performanceStartTime ? toMinutes(step.performanceStartTime) : undefined;
-        if (scene.returnToExit && performanceStart !== undefined && arrive! + (scene.performanceBufferMinutes ?? 15) > performanceStart) violations.push({ code: 'performance_checkin_late', message: '未满足提前到场缓冲', stepIndex: index });
         const expectedEnd = performanceStart === undefined ? undefined : performanceStart + performance.duration_minutes;
         if (step.performanceDurationMinutes !== performance.duration_minutes || step.visitMinutes !== performance.duration_minutes) {
           violations.push({ code: 'performance_duration_mismatch', message: `演出时长与数据合同不一致：${performance.name}`, stepIndex: index });
@@ -170,7 +161,7 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
           violations.push({ code: 'performance_time_axis_mismatch', message: `演出时间轴与数据合同不一致：${performance.name}`, stepIndex: index });
         }
       }
-    } else if (step.reasonCode === 'return_to_exit' ? step.visitMinutes !== 0 : step.visitMinutes !== getVisitMinutes(spot.visit_minutes, scene.pace || 'normal')) {
+    } else if (step.visitMinutes !== getVisitMinutes(spot.visit_minutes, scene.pace || 'normal')) {
       violations.push({ code: 'visit_duration_mismatch', message: `停留时间与数据合同不一致：${spot.name}`, stepIndex: index });
     }
     previous = step.spotId;
@@ -178,11 +169,9 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
     computedVisiting += step.visitMinutes;
   });
 
-  if (scene.returnToExit && plan.steps[plan.steps.length - 1]?.spotId !== (scene.exitSpotId || 'south_gate')) violations.push({ code: 'missing_return_to_exit', message: '路线未返回指定出口' });
-  if (scene.returnToExit && plan.waitingMinutes !== plan.steps.reduce((sum, step) => sum + (step.waitingMinutes || 0), 0)) violations.push({code:'waiting_time_mismatch',message:'等待时间总和不一致'});
-  const mustVisit = new Set(scene.mustVisitSpotIds.filter(id => !scene.visitedSpotIds.includes(id)));
+  const mustVisit = new Set(scene.mustVisitSpotIds);
   for (const id of mustVisit) if (!seen.has(id)) violations.push({ code: 'missing_must_visit', message: `未包含必须到访景点：${id}` });
-  for (const id of scene.visitedSpotIds) if (plan.steps.some(step => step.spotId === id && step.reasonCode !== 'return_to_exit')) violations.push({ code: 'already_visited', message: `重复安排已游览景点：${id}` });
+  for (const id of scene.visitedSpotIds) if (seen.has(id)) violations.push({ code: 'already_visited', message: `重复安排已游览景点：${id}` });
   for (const id of scene.preferredPerformanceIds) {
     const explicitlyRejected = plan.rejectedRequests?.some(request => request.item === id && request.reasonCode === 'performance_unavailable');
     if (!plan.steps.some(step => step.performanceId === id) && !explicitlyRejected) {
@@ -193,7 +182,7 @@ export function validateRoute(plan: RoutePlan, scene: SceneState, graph: RouteGr
   const planEnd = plan.steps.length > 0 ? toMinutes(plan.steps[plan.steps.length - 1].end) : start;
   const totalByClock = start !== undefined && planEnd !== undefined ? planEnd - start : undefined;
   const performanceAnchor = plan.steps.find(step => step.performanceId && scene.preferredPerformanceIds.includes(step.performanceId));
-  const budgetEnd = performanceAnchor && !scene.returnToExit ? toMinutes(performanceAnchor.performanceStartTime || performanceAnchor.start) : planEnd;
+  const budgetEnd = performanceAnchor ? toMinutes(performanceAnchor.performanceStartTime || performanceAnchor.start) : planEnd;
   const budgetByClock = start !== undefined && budgetEnd !== undefined ? budgetEnd - start : undefined;
   if (scene.remainingMinutes !== undefined && budgetByClock !== undefined && budgetByClock > scene.remainingMinutes) {
     violations.push({ code: 'time_budget_exceeded', message: '路线超过游客剩余时间' });

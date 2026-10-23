@@ -30,7 +30,7 @@ test('document deletion cannot escape the isolated data root', async () => {
   try {
     const login = await server.request('/api/v1/auth/login', jsonBody({
       username: 'admin',
-      password: 'public-api-test-password',
+      password: 'lingshan2026',
     }));
     const protectedFile = path.join(server.dataRoot, 'conversations.json');
     fs.writeFileSync(protectedFile, '[]', 'utf8');
@@ -46,12 +46,42 @@ test('document deletion cannot escape the isolated data root', async () => {
   }
 });
 
+test('CSV export neutralizes formula-like user content', async () => {
+  const server = await startTestServer();
+  try {
+    const login = await server.request('/api/v1/auth/login', jsonBody({
+      username: 'admin',
+      password: 'lingshan2026',
+    }));
+    fs.writeFileSync(path.join(server.dataRoot, 'conversations.json'), JSON.stringify([{
+      id: 'csv-injection',
+      session_id: 'security-test',
+      timestamp: new Date().toISOString(),
+      query: '=HYPERLINK("http://evil.example")',
+      answer: '+CMD()',
+      emotion: 'other',
+      used_llm: false,
+      response_time_ms: 1,
+    }]), 'utf8');
+
+    const response = await server.request('/api/v1/admin/conversations/export', {
+      headers: { Authorization: `Bearer ${login.body.access_token}` },
+    });
+    assert.equal(response.status, 200);
+    const csv = new TextDecoder().decode(response.rawBody);
+    assert.match(csv, /'=HYPERLINK/);
+    assert.match(csv, /'\+CMD/);
+  } finally {
+    await server.close();
+  }
+});
+
 test('unsupported document types are rejected before persistence', async () => {
   const server = await startTestServer();
   try {
     const login = await server.request('/api/v1/auth/login', jsonBody({
       username: 'admin',
-      password: 'public-api-test-password',
+      password: 'lingshan2026',
     }));
     const body = new FormData();
     body.append('file', new Blob(['executable payload'], { type: 'application/octet-stream' }), 'payload.exe');
@@ -73,7 +103,7 @@ test('oversized document uploads are rejected', async () => {
   try {
     const login = await server.request('/api/v1/auth/login', jsonBody({
       username: 'admin',
-      password: 'public-api-test-password',
+      password: 'lingshan2026',
     }));
     const body = new FormData();
     body.append(

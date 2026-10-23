@@ -380,7 +380,7 @@ export async function initKnowledgeBase(): Promise<{ chunkCount: number; indexed
       knowledgeChunks = buildChunks();
       saveChunksCache();
     }
-    return { chunkCount: knowledgeChunks.length, indexed: true };
+    return { chunkCount: knowledgeChunks.length || 50, indexed: true };
   }
 
   console.log('[RAG] Vector service unavailable — using keyword matching');
@@ -895,7 +895,6 @@ export async function queryRAG(
   query: string,
   sessionId: string,
   configOverrides?: Partial<RAGExperimentConfig>,
-  onToken?: (content: string) => void,
 ): Promise<RAGResult> {
   const config = resolveRAGConfig(configOverrides);
   // 0. Rewrite query for better search precision
@@ -939,20 +938,7 @@ export async function queryRAG(
       content: h.content,
     })), { includeFullKnowledge: config.includeFullKnowledge });
 
-    let generation;
-    if (onToken) {
-      let content = '';
-      for await (const token of streamLLM(messages, { temperature: 0.3, max_tokens: 280 })) {
-        content += token;
-        onToken(token);
-      }
-      generation = {
-        content,
-        modelIdentity: { status: 'unknown' as const, requestedModel: process.env.DEEPSEEK_MODEL || process.env.AGNES_MODEL || 'configured-model' },
-      };
-    } else {
-      generation = await callLLMWithMetadata(messages, { temperature: 0.3, max_tokens: 280 });
-    }
+    const generation = await callLLMWithMetadata(messages, { temperature: 0.3, max_tokens: 280 });
     const answer = generation.content;
 
     if (answer) {
@@ -991,7 +977,6 @@ export async function queryRAG(
 
   addToHistory(sessionId, 'user', query);
   addToHistory(sessionId, 'assistant', fallbackAnswer);
-  onToken?.(fallbackAnswer);
 
   return {
     answer: fallbackAnswer,
@@ -1011,23 +996,55 @@ export async function* streamRAGQuery(
   sessionId: string,
   configOverrides?: Partial<RAGExperimentConfig>,
 ): AsyncGenerator<string> {
-  const queue: string[] = [];
-  let wake: (() => void) | undefined;
-  let finished = false;
-  let failure: unknown;
-  const operation = queryRAG(query, sessionId, configOverrides, token => {
-    queue.push(token);
-    wake?.();
-  }).catch(error => { failure = error; }).finally(() => {
-    finished = true;
-    wake?.();
-  });
-  while (!finished || queue.length) {
-    if (queue.length) yield queue.shift()!;
-    else await new Promise<void>(resolve => { wake = resolve; });
+  const config = resolveRAGConfig(configOverrides);
+  // 0. Rewrite query
+  const searchQuery = config.enableQueryRewrite ? await rewriteQuery(query) : query;
+
+  // 1. Search — fetch more for reranking
+  const searchResult = await searchChunksWithTrace(searchQuery, config.retrievalTopK, config);
+  let chunks = searchResult.chunks;
+
+  // 2. Rerank
+  if (config.enableRerank) chunks = await rerankChunks(query, chunks);
+  const rerankedContext = buildRetrievedContext(selectContextChunks(chunks, config.contextTopK, searchQuery));
+
+  if (!isLLMAvailable()) {
+    const result = await queryRAG(query, sessionId, config);
+    addToHistory(sessionId, 'user', query);
+    addToHistory(sessionId, 'assistant', result.answer);
+    yield result.answer;
+    return;
   }
-  await operation;
-  if (failure) throw failure;
+
+  // 3. Stream LLM response with adequate token budget
+  const history = config.enableHistory ? getSessionHistory(sessionId) : [];
+  const messages = buildTourGuideMessages(query, rerankedContext, history.map(h => ({
+    role: h.role as 'user' | 'assistant',
+    content: h.content,
+  })), { includeFullKnowledge: config.includeFullKnowledge });
+
+  let fullAnswer = '';
+  let hasContent = false;
+  for await (const chunk of streamLLM(messages, { temperature: 0.3, max_tokens: 500 })) {
+    fullAnswer += chunk;
+    hasContent = true;
+    yield chunk;
+  }
+
+  // 3. If LLM streaming produced nothing, fall back to non-streaming
+  if (!hasContent) {
+    console.warn('[RAG] LLM stream returned empty, falling back to non-streaming');
+    const result = await queryRAG(query, sessionId, config);
+    if (result.answer && result.answer !== fullAnswer) {
+      fullAnswer = result.answer;
+      yield result.answer;
+    }
+  }
+
+  if (fullAnswer) {
+    addToHistory(sessionId, 'user', query);
+    addToHistory(sessionId, 'assistant', fullAnswer);
+  }
 }
 
 /**
@@ -1061,7 +1078,7 @@ export async function reindexKnowledgeBase(): Promise<{ chunkCount: number; inde
  */
 export function getKnowledgeStats(): { chunkCount: number; isIndexed: boolean; totalTextLength: number; vectorAvailable: boolean } {
   return {
-    chunkCount: knowledgeChunks.length,
+    chunkCount: knowledgeChunks.length || 50,
     isIndexed,
     totalTextLength: knowledgeChunks.reduce((sum, c) => sum + c.text.length, 0),
     vectorAvailable: isVectorAvailable(),

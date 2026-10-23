@@ -79,7 +79,7 @@ export function buildBaiduDirectionUrl(
   const params = new URLSearchParams({
     origin: originParam,
     destination: `name:${destName}|latlng:${dest.lat},${dest.lng}`,
-    mode: 'walking',
+    mode: 'driving',
     region: '无锡',
     output: 'html',
     coord_type: destCoordType,
@@ -94,8 +94,6 @@ export async function openBaiduNavigation(
   cachedOrigin?: LatLng | null,
   destCoordType: DestCoordType = 'wgs84',
 ): Promise<void> {
-  const target = window.open('about:blank', '_blank');
-  if (target) target.opener = null;
   let origin = cachedOrigin ?? null;
   if (!origin) {
     try {
@@ -105,16 +103,5 @@ export async function openBaiduNavigation(
     }
   }
   const url = buildBaiduDirectionUrl(dest, destName, origin, destCoordType);
-  if (target) target.location.href = url;
-  else window.location.assign(url);
-}
-
-export function buildAmapDirectionUrl(dest: LatLng, destName: string): string {
-  const gcj = wgs84ToGcj02(dest.lat, dest.lng);
-  const params = new URLSearchParams({ to: `${gcj.lng},${gcj.lat},${destName}`, mode: 'walk', coordinate: 'gaode', callnative: '1', src: 'lingshan-ai-guide' });
-  return `https://uri.amap.com/navigation?${params.toString()}`;
-}
-
-export function openAmapNavigation(dest: LatLng, destName: string): void {
-  window.open(buildAmapDirectionUrl(dest, destName), '_blank', 'noopener,noreferrer');
+  window.open(url, '_blank', 'noopener,noreferrer');
 }

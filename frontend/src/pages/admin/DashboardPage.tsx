@@ -10,7 +10,6 @@ import {
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
 import { adminAPI } from '../../services/api';
-import { subscribeOperations } from '../../services/admin-live';
 
 interface TrendPoint { date: string; score: number; }
 interface HourlyPoint { hour: number; count: number; }
@@ -26,7 +25,7 @@ interface DashboardData {
   today_queries?: number;
   week_queries?: number;
   monthly_queries?: number;
-  avg_satisfaction?: number | null;
+  avg_satisfaction?: number;
   total_knowledge_chunks?: number;
   total_spots?: number;
   sentiment_distribution?: { positive?: number; neutral?: number; negative?: number };
@@ -40,7 +39,8 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [liveConnected, setLiveConnected] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [loadError, setLoadError] = useState('');
+  const wsRef = useRef<WebSocket | null>(null);
+  const liveCountRef = useRef(0);
 
   // Conversation detail state
   const [convList, setConvList] = useState<Conversation[]>([]);
@@ -58,18 +58,42 @@ export default function DashboardPage() {
   const [locations, setLocations] = useState<LocationPoint[]>([]);
   const [categoryDist, setCategoryDist] = useState<Record<string, number>>({});
 
-  const loadDashboard = useCallback(async () => {
-    try { const response = await adminAPI.getDashboard(); setData(response.data); setLoadError(''); }
-    catch { setLoadError('运营数据加载失败，请检查连接后重试。'); }
-  }, []);
+  // WebSocket subscription for real-time updates
   useEffect(() => {
-    let active = true;
-    const refresh = () => { if (active) void loadDashboard(); };
-    queueMicrotask(refresh);
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const close = subscribeOperations(`${protocol}//${window.location.host}/ws`, () => localStorage.getItem('admin_token'), refresh, connected => { if(active) setLiveConnected(connected); });
-    return () => { active = false; close(); };
-  }, [loadDashboard]);
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'subscribe_admin' }));
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data) as { type?: string };
+        if (msg.type === 'connected') {
+          setLiveConnected(true);
+        } else if (msg.type === 'new_query') {
+          liveCountRef.current += 1;
+          setData((prev) => prev ? {
+            ...prev,
+            today_queries: (prev.today_queries || 0) + 1,
+          } : prev);
+        }
+      } catch {
+        // Ignore malformed WebSocket messages.
+      }
+    };
+
+    ws.onclose = () => setLiveConnected(false);
+    ws.onerror = () => setLiveConnected(false);
+
+    return () => { ws.close(); };
+  }, []);
+
+  useEffect(() => {
+    adminAPI.getDashboard().then(res => setData(res.data)).catch(err => console.error(err));
+  }, []);
 
   const handleQuery = () => {
     // Use the latest convFilters via a ref snapshot
@@ -130,7 +154,6 @@ export default function DashboardPage() {
     navigate('/admin/login');
   };
 
-  if (loadError) return <div role="alert" style={{padding:40,textAlign:'center'}}><p>{loadError}</p><Button onClick={() => void loadDashboard()}>重试加载</Button></div>;
   if (!data) return <div style={{ padding: 40, textAlign: 'center' }}>加载中...</div>;
 
   const satisfactionOption = {
@@ -242,7 +265,7 @@ export default function DashboardPage() {
               <Col xs={12} md={4}><Card><Statistic title="今日问答" value={data.today_queries} prefix={<MessageOutlined />} /></Card></Col>
               <Col xs={12} md={4}><Card><Statistic title="周问答" value={data.week_queries} prefix={<BarChartOutlined />} /></Card></Col>
               <Col xs={12} md={4}><Card><Statistic title="月问答" value={data.monthly_queries} prefix={<TeamOutlined />} /></Card></Col>
-              <Col xs={12} md={4}><Card><Statistic title="满意度" value={data.avg_satisfaction ?? '暂无评价'} suffix={data.avg_satisfaction == null ? '' : '%'} prefix={<SmileOutlined />} /></Card></Col>
+              <Col xs={12} md={4}><Card><Statistic title="满意度" value={data.avg_satisfaction} suffix="%" prefix={<SmileOutlined />} /></Card></Col>
               <Col xs={12} md={4}><Card><Statistic title="总知识分块" value={data.total_knowledge_chunks} prefix={<BookOutlined />} /></Card></Col>
               <Col xs={12} md={4}><Card><Statistic title="总景点" value={data.total_spots} prefix={<EnvironmentOutlined />} /></Card></Col>
             </Row>

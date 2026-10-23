@@ -7,7 +7,7 @@ import {
 import {
   UploadOutlined, ReloadOutlined, DeleteOutlined,
   FileTextOutlined, SearchOutlined, LogoutOutlined,
-  HomeOutlined,
+  DashboardOutlined, BookOutlined, SettingOutlined, BarChartOutlined,
 } from '@ant-design/icons';
 import { adminAPI } from '../../services/api';
 
@@ -45,7 +45,10 @@ export default function KnowledgeBasePage() {
   const loadDocuments = async () => {
     setLoading(true);
     try {
-      const { data } = await adminAPI.getDocuments();
+      const res = await fetch('/api/v1/admin/knowledge/documents', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` },
+      });
+      const data = await res.json();
       setDocuments(Array.isArray(data) ? data : []);
     } catch (_err) {
       console.error('Failed to load documents:', _err);
@@ -84,7 +87,10 @@ export default function KnowledgeBasePage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await adminAPI.deleteDocument(id);
+      await fetch(`/api/v1/admin/knowledge/documents/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` },
+      });
       message.success('文档已删除');
       loadDocuments();
     } catch {
@@ -107,10 +113,10 @@ export default function KnowledgeBasePage() {
         <div style={{ fontSize: 24 }}>🏯</div>
         <Title level={4} style={{ margin: 0 }}>知识库管理</Title>
         <div style={{ flex: 1 }} />
-        <Button type="text" icon={<HomeOutlined />} onClick={() => navigate('/')}>游客首页</Button>
-        <Button onClick={() => navigate('/admin/dashboard')}>运营看板</Button>
-        <Button onClick={() => navigate('/admin/digital-human')}>数字人设置</Button>
-        <Button onClick={() => navigate('/admin/reports')}>情感报告</Button>
+        <Button type="text" icon={<DashboardOutlined />} onClick={() => navigate('/admin/dashboard')}>仪表盘</Button>
+        <Button type="text" icon={<BookOutlined />} onClick={() => navigate('/admin/knowledge')}>知识库</Button>
+        <Button type="text" icon={<SettingOutlined />} onClick={() => navigate('/admin/digital-human')}>数字人</Button>
+        <Button type="text" icon={<BarChartOutlined />} onClick={() => navigate('/admin/reports')}>报告</Button>
         <Button type="text" icon={<LogoutOutlined />} onClick={handleLogout} danger>退出</Button>
       </div>
 
@@ -174,7 +180,11 @@ export default function KnowledgeBasePage() {
                     setTestLoading(true);
                     setTestResult(null);
                     try {
-                      const { data } = await adminAPI.testKnowledge(v);
+                      const token = localStorage.getItem('admin_token');
+                      const res = await fetch(`/api/v1/admin/knowledge/test-qa?query=${encodeURIComponent(v)}`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      const data = await res.json() as TestResult;
                       setTestResult(data);
                     } catch {
                       setTestResult({ error: '测试请求失败' });

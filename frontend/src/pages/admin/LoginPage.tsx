@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
       localStorage.setItem('admin_token', res.data.access_token);
       localStorage.setItem('admin_user', JSON.stringify(res.data));
       message.success('登录成功！');
-      navigate('/admin/knowledge');
+      navigate('/admin/dashboard');
     } catch (err: unknown) {
       const errorMessage = axios.isAxiosError<{ error?: string }>(err)
         ? err.response?.data?.error

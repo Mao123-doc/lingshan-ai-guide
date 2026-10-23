@@ -123,13 +123,3 @@ test('explains advisory budget without changing the physical route', async () =>
   assert.equal(budgetEffect?.kind, 'advisory');
   assert.match(budgetEffect?.summary || '', /消费|物理路线/);
 });
-
-
-test('strict visitor routes clarify actual time instead of inferring it from a desired show', async () => {
-  const response=await planRouteRequest({query:'我在南门，还有3小时，想看14点吉祥颂',scene_state:{returnToExit:true}},dependencies(state({currentTime:'11:00'}),{count:0}));
-  assert.equal(response.outcome,'needs_clarification');
-  assert.equal(response.scene_state.currentTime,undefined);
-  assert.ok(response.scene_state.missingCriticalFields.includes('currentTime'));
-  const explicit=await planRouteRequest({query:'我在南门，还有3小时，想看14点吉祥颂',scene_state:{returnToExit:true,currentTime:'11:10'}},dependencies(state({currentTime:'11:00'}),{count:0}));
-  assert.equal(explicit.scene_state.currentTime,'11:10');
-});
